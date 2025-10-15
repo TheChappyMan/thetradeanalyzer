@@ -1,103 +1,160 @@
-import Image from "next/image";
+"use client";
+import React, { useMemo, useState } from "react";
 
-export default function Home() {
+/**
+ * Fantasy Trade Analyzer – Full Layout
+ * - Restored players, picks, league scoring, and roster input sections
+ * - Integrated fairness scoring (τ=0.65, fixed)
+ */
+
+function tanh(x: number) {
+  const e1 = Math.exp(x);
+  const e2 = Math.exp(-x);
+  return (e1 - e2) / (e1 + e2);
+}
+
+function fairnessScore(give: number, get: number): number {
+  const TAU = 0.65;
+  const total = give + get;
+  if (total === 0) return 50;
+  const pctDiff = (get - give) / total;
+  const raw = 50 + 50 * tanh(pctDiff / TAU);
+  return Math.max(0, Math.min(100, raw));
+}
+
+function fairnessDescription(score: number): string {
+  if (score <= 10.4) return "You're getting robbed.";
+  if (score <= 20.4) return "Not quite a robbery, but you're giving a lot away.";
+  if (score <= 30.4) return "It's close, but you lose value.";
+  if (score <= 40.4) return "You lose, but only by a bit.";
+  if (score <= 60.4) return "This is in the realm of fairness.";
+  if (score <= 70.4) return "You win this trade.";
+  if (score <= 80.4) return "Big win for you.";
+  if (score <= 90.4) return "They shouldn't accept this trade, but if they do, good for you.";
+  return "We won't tell, but if they accept this, it's probably collusion.";
+}
+
+export default function TradeAnalyzer() {
+  // League settings
+  const [league, setLeague] = useState({
+    teams: 12,
+    draftType: "snake",
+    seasonStats: "current",
+    roster: { F: 2, W: 2, C: 2, LW: 2, RW: 2, D: 4, U: 2, G: 2, B: 4, IR: 1, IRp: 0 },
+    weights: {},
+  });
+
+  // Player & pick inputs
+  const [sendPlayers, setSendPlayers] = useState("");
+  const [recvPlayers, setRecvPlayers] = useState("");
+  const [sendPicks, setSendPicks] = useState("");
+  const [recvPicks, setRecvPicks] = useState("");
+
+  // Placeholder numeric values for now (mocked player valuations)
+  const [sendValue, setSendValue] = useState(50);
+  const [recvValue, setRecvValue] = useState(50);
+
+  const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">Fantasy Trade Analyzer (NHL – Full Prototype)</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      {/* League + Scoring Settings */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="border rounded-2xl p-4">
+          <h2 className="font-medium mb-2">League Settings</h2>
+          <label className="text-sm">Number of Teams</label>
+          <input
+            type="number"
+            min={2}
+            className="border rounded-xl p-2 w-full mb-2"
+            value={league.teams}
+            onChange={(e) => setLeague({ ...league, teams: parseInt(e.target.value || "12", 10) })}
+          />
+          <label className="text-sm">Draft Type</label>
+          <select
+            className="border rounded-xl p-2 w-full mb-3"
+            value={league.draftType}
+            onChange={(e) => setLeague({ ...league, draftType: e.target.value })}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <option value="snake">Snake</option>
+            <option value="linear">Linear</option>
+          </select>
+
+          <h3 className="text-sm font-semibold mt-2 mb-2">Roster Slots</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.keys(league.roster).map((pos) => (
+              <label key={pos} className="text-xs flex items-center gap-2">
+                <span className="w-8">{pos}</span>
+                <input
+                  type="number"
+                  min={0}
+                  className="border rounded-xl p-1 w-full"
+                  value={(league.roster as any)[pos]}
+                  onChange={(e) => setLeague({ ...league, roster: { ...league.roster, [pos]: parseInt(e.target.value || "0", 10) } })}
+                />
+              </label>
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="border rounded-2xl p-4">
+          <h2 className="font-medium mb-2">Scoring Weights</h2>
+          <div className="grid grid-cols-2 gap-x-4">
+            {["G","A","P","+/-","PIM","PPG","PPA","PPP","SOG","W","SO","FW","FL","HIT","BLK"].map((stat) => (
+              <div key={stat} className="flex items-center justify-between gap-2 mb-1">
+                <label className="text-sm w-16">{stat}</label>
+                <input type="number" step="0.1" className="border rounded-xl p-1 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Trade Inputs */}
+      <div className="border rounded-2xl p-4 mb-6">
+        <h2 className="font-medium mb-3">Trade Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-sm font-semibold mb-1">You Give</h3>
+            <textarea
+              className="border rounded-xl p-2 w-full h-20 mb-2"
+              placeholder="Players (comma or line separated)"
+              value={sendPlayers}
+              onChange={(e) => setSendPlayers(e.target.value)}
+            />
+            <textarea
+              className="border rounded-xl p-2 w-full h-20"
+              placeholder="Picks (e.g., 1.01, 2.02)"
+              value={sendPicks}
+              onChange={(e) => setSendPicks(e.target.value)}
+            />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-1">You Get</h3>
+            <textarea
+              className="border rounded-xl p-2 w-full h-20 mb-2"
+              placeholder="Players (comma or line separated)"
+              value={recvPlayers}
+              onChange={(e) => setRecvPlayers(e.target.value)}
+            />
+            <textarea
+              className="border rounded-xl p-2 w-full h-20"
+              placeholder="Picks (e.g., 1.01, 2.02)"
+              value={recvPicks}
+              onChange={(e) => setRecvPicks(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Fairness Output */}
+      <div className="border rounded-2xl p-4">
+        <h2 className="font-medium mb-3">Fairness Result</h2>
+        <div className="text-2xl font-semibold">{score.toFixed(1)} / 100</div>
+        <div className="mt-2 text-sm text-gray-700">{fairnessDescription(score)}</div>
+      </div>
     </div>
   );
 }
