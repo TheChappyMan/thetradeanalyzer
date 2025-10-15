@@ -1,39 +1,25 @@
 "use client";
+
 import React, { useMemo, useState } from "react";
 
-type RosterKey = 'F' | 'W' | 'C' | 'LW' | 'RW' | 'D' | 'U' | 'G' | 'B' | 'IR' | 'IRp';
+/** Types to keep ESLint/TS happy */
+type RosterKey = "F" | "W" | "C" | "LW" | "RW" | "D" | "U" | "G" | "B" | "IR" | "IRp";
 type Roster = Record<RosterKey, number>;
-
 type League = {
   teams: number;
-  draftType: 'snake' | 'linear';
-  seasonStats: 'current' | 'last';
+  draftType: "snake" | "linear";
+  seasonStats: "current" | "last";
   roster: Roster;
   weights: Record<string, number>;
 };
+const ROSTER_KEYS: RosterKey[] = ["F", "W", "C", "LW", "RW", "D", "U", "G", "B", "IR", "IRp"];
 
-const ROSTER_KEYS: RosterKey[] = ['F','W','C','LW','RW','D','U','G','B','IR','IRp'];
-
-const [league, setLeague] = useState<League>({
-  teams: 12,
-  draftType: 'snake',
-  seasonStats: 'current',
-  roster: { F:2, W:2, C:2, LW:2, RW:2, D:4, U:2, G:2, B:4, IR:1, IRp:0 },
-  weights: {},
-});
-
-/**
- * Fantasy Trade Analyzer – Full Layout
- * - Restored players, picks, league scoring, and roster input sections
- * - Integrated fairness scoring (τ=0.65, fixed)
- */
-
+/** Fairness helpers */
 function tanh(x: number) {
   const e1 = Math.exp(x);
   const e2 = Math.exp(-x);
   return (e1 - e2) / (e1 + e2);
 }
-
 function fairnessScore(give: number, get: number): number {
   const TAU = 0.65;
   const total = give + get;
@@ -42,7 +28,6 @@ function fairnessScore(give: number, get: number): number {
   const raw = 50 + 50 * tanh(pctDiff / TAU);
   return Math.max(0, Math.min(100, raw));
 }
-
 function fairnessDescription(score: number): string {
   if (score <= 10.4) return "You're getting robbed.";
   if (score <= 20.4) return "Not quite a robbery, but you're giving a lot away.";
@@ -57,7 +42,7 @@ function fairnessDescription(score: number): string {
 
 export default function TradeAnalyzer() {
   // League settings
-  const [league, setLeague] = useState({
+  const [league, setLeague] = useState<League>({
     teams: 12,
     draftType: "snake",
     seasonStats: "current",
@@ -65,13 +50,13 @@ export default function TradeAnalyzer() {
     weights: {},
   });
 
-  // Player & pick inputs
+  // Player & pick inputs (simple text placeholders for now)
   const [sendPlayers, setSendPlayers] = useState("");
   const [recvPlayers, setRecvPlayers] = useState("");
   const [sendPicks, setSendPicks] = useState("");
   const [recvPicks, setRecvPicks] = useState("");
 
-  // Placeholder numeric values for now (mocked player valuations)
+  // Manual value inputs so ESLint sees the setters used
   const [sendValue, setSendValue] = useState(50);
   const [recvValue, setRecvValue] = useState(50);
 
@@ -97,42 +82,56 @@ export default function TradeAnalyzer() {
           <select
             className="border rounded-xl p-2 w-full mb-3"
             value={league.draftType}
-            onChange={(e) => setLeague({ ...league, draftType: e.target.value })}
+            onChange={(e) => setLeague({ ...league, draftType: e.target.value as League["draftType"] })}
           >
             <option value="snake">Snake</option>
             <option value="linear">Linear</option>
           </select>
 
-		<h3 className="text-sm font-semibold mt-2 mb-2">Roster Slots</h3>
-		<div className="grid grid-cols-2 gap-2">
-		  {ROSTER_KEYS.map((pos) => (
-			<label key={pos} className="text-xs flex items-center gap-2">
-			  <span className="w-8">{pos}</span>
-			  <input
-				type="number"
-				min={0}
-				className="border rounded-xl p-1 w-full"
-				value={league.roster[pos]}
-				onChange={(e) =>
-				  setLeague({
-					...league,
-					roster: { ...league.roster, [pos]: parseInt(e.target.value || '0', 10) },
-				  })
-				}
-			  />
-			</label>
-		  ))}
-		</div>
+          <h3 className="text-sm font-semibold mt-2 mb-2">Roster Slots</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {ROSTER_KEYS.map((pos) => (
+              <label key={pos} className="text-xs flex items-center gap-2">
+                <span className="w-8">{pos}</span>
+                <input
+                  type="number"
+                  min={0}
+                  className="border rounded-xl p-1 w-full"
+                  value={league.roster[pos]}
+                  onChange={(e) =>
+                    setLeague({
+                      ...league,
+                      roster: { ...league.roster, [pos]: parseInt(e.target.value || "0", 10) },
+                    })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+        </div>
 
         <div className="border rounded-2xl p-4">
           <h2 className="font-medium mb-2">Scoring Weights</h2>
           <div className="grid grid-cols-2 gap-x-4">
-            {["G","A","P","+/-","PIM","PPG","PPA","PPP","SOG","W","SO","FW","FL","HIT","BLK"].map((stat) => (
-              <div key={stat} className="flex items-center justify-between gap-2 mb-1">
-                <label className="text-sm w-16">{stat}</label>
-                <input type="number" step="0.1" className="border rounded-xl p-1 w-full" />
-              </div>
-            ))}
+            {["G", "A", "P", "+/-", "PIM", "PPG", "PPA", "PPP", "SOG", "W", "SO", "FW", "FL", "HIT", "BLK"].map(
+              (stat) => (
+                <div key={stat} className="flex items-center justify-between gap-2 mb-1">
+                  <label className="text-sm w-16">{stat}</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="border rounded-xl p-1 w-full"
+                    value={league.weights[stat] ?? ""}
+                    onChange={(e) =>
+                      setLeague({
+                        ...league,
+                        weights: { ...league.weights, [stat]: parseFloat(e.target.value || "0") },
+                      })
+                    }
+                  />
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>
@@ -174,39 +173,32 @@ export default function TradeAnalyzer() {
         </div>
       </div>
 
-		{/* Fairness Output */}
-		<div className="border rounded-2xl p-4">
-		  <h2 className="font-medium mb-3">Fairness Result</h2>
-
-		  {/* Add trade value inputs here */}
-		  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-			<div>
-			  <label className="text-sm">You Give Value</label>
-			  <input
-				type="number"
-				className="border rounded-xl p-2 w-full mb-2"
-				value={sendValue}
-				onChange={(e) => setSendValue(parseFloat(e.target.value || '0'))}
-			  />
-			</div>
-			<div>
-			  <label className="text-sm">You Get Value</label>
-			  <input
-				type="number"
-				className="border rounded-xl p-2 w-full mb-2"
-				value={recvValue}
-				onChange={(e) => setRecvValue(parseFloat(e.target.value || '0'))}
-			  />
-			</div>
-		  </div>
-
-		  <div className="text-2xl font-semibold">{score.toFixed(1)} / 100</div>
-		  <div className="mt-2 text-sm text-gray-700">{fairnessDescription(score)}</div>
-		</div>
-
       {/* Fairness Output */}
       <div className="border rounded-2xl p-4">
         <h2 className="font-medium mb-3">Fairness Result</h2>
+
+        {/* Value inputs so users can test fairness immediately */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="text-sm">You Give Value</label>
+            <input
+              type="number"
+              className="border rounded-xl p-2 w-full mb-2"
+              value={sendValue}
+              onChange={(e) => setSendValue(parseFloat(e.target.value || "0"))}
+            />
+          </div>
+          <div>
+            <label className="text-sm">You Get Value</label>
+            <input
+              type="number"
+              className="border rounded-xl p-2 w-full mb-2"
+              value={recvValue}
+              onChange={(e) => setRecvValue(parseFloat(e.target.value || "0"))}
+            />
+          </div>
+        </div>
+
         <div className="text-2xl font-semibold">{score.toFixed(1)} / 100</div>
         <div className="mt-2 text-sm text-gray-700">{fairnessDescription(score)}</div>
       </div>
