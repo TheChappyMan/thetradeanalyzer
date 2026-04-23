@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 // ============================================================
 
 type SkaterStatKey =
-  | "G" | "A" | "P" | "+/-" | "PIM"
+  | "G" | "A" | "P" | "PLUS" | "MINUS" | "PIM"
   | "PPG" | "PPA" | "PPP"
   | "SHG" | "SHA" | "SHP"
   | "GWG" | "SOG" | "HIT" | "BLK" | "FW" | "FL"
@@ -25,6 +25,8 @@ type GoalieStatKey = "W" | "L" | "OTL" | "SO" | "SV" | "GA" | "GAA" | "SV%";
 
 type SkaterWeights = Record<SkaterStatKey, number>;
 type GoalieWeights = Record<GoalieStatKey, number>;
+
+type CategoryConfig = { direction: "more" | "less" };
 
 type RosterKey =
   | "C" | "LW" | "RW" | "W" | "F" | "D" | "U" | "G" | "B" | "IR" | "IRplus";
@@ -36,8 +38,11 @@ type League = {
   leagueType: "redraft" | "keeper";
   keepersPerTeam: number;
   roster: Roster;
+  scoringType: "points" | "categories";
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  skaterCategories: Record<SkaterStatKey, CategoryConfig | null>;
+  goalieCategories: Record<GoalieStatKey, CategoryConfig | null>;
 };
 
 // ============================================================
@@ -227,7 +232,8 @@ function buildPlayerDatabase(args: {
         G: asNumber(s.goals),
         A: asNumber(s.assists),
         P: asNumber(s.points),
-        "+/-": asNumber(s.plusMinus),
+        PLUS: Math.max(0, asNumber(s.plusMinus)),
+        MINUS: Math.min(0, asNumber(s.plusMinus)),
         PIM: asNumber(s.penaltyMinutes),
         PPG: ppGoals,
         PPA: ppPoints - ppGoals,
@@ -471,10 +477,25 @@ function parsePicks(text: string, teams: number): ParsedPick[] {
 function buildTalentRanking(
   playerDb: DbPlayer[],
   skaterWeights: SkaterWeights,
-  goalieWeights: GoalieWeights
+  goalieWeights: GoalieWeights,
+  scoringType: "points" | "categories" = "points",
+  skaterCategories?: Record<SkaterStatKey, CategoryConfig | null>,
+  goalieCategories?: Record<GoalieStatKey, CategoryConfig | null>,
+  poolStats?: PoolStats | null,
+  skaterStatKeys?: SkaterStatKey[],
+  goalieStatKeys?: GoalieStatKey[]
 ): number[] {
   return playerDb
-    .map((p) => projectedSeasonValue(p, skaterWeights, goalieWeights))
+    .map((p) => {
+      if (
+        scoringType === "categories" &&
+        skaterCategories && goalieCategories && poolStats &&
+        skaterStatKeys && goalieStatKeys
+      ) {
+        return zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys);
+      }
+      return projectedSeasonValue(p, skaterWeights, goalieWeights);
+    })
     .sort((a, b) => b - a);
 }
 
@@ -499,11 +520,133 @@ function valueForPick(
 }
 
 // ============================================================
+// CATEGORIES VALUATION – z-score mode
+// ============================================================
+
+type StatPoolStats = { mean: number; stddev: number; avgVolume?: number };
+type PoolStats = {
+  skaterStats: Record<SkaterStatKey, StatPoolStats>;
+  goalieStats: Record<GoalieStatKey, StatPoolStats>;
+};
+
+// Stats where we use the raw value directly (already a per-game rate).
+const RATE_SKATER = new Set<SkaterStatKey>(["ATOI"]);
+// Goalie stats that are volume-weighted rate stats.
+const VOL_GOALIE = new Set<GoalieStatKey>(["SV%", "GAA"]);
+
+function _meanStddev(values: number[]): { mean: number; stddev: number } {
+  if (values.length === 0) return { mean: 0, stddev: 1 };
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+  return { mean, stddev: Math.sqrt(variance) || 1 };
+}
+
+function computePoolStats(
+  playerDb: DbPlayer[],
+  teams: number,
+  roster: Roster,
+  skaterStats: SkaterStatKey[],
+  goalieStats: GoalieStatKey[]
+): PoolStats {
+  const skaters = playerDb.filter((p) => !p.isGoalie && p.gamesPlayed > 0);
+  const goalies = playerDb.filter((p) => p.isGoalie && p.gamesPlayed > 0);
+
+  const skaterSlots = (["C", "LW", "RW", "W", "F", "D", "U"] as RosterKey[])
+    .reduce((s, k) => s + (roster[k] || 0), 0);
+  const skaterN = Math.max(100, teams * skaterSlots);
+  const goalieN = Math.max(30, teams * (roster.G || 0));
+
+  const topSkaters = [...skaters]
+    .sort((a, b) => (b.stats.TOI || 0) - (a.stats.TOI || 0))
+    .slice(0, skaterN);
+  const topGoalies = [...goalies]
+    .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
+    .slice(0, goalieN);
+
+  const skaterPoolStats = {} as Record<SkaterStatKey, StatPoolStats>;
+  for (const stat of skaterStats) {
+    const values = topSkaters.map((p) => {
+      const raw = p.stats[stat] || 0;
+      return RATE_SKATER.has(stat) ? raw : raw / p.gamesPlayed;
+    });
+    skaterPoolStats[stat] = _meanStddev(values);
+  }
+
+  const goaliePoolStats = {} as Record<GoalieStatKey, StatPoolStats>;
+  for (const stat of goalieStats) {
+    if (stat === "SV%") {
+      const values = topGoalies.map((p) => p.stats["SV%"] || 0);
+      const volumes = topGoalies.map((p) => (p.stats.SV || 0) / p.gamesPlayed);
+      const { mean, stddev } = _meanStddev(values);
+      const avgVolume = volumes.reduce((a, b) => a + b, 0) / (volumes.length || 1);
+      goaliePoolStats[stat] = { mean, stddev, avgVolume };
+    } else if (stat === "GAA") {
+      const values = topGoalies.map((p) => p.stats.GAA || 0);
+      const { mean, stddev } = _meanStddev(values);
+      const avgVolume = topGoalies.reduce((a, p) => a + p.gamesPlayed, 0) / (topGoalies.length || 1);
+      goaliePoolStats[stat] = { mean, stddev, avgVolume };
+    } else {
+      const values = topGoalies.map((p) => ((p.stats[stat] || 0)) / p.gamesPlayed);
+      goaliePoolStats[stat] = _meanStddev(values);
+    }
+  }
+
+  return { skaterStats: skaterPoolStats, goalieStats: goaliePoolStats };
+}
+
+function _skaterZ(player: DbPlayer, stat: SkaterStatKey, ps: StatPoolStats): number {
+  if (ps.stddev === 0) return 0;
+  const raw = player.stats[stat] || 0;
+  const value = RATE_SKATER.has(stat) ? raw : raw / player.gamesPlayed;
+  return (value - ps.mean) / ps.stddev;
+}
+
+function _goalieZ(player: DbPlayer, stat: GoalieStatKey, ps: StatPoolStats): number {
+  if (ps.stddev === 0) return 0;
+  const raw = player.stats[stat] || 0;
+  if (VOL_GOALIE.has(stat) && ps.avgVolume !== undefined && ps.avgVolume > 0) {
+    const vol = stat === "SV%"
+      ? (player.stats.SV || 0) / player.gamesPlayed
+      : player.gamesPlayed;
+    return (raw - ps.mean) * (vol / ps.avgVolume) / ps.stddev;
+  }
+  return (raw / player.gamesPlayed - ps.mean) / ps.stddev;
+}
+
+function zScoreValue(
+  player: DbPlayer,
+  skaterCategories: Record<SkaterStatKey, CategoryConfig | null>,
+  goalieCategories: Record<GoalieStatKey, CategoryConfig | null>,
+  poolStats: PoolStats,
+  skaterStats: SkaterStatKey[],
+  goalieStats: GoalieStatKey[]
+): number {
+  if (player.gamesPlayed === 0) return 0;
+  let total = 0;
+  if (player.isGoalie) {
+    for (const stat of goalieStats) {
+      const cfg = goalieCategories[stat];
+      if (!cfg || !poolStats.goalieStats[stat]) continue;
+      const z = _goalieZ(player, stat, poolStats.goalieStats[stat]);
+      total += cfg.direction === "less" ? -z : z;
+    }
+  } else {
+    for (const stat of skaterStats) {
+      const cfg = skaterCategories[stat];
+      if (!cfg || !poolStats.skaterStats[stat]) continue;
+      const z = _skaterZ(player, stat, poolStats.skaterStats[stat]);
+      total += cfg.direction === "less" ? -z : z;
+    }
+  }
+  return total;
+}
+
+// ============================================================
 // CONSTANTS
 // ============================================================
 
 const SKATER_STATS: SkaterStatKey[] = [
-  "G", "A", "P", "+/-", "PIM",
+  "G", "A", "P", "PLUS", "MINUS", "PIM",
   "PPG", "PPA", "PPP",
   "SHG", "SHA", "SHP",
   "GWG", "SOG", "HIT", "BLK", "FW", "FL",
@@ -520,6 +663,12 @@ function emptySkaterWeights(): SkaterWeights {
 function emptyGoalieWeights(): GoalieWeights {
   return GOALIE_STATS.reduce((acc, s) => ({ ...acc, [s]: 0 }), {} as GoalieWeights);
 }
+function emptySkaterCategories(): Record<SkaterStatKey, CategoryConfig | null> {
+  return SKATER_STATS.reduce((acc, s) => ({ ...acc, [s]: null }), {} as Record<SkaterStatKey, CategoryConfig | null>);
+}
+function emptyGoalieCategories(): Record<GoalieStatKey, CategoryConfig | null> {
+  return GOALIE_STATS.reduce((acc, s) => ({ ...acc, [s]: null }), {} as Record<GoalieStatKey, CategoryConfig | null>);
+}
 
 // ============================================================
 // MAIN COMPONENT
@@ -534,12 +683,30 @@ const DEFAULT_LEAGUE: League = {
     C: 2, LW: 2, RW: 2, W: 0, F: 0,
     D: 4, U: 2, G: 2, B: 4, IR: 1, IRplus: 0,
   },
+  scoringType: "points",
   skaterWeights: emptySkaterWeights(),
   goalieWeights: emptyGoalieWeights(),
+  skaterCategories: emptySkaterCategories(),
+  goalieCategories: emptyGoalieCategories(),
 };
 
 export default function TradeAnalyzer() {
-  const [league, setLeague] = useState<League>(() => loadCurrentLeague() ?? DEFAULT_LEAGUE);
+  const [league, setLeague] = useState<League>(() => {
+    const saved = loadCurrentLeague();
+    if (!saved) return DEFAULT_LEAGUE;
+    // Migration: fill in fields that didn't exist in older saved versions
+    return {
+      ...DEFAULT_LEAGUE,
+      ...saved,
+      scoringType: saved.scoringType ?? "points",
+      skaterCategories: saved.skaterCategories
+        ? { ...DEFAULT_LEAGUE.skaterCategories, ...saved.skaterCategories }
+        : emptySkaterCategories(),
+      goalieCategories: saved.goalieCategories
+        ? { ...DEFAULT_LEAGUE.goalieCategories, ...saved.goalieCategories }
+        : emptyGoalieCategories(),
+    };
+  });
   const [profiles, setProfiles] = useState<SavedProfile[]>(() => loadProfiles());
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -600,12 +767,30 @@ export default function TradeAnalyzer() {
   const [sendPicks, setSendPicks] = useState("");
   const [recvPicks, setRecvPicks] = useState("");
 
-  // League-specific talent ranking — sorted projected values for every NHL player,
-  // using this league's scoring weights. Used for pick valuation.
+  // Pre-computed population stats for categories mode — recalculates when DB
+  // or league size/roster changes, not when categories are toggled.
+  const poolStats = useMemo(() => {
+    if (playerDb.length === 0) return null;
+    return computePoolStats(playerDb, league.teams, league.roster, SKATER_STATS, GOALIE_STATS);
+  }, [playerDb, league.teams, league.roster]);
+
+  // League-specific talent ranking — sorted projected values for every NHL player.
+  // Branches on scoringType so pick valuation works in both modes.
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
-    return buildTalentRanking(playerDb, league.skaterWeights, league.goalieWeights);
-  }, [playerDb, league.skaterWeights, league.goalieWeights]);
+    return buildTalentRanking(
+      playerDb,
+      league.skaterWeights,
+      league.goalieWeights,
+      league.scoringType,
+      league.skaterCategories,
+      league.goalieCategories,
+      poolStats,
+      SKATER_STATS,
+      GOALIE_STATS
+    );
+  }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
+      league.skaterCategories, league.goalieCategories, poolStats]);
 
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
@@ -617,11 +802,15 @@ export default function TradeAnalyzer() {
     [recvPicks, league.teams]
   );
 
+  const isCatMode = league.scoringType === "categories";
+
   const sendValue = useMemo(() => {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      const base = projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
+      const base = isCatMode && poolStats
+        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS)
+        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
       return sum + base * mult;
     }, 0);
@@ -631,13 +820,15 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league]);
+  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      const base = projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
+      const base = isCatMode && poolStats
+        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS)
+        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
       return sum + base * mult;
     }, 0);
@@ -647,7 +838,7 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league]);
+  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode]);
 
   const totalRosterSize = useMemo(() => {
     return Object.values(league.roster).reduce((a, b) => a + b, 0);
@@ -663,6 +854,10 @@ export default function TradeAnalyzer() {
     setLeague((prev) => ({ ...prev, skaterWeights: { ...prev.skaterWeights, [stat]: val } }));
   const updateGoalieWeight = (stat: GoalieStatKey, val: number) =>
     setLeague((prev) => ({ ...prev, goalieWeights: { ...prev.goalieWeights, [stat]: val } }));
+  const updateSkaterCategory = (stat: SkaterStatKey, cfg: CategoryConfig | null) =>
+    setLeague((prev) => ({ ...prev, skaterCategories: { ...prev.skaterCategories, [stat]: cfg } }));
+  const updateGoalieCategory = (stat: GoalieStatKey, cfg: CategoryConfig | null) =>
+    setLeague((prev) => ({ ...prev, goalieCategories: { ...prev.goalieCategories, [stat]: cfg } }));
 
   const addPlayer = (side: "send" | "recv", dbEntry: DbPlayer) => {
     const setter = side === "send" ? setSendPlayers : setRecvPlayers;
@@ -856,43 +1051,129 @@ export default function TradeAnalyzer() {
         </div>
 
         <div className="border rounded-2xl p-4">
-          <h2 className="font-medium mb-2">Scoring Weights</h2>
-          <p className="text-xs text-gray-600 mb-2">
-            If your league scores both G+A and P, you&apos;re counting goals twice. Set G/A to 0 if you
-            only score P, or leave P at 0 if you score G and A separately.
-          </p>
+          <h2 className="font-medium mb-2">Scoring</h2>
 
-          <h3 className="text-sm font-semibold mt-1 mb-1">Skaters</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
-            {SKATER_STATS.map((stat) => (
-              <div key={stat} className="flex items-center justify-between gap-2">
-                <label className="text-sm w-16">{stat}</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="border rounded-xl p-1 w-full"
-                  value={league.skaterWeights[stat]}
-                  onChange={(e) => updateSkaterWeight(stat, parseFloat(e.target.value || "0"))}
-                />
-              </div>
-            ))}
-          </div>
+          <label className="text-sm">Scoring Type</label>
+          <select
+            className="border rounded-xl p-2 w-full mb-3"
+            value={league.scoringType}
+            onChange={(e) => updateLeague({ scoringType: e.target.value as "points" | "categories" })}
+          >
+            <option value="points">Points</option>
+            <option value="categories">Categories</option>
+          </select>
 
-          <h3 className="text-sm font-semibold mt-2 mb-1">Goalies</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            {GOALIE_STATS.map((stat) => (
-              <div key={stat} className="flex items-center justify-between gap-2">
-                <label className="text-sm w-16">{stat}</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className="border rounded-xl p-1 w-full"
-                  value={league.goalieWeights[stat]}
-                  onChange={(e) => updateGoalieWeight(stat, parseFloat(e.target.value || "0"))}
-                />
+          {!isCatMode ? (
+            <>
+              <p className="text-xs text-gray-600 mb-2">
+                If your league scores both G+A and P, you&apos;re counting goals twice. Set G/A to 0
+                if you only score P, or leave P at 0 if you score G and A separately.
+              </p>
+              <h3 className="text-sm font-semibold mt-1 mb-1">Skaters</h3>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+                {SKATER_STATS.map((stat) => (
+                  <div key={stat} className="flex items-center justify-between gap-2">
+                    <label className="text-sm w-16">
+                      {stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="border rounded-xl p-1 w-full"
+                      value={league.skaterWeights[stat]}
+                      onChange={(e) => updateSkaterWeight(stat, parseFloat(e.target.value || "0"))}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+              <h3 className="text-sm font-semibold mt-2 mb-1">Goalies</h3>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {GOALIE_STATS.map((stat) => (
+                  <div key={stat} className="flex items-center justify-between gap-2">
+                    <label className="text-sm w-16">{stat}</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="border rounded-xl p-1 w-full"
+                      value={league.goalieWeights[stat]}
+                      onChange={(e) => updateGoalieWeight(stat, parseFloat(e.target.value || "0"))}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-gray-600 mb-3">
+                Check each category your league uses. If your league has both G+A and P as
+                categories, you&apos;re counting goals twice. Set direction to &ldquo;less&rdquo; for stats where
+                lower is better (PIM, GAA, L, GA).
+              </p>
+              <h3 className="text-sm font-semibold mb-2">Skaters</h3>
+              <div className="space-y-1 mb-4">
+                {SKATER_STATS.map((stat) => {
+                  const cfg = league.skaterCategories[stat];
+                  const label = stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat;
+                  return (
+                    <div key={stat} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        id={`scat-${stat}`}
+                        checked={cfg !== null}
+                        onChange={(e) =>
+                          updateSkaterCategory(stat, e.target.checked ? { direction: "more" } : null)
+                        }
+                      />
+                      <label htmlFor={`scat-${stat}`} className="w-12 cursor-pointer">{label}</label>
+                      {cfg && (
+                        <div className="flex rounded-lg border overflow-hidden text-xs ml-1">
+                          <button
+                            className={`px-2 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                            onClick={() => updateSkaterCategory(stat, { direction: "more" })}
+                          >more</button>
+                          <button
+                            className={`px-2 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                            onClick={() => updateSkaterCategory(stat, { direction: "less" })}
+                          >less</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <h3 className="text-sm font-semibold mb-2">Goalies</h3>
+              <div className="space-y-1">
+                {GOALIE_STATS.map((stat) => {
+                  const cfg = league.goalieCategories[stat];
+                  return (
+                    <div key={stat} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        id={`gcat-${stat}`}
+                        checked={cfg !== null}
+                        onChange={(e) =>
+                          updateGoalieCategory(stat, e.target.checked ? { direction: "more" } : null)
+                        }
+                      />
+                      <label htmlFor={`gcat-${stat}`} className="w-12 cursor-pointer">{stat}</label>
+                      {cfg && (
+                        <div className="flex rounded-lg border overflow-hidden text-xs ml-1">
+                          <button
+                            className={`px-2 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                            onClick={() => updateGoalieCategory(stat, { direction: "more" })}
+                          >more</button>
+                          <button
+                            className={`px-2 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                            onClick={() => updateGoalieCategory(stat, { direction: "less" })}
+                          >less</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -951,12 +1232,20 @@ export default function TradeAnalyzer() {
         </div>
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
-            <div className="text-xs text-gray-600">You Give (projected pts)</div>
-            <div className="text-lg font-semibold">{sendValue.toFixed(1)}</div>
+            <div className="text-xs text-gray-600">
+              {isCatMode ? "You Give (z-score sum)" : "You Give (projected pts)"}
+            </div>
+            <div className="text-lg font-semibold">
+              {isCatMode ? sendValue.toFixed(2) : sendValue.toFixed(1)}
+            </div>
           </div>
           <div>
-            <div className="text-xs text-gray-600">You Get (projected pts)</div>
-            <div className="text-lg font-semibold">{recvValue.toFixed(1)}</div>
+            <div className="text-xs text-gray-600">
+              {isCatMode ? "You Get (z-score sum)" : "You Get (projected pts)"}
+            </div>
+            <div className="text-lg font-semibold">
+              {isCatMode ? recvValue.toFixed(2) : recvValue.toFixed(1)}
+            </div>
           </div>
           <div>
             <div className="text-xs text-gray-600">Fairness</div>
@@ -970,7 +1259,9 @@ export default function TradeAnalyzer() {
         </div>
         {(sendValue === 0 && recvValue === 0) && (
           <div className="text-xs text-amber-700 mt-2">
-            All values are 0 — make sure you&apos;ve set scoring weights above and added players below.
+            {isCatMode
+              ? "All values are 0 — make sure you\u2019ve selected at least one category above and added players."
+              : "All values are 0 — make sure you\u2019ve set scoring weights above and added players below."}
           </div>
         )}
       </div>
