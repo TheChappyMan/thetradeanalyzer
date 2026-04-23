@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
  */
 
 // ============================================================
-// TYPES
+// TYPES 
 // ============================================================
 
 type SkaterStatKey =
