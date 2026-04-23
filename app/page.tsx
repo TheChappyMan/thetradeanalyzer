@@ -554,7 +554,7 @@ export default function TradeAnalyzer() {
         <div className="border rounded-2xl p-4">
           <h2 className="font-medium mb-2">Scoring Weights</h2>
           <p className="text-xs text-gray-600 mb-2">
-            If your league scores both G+A and P, you're counting goals twice. Set G/A to 0 if you
+            If your league scores both G+A and P, you&apos;re counting goals twice. Set G/A to 0 if you
             only score P, or leave P at 0 if you score G and A separately.
           </p>
 
@@ -645,7 +645,7 @@ export default function TradeAnalyzer() {
         <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
         {(sendValue === 0 && recvValue === 0) && (
           <div className="text-xs text-amber-700 mt-2">
-            All values are 0 — make sure you've set scoring weights above and added players below.
+            All values are 0 — make sure you&apos;ve set scoring weights above and added players below.
           </div>
         )}
       </div>
