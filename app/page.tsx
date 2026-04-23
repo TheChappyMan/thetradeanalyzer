@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
  */
 
 // ============================================================
-// TYPES 
+// TYPES
 // ============================================================
 
 type SkaterStatKey =
@@ -65,10 +65,8 @@ type DbStatus = "loading" | "ready" | "error";
 type DbMeta = { seasonUsed: string | null; isFallback: boolean };
 
 // ============================================================
-// DATA LAYER – NHL API
+// DATA LAYER – NHL API (via server proxy to avoid CORS)
 // ============================================================
-
-const NHL_STATS_BASE = "https://api.nhle.com/stats/rest/en";
 
 function currentSeasonId(): string {
   const now = new Date();
@@ -93,25 +91,25 @@ async function fetchJson<T = unknown>(url: string): Promise<T> {
 type NhlApiResponse<T> = { data?: T[] };
 
 async function fetchSkaterSummary(seasonId: string) {
-  const url = `${NHL_STATS_BASE}/skater/summary?limit=-1&cayenneExp=seasonId=${seasonId}%20and%20gameTypeId=2`;
+  const url = `/api/nhl?endpoint=skater-summary&season=${seasonId}`;
   const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
   return json.data || [];
 }
 
 async function fetchSkaterRealtime(seasonId: string) {
-  const url = `${NHL_STATS_BASE}/skater/realtime?limit=-1&cayenneExp=seasonId=${seasonId}%20and%20gameTypeId=2`;
+  const url = `/api/nhl?endpoint=skater-realtime&season=${seasonId}`;
   const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
   return json.data || [];
 }
 
 async function fetchSkaterFaceoffs(seasonId: string) {
-  const url = `${NHL_STATS_BASE}/skater/faceoffwins?limit=-1&cayenneExp=seasonId=${seasonId}%20and%20gameTypeId=2`;
+  const url = `/api/nhl?endpoint=skater-faceoffs&season=${seasonId}`;
   const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
   return json.data || [];
 }
 
 async function fetchGoalieSummary(seasonId: string) {
-  const url = `${NHL_STATS_BASE}/goalie/summary?limit=-1&cayenneExp=seasonId=${seasonId}%20and%20gameTypeId=2`;
+  const url = `/api/nhl?endpoint=goalie-summary&season=${seasonId}`;
   const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
   return json.data || [];
 }
