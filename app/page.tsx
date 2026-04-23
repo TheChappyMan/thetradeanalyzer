@@ -1109,68 +1109,74 @@ export default function TradeAnalyzer() {
                 categories, you&apos;re counting goals twice. Set direction to &ldquo;less&rdquo; for stats where
                 lower is better (PIM, GAA, L, GA).
               </p>
-              <h3 className="text-sm font-semibold mb-2">Skaters</h3>
-              <div className="space-y-1 mb-4">
-                {SKATER_STATS.map((stat) => {
-                  const cfg = league.skaterCategories[stat];
-                  const label = stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat;
-                  return (
-                    <div key={stat} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        id={`scat-${stat}`}
-                        checked={cfg !== null}
-                        onChange={(e) =>
-                          updateSkaterCategory(stat, e.target.checked ? { direction: "more" } : null)
-                        }
-                      />
-                      <label htmlFor={`scat-${stat}`} className="w-12 cursor-pointer">{label}</label>
-                      {cfg && (
-                        <div className="flex rounded-lg border overflow-hidden text-xs ml-1">
-                          <button
-                            className={`px-2 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-                            onClick={() => updateSkaterCategory(stat, { direction: "more" })}
-                          >more</button>
-                          <button
-                            className={`px-2 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-                            onClick={() => updateSkaterCategory(stat, { direction: "less" })}
-                          >less</button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Skaters</h3>
+                  <div className="space-y-1">
+                    {SKATER_STATS.map((stat) => {
+                      const cfg = league.skaterCategories[stat];
+                      const label = stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat;
+                      return (
+                        <div key={stat} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            id={`scat-${stat}`}
+                            checked={cfg !== null}
+                            onChange={(e) =>
+                              updateSkaterCategory(stat, e.target.checked ? { direction: "more" } : null)
+                            }
+                          />
+                          <label htmlFor={`scat-${stat}`} className="w-10 cursor-pointer">{label}</label>
+                          {cfg && (
+                            <div className="flex rounded-lg border overflow-hidden text-xs">
+                              <button
+                                className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                onClick={() => updateSkaterCategory(stat, { direction: "more" })}
+                              >+</button>
+                              <button
+                                className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                onClick={() => updateSkaterCategory(stat, { direction: "less" })}
+                              >−</button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <h3 className="text-sm font-semibold mb-2">Goalies</h3>
-              <div className="space-y-1">
-                {GOALIE_STATS.map((stat) => {
-                  const cfg = league.goalieCategories[stat];
-                  return (
-                    <div key={stat} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        id={`gcat-${stat}`}
-                        checked={cfg !== null}
-                        onChange={(e) =>
-                          updateGoalieCategory(stat, e.target.checked ? { direction: "more" } : null)
-                        }
-                      />
-                      <label htmlFor={`gcat-${stat}`} className="w-12 cursor-pointer">{stat}</label>
-                      {cfg && (
-                        <div className="flex rounded-lg border overflow-hidden text-xs ml-1">
-                          <button
-                            className={`px-2 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-                            onClick={() => updateGoalieCategory(stat, { direction: "more" })}
-                          >more</button>
-                          <button
-                            className={`px-2 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-                            onClick={() => updateGoalieCategory(stat, { direction: "less" })}
-                          >less</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Goalies</h3>
+                  <div className="space-y-1">
+                    {GOALIE_STATS.map((stat) => {
+                      const cfg = league.goalieCategories[stat];
+                      return (
+                        <div key={stat} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            id={`gcat-${stat}`}
+                            checked={cfg !== null}
+                            onChange={(e) =>
+                              updateGoalieCategory(stat, e.target.checked ? { direction: "more" } : null)
+                            }
+                          />
+                          <label htmlFor={`gcat-${stat}`} className="w-10 cursor-pointer">{stat}</label>
+                          {cfg && (
+                            <div className="flex rounded-lg border overflow-hidden text-xs">
+                              <button
+                                className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                onClick={() => updateGoalieCategory(stat, { direction: "more" })}
+                              >+</button>
+                              <button
+                                className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                onClick={() => updateGoalieCategory(stat, { direction: "less" })}
+                              >−</button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </>
           )}
