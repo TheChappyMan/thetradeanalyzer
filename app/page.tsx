@@ -60,6 +60,15 @@ type TradePlayer = {
   positions: string[];
 };
 
+type ParsedPick = {
+  raw: string;        // original text the user typed
+  round: number;
+  slot: number;
+  year: number | null; // optional year prefix, purely for display
+  overall: number;     // (round - 1) * teams + slot
+  error: string | null; // populated if parsing failed or pick is invalid
+};
+
 type DbStatus = "loading" | "ready" | "error";
 
 type DbMeta = { seasonUsed: string | null; isFallback: boolean };
@@ -339,6 +348,85 @@ function projectedSeasonValue(
   return perGame * 82;
 }
 
+// Parse a string of picks into structured ParsedPick objects.
+// Accepts formats:
+//   "1.01"          -> round 1, slot 1
+//   "2.05"          -> round 2, slot 5
+//   "2027 1.01"     -> round 1, slot 1, year 2027 (year is annotation only, no discount)
+// Separators: commas, semicolons, or newlines.
+function parsePicks(text: string, teams: number): ParsedPick[] {
+  if (!text.trim()) return [];
+  const tokens = text.split(/[\n,;]+/).map((t) => t.trim()).filter(Boolean);
+  return tokens.map((raw): ParsedPick => {
+    // Optional year prefix: "2027 1.01"
+    const yearMatch = raw.match(/^(\d{4})\s+(.+)$/);
+    let year: number | null = null;
+    let core = raw;
+    if (yearMatch) {
+      year = parseInt(yearMatch[1], 10);
+      core = yearMatch[2];
+    }
+
+    // Expect round.slot format
+    const pickMatch = core.match(/^(\d+)\.(\d+)$/);
+    if (!pickMatch) {
+      return {
+        raw, round: 0, slot: 0, year, overall: 0,
+        error: "Invalid format. Use round.slot (e.g., 1.01)",
+      };
+    }
+
+    const round = parseInt(pickMatch[1], 10);
+    const slot = parseInt(pickMatch[2], 10);
+
+    if (round < 1) {
+      return { raw, round, slot, year, overall: 0, error: "Round must be 1 or higher" };
+    }
+    if (slot < 1 || slot > teams) {
+      return {
+        raw, round, slot, year, overall: 0,
+        error: `Slot must be between 1 and ${teams} (your league size)`,
+      };
+    }
+
+    const overall = (round - 1) * teams + slot;
+    return { raw, round, slot, year, overall, error: null };
+  });
+}
+
+// Build a league-specific talent ranking: all players sorted by projected
+// value descending, using the user's scoring weights. Returns values only
+// (not player objects) since that's all pick valuation needs.
+function buildTalentRanking(
+  playerDb: DbPlayer[],
+  skaterWeights: SkaterWeights,
+  goalieWeights: GoalieWeights
+): number[] {
+  return playerDb
+    .map((p) => projectedSeasonValue(p, skaterWeights, goalieWeights))
+    .sort((a, b) => b - a);
+}
+
+// Given a parsed pick and league config, compute its projected value.
+// Returns 0 if the pick has an error or if the ranking lookup fails.
+function valueForPick(
+  pick: ParsedPick,
+  talentRanking: number[],
+  teams: number,
+  keepersPerTeam: number
+): number {
+  if (pick.error) return 0;
+  const keeperOffset = teams * keepersPerTeam;
+  const talentRank = keeperOffset + pick.overall; // 1-indexed
+  const idx = talentRank - 1;
+  if (idx < 0) return 0;
+  // If the pick exceeds the database, use the last available value as a floor
+  if (idx >= talentRanking.length) {
+    return talentRanking[talentRanking.length - 1] || 0;
+  }
+  return talentRanking[idx] || 0;
+}
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -406,25 +494,54 @@ export default function TradeAnalyzer() {
   const [sendPicks, setSendPicks] = useState("");
   const [recvPicks, setRecvPicks] = useState("");
 
+  // League-specific talent ranking — sorted projected values for every NHL player,
+  // using this league's scoring weights. Used for pick valuation.
+  const talentRanking = useMemo(() => {
+    if (playerDb.length === 0) return [];
+    return buildTalentRanking(playerDb, league.skaterWeights, league.goalieWeights);
+  }, [playerDb, league.skaterWeights, league.goalieWeights]);
+
+  // Parsed picks with errors flagged
+  const sendPicksParsed = useMemo(
+    () => parsePicks(sendPicks, league.teams),
+    [sendPicks, league.teams]
+  );
+  const recvPicksParsed = useMemo(
+    () => parsePicks(recvPicks, league.teams),
+    [recvPicks, league.teams]
+  );
+
   const sendValue = useMemo(() => {
-    return sendPlayers.reduce((sum, p) => {
+    const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       const base = projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
       return sum + base * mult;
     }, 0);
-  }, [sendPlayers, playerDb, league]);
+    const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
+    const pickTotal = sendPicksParsed.reduce(
+      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepers),
+      0
+    );
+    return playerTotal + pickTotal;
+  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league]);
 
   const recvValue = useMemo(() => {
-    return recvPlayers.reduce((sum, p) => {
+    const playerTotal = recvPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       const base = projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
       return sum + base * mult;
     }, 0);
-  }, [recvPlayers, playerDb, league]);
+    const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
+    const pickTotal = recvPicksParsed.reduce(
+      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepers),
+      0
+    );
+    return playerTotal + pickTotal;
+  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league]);
 
   const totalRosterSize = useMemo(() => {
     return Object.values(league.roster).reduce((a, b) => a + b, 0);
@@ -598,6 +715,10 @@ export default function TradeAnalyzer() {
             players={sendPlayers}
             picks={sendPicks}
             setPicks={setSendPicks}
+            parsedPicks={sendPicksParsed}
+            talentRanking={talentRanking}
+            teams={league.teams}
+            keepersPerTeam={league.leagueType === "keeper" ? league.keepersPerTeam : 0}
             playerDb={playerDb}
             dbStatus={dbStatus}
             roster={league.roster}
@@ -612,6 +733,10 @@ export default function TradeAnalyzer() {
             players={recvPlayers}
             picks={recvPicks}
             setPicks={setRecvPicks}
+            parsedPicks={recvPicksParsed}
+            talentRanking={talentRanking}
+            teams={league.teams}
+            keepersPerTeam={league.leagueType === "keeper" ? league.keepersPerTeam : 0}
             playerDb={playerDb}
             dbStatus={dbStatus}
             roster={league.roster}
@@ -641,6 +766,10 @@ export default function TradeAnalyzer() {
           </div>
         </div>
         <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
+        <div className="text-xs text-gray-500 mt-2">
+          Any score over 50 leans towards you gaining more value than the other person in the
+          trade. Any score below 50 means you lose value compared to the other person in the trade.
+        </div>
         {(sendValue === 0 && recvValue === 0) && (
           <div className="text-xs text-amber-700 mt-2">
             All values are 0 — make sure you&apos;ve set scoring weights above and added players below.
@@ -683,6 +812,10 @@ type TradeSideProps = {
   players: TradePlayer[];
   picks: string;
   setPicks: (v: string) => void;
+  parsedPicks: ParsedPick[];
+  talentRanking: number[];
+  teams: number;
+  keepersPerTeam: number;
   playerDb: DbPlayer[];
   dbStatus: DbStatus;
   roster: Roster;
@@ -694,7 +827,8 @@ type TradeSideProps = {
 };
 
 function TradeSide({
-  label, players, picks, setPicks, playerDb, dbStatus,
+  label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
+  playerDb, dbStatus,
   roster, skaterWeights, goalieWeights,
   onAdd, onRemove, onTogglePos,
 }: TradeSideProps) {
@@ -723,12 +857,64 @@ function TradeSide({
       </div>
 
       <h3 className="text-sm font-semibold mt-4 mb-1">{label} — Picks</h3>
+      <p className="text-xs text-gray-600 mb-1">
+        Enter picks as <span className="font-mono">round.slot</span> (e.g.,{" "}
+        <span className="font-mono">1.01</span> = first round, first overall).
+        Separate multiple picks with commas or new lines. Optionally prefix with a year
+        (e.g., <span className="font-mono">2027 1.01</span>) — year is for your reference only and
+        does not affect value.
+      </p>
       <textarea
         className="border rounded-xl p-2 w-full h-14 text-sm"
-        placeholder="Picks (e.g., 1.01, 2.02) — valuation coming soon"
+        placeholder="1.01, 2.05"
         value={picks}
         onChange={(e) => setPicks(e.target.value)}
       />
+      <ParsedPicksList
+        parsedPicks={parsedPicks}
+        talentRanking={talentRanking}
+        teams={teams}
+        keepersPerTeam={keepersPerTeam}
+      />
+    </div>
+  );
+}
+
+function ParsedPicksList({
+  parsedPicks, talentRanking, teams, keepersPerTeam,
+}: {
+  parsedPicks: ParsedPick[];
+  talentRanking: number[];
+  teams: number;
+  keepersPerTeam: number;
+}) {
+  if (parsedPicks.length === 0) return null;
+  const keeperOffset = teams * keepersPerTeam;
+  return (
+    <div className="mt-2 space-y-1">
+      {parsedPicks.map((pk, idx) => {
+        if (pk.error) {
+          return (
+            <div key={idx} className="border rounded-xl p-2 bg-red-50 text-xs flex justify-between">
+              <span className="font-mono text-gray-700">{pk.raw}</span>
+              <span className="text-red-700">{pk.error}</span>
+            </div>
+          );
+        }
+        const talentRank = keeperOffset + pk.overall;
+        const value = valueForPick(pk, talentRanking, teams, keepersPerTeam);
+        return (
+          <div key={idx} className="border rounded-xl p-2 bg-gray-50 text-xs flex justify-between">
+            <span className="font-mono font-semibold">
+              {pk.year ? `${pk.year} ` : ""}
+              {pk.round}.{pk.slot.toString().padStart(2, "0")}
+            </span>
+            <span className="text-gray-600">
+              talent rank {talentRank} · value {value.toFixed(1)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
