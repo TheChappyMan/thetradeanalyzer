@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Fantasy Trade Analyzer – V3 (Next.js 15 / TypeScript)
@@ -39,6 +39,77 @@ type League = {
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
 };
+
+// ============================================================
+// PERSISTENCE – localStorage helpers
+// ============================================================
+
+const LS_CURRENT = "fta-current-league";
+const LS_PROFILES = "fta-saved-profiles";
+
+type SavedProfile = { name: string; savedAt: string; league: League };
+
+function loadCurrentLeague(): League | null {
+  try {
+    const raw = localStorage.getItem(LS_CURRENT);
+    return raw ? (JSON.parse(raw) as League) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCurrentLeague(league: League) {
+  try {
+    localStorage.setItem(LS_CURRENT, JSON.stringify(league));
+  } catch {}
+}
+
+function loadProfiles(): SavedProfile[] {
+  try {
+    const raw = localStorage.getItem(LS_PROFILES);
+    return raw ? (JSON.parse(raw) as SavedProfile[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveProfiles(profiles: SavedProfile[]) {
+  try {
+    localStorage.setItem(LS_PROFILES, JSON.stringify(profiles));
+  } catch {}
+}
+
+const LS_HISTORY = "fta-trade-history";
+const MAX_HISTORY = 50;
+
+type HistoryEntry = {
+  id: string;
+  savedAt: string;
+  leagueName: string;
+  sendPlayerNames: string[];
+  recvPlayerNames: string[];
+  sendPicks: string;
+  recvPicks: string;
+  sendValue: number;
+  recvValue: number;
+  score: number;
+  verdict: string;
+};
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(LS_HISTORY);
+    return raw ? (JSON.parse(raw) as HistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(entries: HistoryEntry[]) {
+  try {
+    localStorage.setItem(LS_HISTORY, JSON.stringify(entries));
+  } catch {}
+}
 
 type PlayerStats = Partial<Record<SkaterStatKey | GoalieStatKey, number>>;
 
@@ -454,19 +525,24 @@ function emptyGoalieWeights(): GoalieWeights {
 // MAIN COMPONENT
 // ============================================================
 
+const DEFAULT_LEAGUE: League = {
+  name: "",
+  teams: 12,
+  leagueType: "redraft",
+  keepersPerTeam: 0,
+  roster: {
+    C: 2, LW: 2, RW: 2, W: 0, F: 0,
+    D: 4, U: 2, G: 2, B: 4, IR: 1, IRplus: 0,
+  },
+  skaterWeights: emptySkaterWeights(),
+  goalieWeights: emptyGoalieWeights(),
+};
+
 export default function TradeAnalyzer() {
-  const [league, setLeague] = useState<League>({
-    name: "",
-    teams: 12,
-    leagueType: "redraft",
-    keepersPerTeam: 0,
-    roster: {
-      C: 2, LW: 2, RW: 2, W: 0, F: 0,
-      D: 4, U: 2, G: 2, B: 4, IR: 1, IRplus: 0,
-    },
-    skaterWeights: emptySkaterWeights(),
-    goalieWeights: emptyGoalieWeights(),
-  });
+  const [league, setLeague] = useState<League>(() => loadCurrentLeague() ?? DEFAULT_LEAGUE);
+  const [profiles, setProfiles] = useState<SavedProfile[]>(() => loadProfiles());
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [playerDb, setPlayerDb] = useState<DbPlayer[]>([]);
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
@@ -488,6 +564,36 @@ export default function TradeAnalyzer() {
       });
     return () => { cancelled = true; };
   }, []);
+
+  // Auto-save current league settings whenever they change
+  useEffect(() => {
+    saveCurrentLeague(league);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveStatus("saved");
+    saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
+  }, [league]);
+
+  const saveProfile = useCallback(() => {
+    const profileName = league.name.trim() || "Unnamed League";
+    const updated = [
+      { name: profileName, savedAt: new Date().toISOString(), league },
+      ...profiles.filter((p) => p.name !== profileName),
+    ];
+    setProfiles(updated);
+    saveProfiles(updated);
+  }, [league, profiles]);
+
+  const loadProfile = useCallback((profile: SavedProfile) => {
+    setLeague(profile.league);
+  }, []);
+
+  const deleteProfile = useCallback((name: string) => {
+    const updated = profiles.filter((p) => p.name !== name);
+    setProfiles(updated);
+    saveProfiles(updated);
+  }, [profiles]);
+
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
 
   const [sendPlayers, setSendPlayers] = useState<TradePlayer[]>([]);
   const [recvPlayers, setRecvPlayers] = useState<TradePlayer[]>([]);
@@ -592,6 +698,39 @@ export default function TradeAnalyzer() {
     );
   };
 
+  const saveToHistory = useCallback(() => {
+    const entry: HistoryEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      savedAt: new Date().toISOString(),
+      leagueName: league.name.trim() || "Unnamed League",
+      sendPlayerNames: sendPlayers.map((p) => p.name),
+      recvPlayerNames: recvPlayers.map((p) => p.name),
+      sendPicks: sendPicks.trim(),
+      recvPicks: recvPicks.trim(),
+      sendValue,
+      recvValue,
+      score,
+      verdict: fairnessDescription(score),
+    };
+    const updated = [entry, ...history].slice(0, MAX_HISTORY);
+    setHistory(updated);
+    saveHistory(updated);
+  }, [league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
+
+  const deleteHistoryEntry = useCallback((id: string) => {
+    const updated = history.filter((e) => e.id !== id);
+    setHistory(updated);
+    saveHistory(updated);
+  }, [history]);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    saveHistory([]);
+  }, []);
+
+  const hasAnything = sendPlayers.length > 0 || recvPlayers.length > 0 ||
+                      sendPicks.trim() !== "" || recvPicks.trim() !== "";
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
@@ -663,6 +802,56 @@ export default function TradeAnalyzer() {
           </div>
           <div className="text-xs text-gray-600 mt-2">
             Total roster size: <span className="font-semibold">{totalRosterSize}</span>
+          </div>
+
+          <div className="mt-4 border-t pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">Saved Profiles</h3>
+              <div className="flex items-center gap-2">
+                {saveStatus === "saved" && (
+                  <span className="text-xs text-green-600">✓ Auto-saved</span>
+                )}
+                <button
+                  className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700"
+                  onClick={saveProfile}
+                >
+                  Save Profile
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mb-2">
+              Your settings are auto-saved for next visit. Use profiles to switch between leagues.
+            </p>
+            {profiles.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">No saved profiles yet.</p>
+            ) : (
+              <div className="space-y-1">
+                {profiles.map((p) => (
+                  <div key={p.name} className="flex items-center justify-between border rounded-lg px-2 py-1.5 bg-gray-50 text-xs">
+                    <div>
+                      <span className="font-medium">{p.name}</span>
+                      <span className="text-gray-400 ml-2">
+                        {new Date(p.savedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => loadProfile(p)}
+                      >
+                        Load
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => deleteProfile(p.name)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -750,7 +939,16 @@ export default function TradeAnalyzer() {
       </div>
 
       <div className="border rounded-2xl p-4">
-        <h2 className="font-medium mb-3">Fairness Result</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-medium">Fairness Result</h2>
+          <button
+            className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={!hasAnything}
+            onClick={saveToHistory}
+          >
+            Save to History
+          </button>
+        </div>
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
             <div className="text-xs text-gray-600">You Give (projected pts)</div>
@@ -776,6 +974,25 @@ export default function TradeAnalyzer() {
           </div>
         )}
       </div>
+
+      {history.length > 0 && (
+        <div className="border rounded-2xl p-4 mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-medium">Trade History</h2>
+            <button
+              className="text-xs text-red-500 hover:text-red-700"
+              onClick={clearHistory}
+            >
+              Clear All
+            </button>
+          </div>
+          <div className="space-y-2">
+            {history.map((entry) => (
+              <HistoryRow key={entry.id} entry={entry} onDelete={deleteHistoryEntry} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1097,6 +1314,86 @@ function PlayerRow({
         <span className="text-gray-600">Base value: {baseValue.toFixed(1)}</span>
         <span className="font-semibold">Adjusted: {adjValue.toFixed(1)}</span>
       </div>
+    </div>
+  );
+}
+
+function HistoryRow({ entry, onDelete }: { entry: HistoryEntry; onDelete: (id: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const date = new Date(entry.savedAt);
+  const dateStr = date.toLocaleDateString();
+  const timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  const scoreBg =
+    entry.score >= 60 ? "bg-green-50 border-green-200" :
+    entry.score <= 40 ? "bg-red-50 border-red-200" :
+    "bg-gray-50 border-gray-200";
+
+  const sendSummary = [
+    ...entry.sendPlayerNames,
+    ...(entry.sendPicks ? entry.sendPicks.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean) : []),
+  ].join(", ") || "—";
+
+  const recvSummary = [
+    ...entry.recvPlayerNames,
+    ...(entry.recvPicks ? entry.recvPicks.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean) : []),
+  ].join(", ") || "—";
+
+  return (
+    <div className={`border rounded-xl text-xs ${scoreBg}`}>
+      <div
+        className="flex items-center justify-between px-3 py-2 cursor-pointer select-none"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-gray-400 shrink-0">{dateStr} {timeStr}</span>
+          {entry.leagueName && (
+            <span className="text-gray-500 shrink-0 font-medium">{entry.leagueName}</span>
+          )}
+          <span className="text-gray-600 truncate hidden sm:block">
+            {sendSummary} → {recvSummary}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 ml-2">
+          <span className="font-semibold">{entry.score.toFixed(1)} / 100</span>
+          <button
+            className="text-red-400 hover:text-red-600 px-1"
+            onClick={(e) => { e.stopPropagation(); onDelete(entry.id); }}
+            title="Remove"
+          >
+            ×
+          </button>
+          <span className="text-gray-400">{expanded ? "▲" : "▼"}</span>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="px-3 pb-3 border-t border-inherit pt-2 space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="font-semibold text-gray-700 mb-1">You Gave</div>
+              {entry.sendPlayerNames.length > 0 && (
+                <div className="mb-1">{entry.sendPlayerNames.join(", ")}</div>
+              )}
+              {entry.sendPicks && (
+                <div className="text-gray-500">Picks: {entry.sendPicks}</div>
+              )}
+              <div className="text-gray-600 mt-1">Value: <span className="font-medium">{entry.sendValue.toFixed(1)}</span></div>
+            </div>
+            <div>
+              <div className="font-semibold text-gray-700 mb-1">You Got</div>
+              {entry.recvPlayerNames.length > 0 && (
+                <div className="mb-1">{entry.recvPlayerNames.join(", ")}</div>
+              )}
+              {entry.recvPicks && (
+                <div className="text-gray-500">Picks: {entry.recvPicks}</div>
+              )}
+              <div className="text-gray-600 mt-1">Value: <span className="font-medium">{entry.recvValue.toFixed(1)}</span></div>
+            </div>
+          </div>
+          <div className="text-gray-700 italic">{entry.verdict}</div>
+        </div>
+      )}
     </div>
   );
 }
