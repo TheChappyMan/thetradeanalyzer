@@ -935,12 +935,12 @@ export default function TradeAnalyzer() {
   return (
     <>
       {isPro && <ProNav />}
+      {!isPro && <div style={{ background: "#f3f4f6", padding: "0.5rem 1rem", fontSize: "0.75rem", marginBottom: "0.5rem" }}>💡 Save your settings and trade history — upgrade to Pro</div>}
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold">Fantasy Trade Analyzer (NHL) — V3</h1>
           <ApiStatus status={dbStatus} meta={dbMeta} playerCount={playerDb.length} />
         </div>
-        {!isPro && <UpgradeBanner />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="border rounded-2xl p-4">
