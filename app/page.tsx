@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 
 /**
  * Fantasy Trade Analyzer – V3 (Next.js 15 / TypeScript)
@@ -691,6 +693,10 @@ const DEFAULT_LEAGUE: League = {
 };
 
 export default function TradeAnalyzer() {
+  const { user } = useUser();
+  const tier = (user?.publicMetadata?.tier as string) ?? "free";
+  const isPro = tier === "tier1" || tier === "tier2";
+
   const [league, setLeague] = useState<League>(() => {
     const saved = loadCurrentLeague();
     if (!saved) return DEFAULT_LEAGUE;
@@ -927,11 +933,14 @@ export default function TradeAnalyzer() {
                       sendPicks.trim() !== "" || recvPicks.trim() !== "";
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Fantasy Trade Analyzer (NHL) — V3</h1>
-        <ApiStatus status={dbStatus} meta={dbMeta} playerCount={playerDb.length} />
-      </div>
+    <>
+      {isPro && <ProNav />}
+      {!isPro && <div style={{ background: "#f3f4f6", padding: "0.5rem 1rem", fontSize: "0.75rem", marginBottom: "0.5rem" }}>💡 Save your settings and trade history — upgrade to Pro</div>}
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-semibold">Fantasy Trade Analyzer (NHL) — V3</h1>
+          <ApiStatus status={dbStatus} meta={dbMeta} playerCount={playerDb.length} />
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="border rounded-2xl p-4">
@@ -1272,25 +1281,26 @@ export default function TradeAnalyzer() {
         )}
       </div>
 
-      {history.length > 0 && (
-        <div className="border rounded-2xl p-4 mt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-medium">Trade History</h2>
-            <button
-              className="text-xs text-red-500 hover:text-red-700"
-              onClick={clearHistory}
-            >
-              Clear All
-            </button>
+        {history.length > 0 && (
+          <div className="border rounded-2xl p-4 mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-medium">Trade History</h2>
+              <button
+                className="text-xs text-red-500 hover:text-red-700"
+                onClick={clearHistory}
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="space-y-2">
+              {history.map((entry) => (
+                <HistoryRow key={entry.id} entry={entry} onDelete={deleteHistoryEntry} />
+              ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {history.map((entry) => (
-              <HistoryRow key={entry.id} entry={entry} onDelete={deleteHistoryEntry} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -1611,6 +1621,46 @@ function PlayerRow({
         <span className="text-gray-600">Base value: {baseValue.toFixed(1)}</span>
         <span className="font-semibold">Adjusted: {adjValue.toFixed(1)}</span>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// TIER-GATED UI
+// ============================================================
+
+function ProNav() {
+  const links: { href: string; label: string }[] = [
+    { href: "/settings", label: "Settings" },
+    { href: "/history",  label: "History"  },
+    { href: "/nhl",      label: "NHL"      },
+    { href: "/nfl",      label: "NFL"      },
+  ];
+  return (
+    <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">
+      <span className="font-semibold text-gray-400 text-xs tracking-widest uppercase mr-2">
+        Trade Analyzer
+      </span>
+      {links.map(({ href, label }) => (
+        <Link
+          key={href}
+          href={href}
+          className="text-gray-200 hover:text-white transition-colors"
+        >
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function UpgradeBanner() {
+  return (
+    <div className="mb-5 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-xs text-gray-500">
+      <span>💡 Save your settings and trade history —</span>
+      <a href="#" className="font-medium text-blue-600 hover:underline">
+        upgrade to Pro
+      </a>
     </div>
   );
 }
