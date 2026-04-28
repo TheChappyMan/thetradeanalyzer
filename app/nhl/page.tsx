@@ -971,6 +971,7 @@ export default function TradeAnalyzer() {
           <ApiStatus status={dbStatus} meta={dbMeta} playerCount={playerDb.length} />
         </div>
 
+      {!isPro && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="border rounded-2xl p-4">
           <h2 className="font-medium mb-2">League Settings</h2>
@@ -1222,6 +1223,7 @@ export default function TradeAnalyzer() {
           )}
         </div>
       </div>
+      )}
 
       <div className="border rounded-2xl p-4 mb-6">
         <h2 className="font-medium mb-3">Trade Information</h2>
