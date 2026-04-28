@@ -693,7 +693,7 @@ const DEFAULT_LEAGUE: League = {
 };
 
 export default function TradeAnalyzer() {
-  const { user } = useUser();
+  const { user, isLoaded: clerkLoaded } = useUser();
   const tier = (user?.publicMetadata?.tier as string) ?? "free";
   const isPro = tier === "tier1" || tier === "tier2";
 
@@ -738,13 +738,42 @@ export default function TradeAnalyzer() {
     return () => { cancelled = true; };
   }, []);
 
-  // Auto-save current league settings whenever they change
+  // Auto-save current league settings whenever they change (free users only)
   useEffect(() => {
+    if (isPro) return;
     saveCurrentLeague(league);
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaveStatus("saved");
     saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
-  }, [league]);
+  }, [league, isPro]);
+
+  // On load, fetch saved league from Supabase for Pro users and override
+  // the localStorage-seeded state. Runs once when Clerk finishes loading.
+  useEffect(() => {
+    if (!clerkLoaded || !isPro) return;
+    let cancelled = false;
+    fetch("/api/leagues?sport=nhl")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { data: { settings: unknown } | null } | null) => {
+        if (cancelled) return;
+        const settings = json?.data?.settings;
+        if (!settings) return; // no saved league — keep defaults
+        const saved = settings as League;
+        setLeague({
+          ...DEFAULT_LEAGUE,
+          ...saved,
+          scoringType: saved.scoringType ?? "points",
+          skaterCategories: saved.skaterCategories
+            ? { ...DEFAULT_LEAGUE.skaterCategories, ...saved.skaterCategories }
+            : emptySkaterCategories(),
+          goalieCategories: saved.goalieCategories
+            ? { ...DEFAULT_LEAGUE.goalieCategories, ...saved.goalieCategories }
+            : emptyGoalieCategories(),
+        });
+      })
+      .catch(() => {}); // silently keep defaults on network error
+    return () => { cancelled = true; };
+  }, [isPro, clerkLoaded]);
 
   const saveProfile = useCallback(() => {
     const profileName = league.name.trim() || "Unnamed League";
@@ -1008,6 +1037,7 @@ export default function TradeAnalyzer() {
             Total roster size: <span className="font-semibold">{totalRosterSize}</span>
           </div>
 
+          {!isPro && (
           <div className="mt-4 border-t pt-3">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold">Saved Profiles</h3>
@@ -1057,6 +1087,7 @@ export default function TradeAnalyzer() {
               </div>
             )}
           </div>
+          )}
         </div>
 
         <div className="border rounded-2xl p-4">
