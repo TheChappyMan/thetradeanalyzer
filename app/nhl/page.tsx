@@ -942,10 +942,20 @@ export default function TradeAnalyzer() {
       score,
       verdict: fairnessDescription(score),
     };
-    const updated = [entry, ...history].slice(0, MAX_HISTORY);
-    setHistory(updated);
-    saveHistory(updated);
-  }, [league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
+    if (isPro) {
+      // Pro users: persist to Supabase via API route (no localStorage write)
+      fetch("/api/trades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      }).catch(() => {}); // fire-and-forget; errors are silent
+    } else {
+      // Free users: persist to localStorage as before
+      const updated = [entry, ...history].slice(0, MAX_HISTORY);
+      setHistory(updated);
+      saveHistory(updated);
+    }
+  }, [isPro, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     const updated = history.filter((e) => e.id !== id);
