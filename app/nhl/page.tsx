@@ -779,47 +779,6 @@ export default function TradeAnalyzer() {
     return () => { cancelled = true; };
   }, [isPro, clerkLoaded]);
 
-  // Auto-save to Supabase for Pro users — debounced 1500ms.
-  // Fires when both sides of the trade have content and at least one value > 0.
-  useEffect(() => {
-    if (!isPro) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-
-    const hasSend = sendPlayers.length > 0 || sendPicks.trim() !== "";
-    const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
-    if (!hasSend || !hasRecv || (sendValue === 0 && recvValue === 0)) return;
-
-    autoSaveTimerRef.current = setTimeout(() => {
-      const entry: HistoryEntry = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        savedAt: new Date().toISOString(),
-        leagueName: league.name.trim() || "Unnamed League",
-        sendPlayerNames: sendPlayers.map((p) => p.name),
-        recvPlayerNames: recvPlayers.map((p) => p.name),
-        sendPicks: sendPicks.trim(),
-        recvPicks: recvPicks.trim(),
-        sendValue,
-        recvValue,
-        score,
-        verdict: fairnessDescription(score),
-      };
-      fetch("/api/trades", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry),
-      })
-        .then(() => {
-          setAutoSaveStatus("saved");
-          setTimeout(() => setAutoSaveStatus("idle"), 2000);
-        })
-        .catch(() => {});
-    }, 1500);
-
-    return () => {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, league.name]);
-
   const saveProfile = useCallback(() => {
     const profileName = league.name.trim() || "Unnamed League";
     const updated = [
@@ -925,6 +884,47 @@ export default function TradeAnalyzer() {
   }, [league.roster]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
+
+  // Auto-save to Supabase for Pro users — debounced 1500ms.
+  // Fires when both sides of the trade have content and at least one value > 0.
+  useEffect(() => {
+    if (!isPro) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+
+    const hasSend = sendPlayers.length > 0 || sendPicks.trim() !== "";
+    const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
+    if (!hasSend || !hasRecv || (sendValue === 0 && recvValue === 0)) return;
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      const entry: HistoryEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        savedAt: new Date().toISOString(),
+        leagueName: league.name.trim() || "Unnamed League",
+        sendPlayerNames: sendPlayers.map((p) => p.name),
+        recvPlayerNames: recvPlayers.map((p) => p.name),
+        sendPicks: sendPicks.trim(),
+        recvPicks: recvPicks.trim(),
+        sendValue,
+        recvValue,
+        score,
+        verdict: fairnessDescription(score),
+      };
+      fetch("/api/trades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      })
+        .then(() => {
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        })
+        .catch(() => {});
+    }, 1500);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, league.name]);
 
   const updateLeague = (patch: Partial<League>) =>
     setLeague((prev) => ({ ...prev, ...patch }));
