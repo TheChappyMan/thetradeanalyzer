@@ -891,8 +891,8 @@ export default function TradeAnalyzer() {
     if (rating >= 90) return "Perfect Trade";
     if (rating >= 70) return "Excellent Trade";
     if (rating >= 60) return "Good Trade";
-    if (rating >= 41) return "Decent Trade";
-    if (rating >= 21) return "Uneven Trade";
+    if (rating >= 41) return "Uneven Trade";
+    if (rating >= 21) return "Bad Trade";
     return "Severely Lopsided";
   }
 
@@ -1368,10 +1368,6 @@ export default function TradeAnalyzer() {
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-600">Fairness Scale Score</div>
-            <div className="text-lg font-semibold">{score.toFixed(1)} / 100</div>
-          </div>
-          <div>
             <div className="text-xs text-gray-600">Trade Rating</div>
             <div className="text-lg font-semibold">{tradeRating.toFixed(1)}</div>
             <div className="text-xs text-gray-500">{tradeRatingLabel(tradeRating)}</div>
@@ -1396,10 +1392,6 @@ export default function TradeAnalyzer() {
         </div>
 
         <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
-        <div className="text-xs text-gray-500 mt-2">
-          Any score over 50 leans towards you gaining more value than the other person in the
-          trade. Any score below 50 means you lose value compared to the other person in the trade.
-        </div>
         {(sendValue === 0 && recvValue === 0) && (
           <div className="text-xs text-amber-700 mt-2">
             {isCatMode
