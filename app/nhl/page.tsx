@@ -717,6 +717,10 @@ export default function TradeAnalyzer() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Auto-save state for Pro users (replaces the manual "Save to History" button)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saved">("idle");
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [playerDb, setPlayerDb] = useState<DbPlayer[]>([]);
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
   const [dbMeta, setDbMeta] = useState<DbMeta>({ seasonUsed: null, isFallback: false });
@@ -774,6 +778,47 @@ export default function TradeAnalyzer() {
       .catch(() => {}); // silently keep defaults on network error
     return () => { cancelled = true; };
   }, [isPro, clerkLoaded]);
+
+  // Auto-save to Supabase for Pro users — debounced 1500ms.
+  // Fires when both sides of the trade have content and at least one value > 0.
+  useEffect(() => {
+    if (!isPro) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+
+    const hasSend = sendPlayers.length > 0 || sendPicks.trim() !== "";
+    const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
+    if (!hasSend || !hasRecv || (sendValue === 0 && recvValue === 0)) return;
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      const entry: HistoryEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        savedAt: new Date().toISOString(),
+        leagueName: league.name.trim() || "Unnamed League",
+        sendPlayerNames: sendPlayers.map((p) => p.name),
+        recvPlayerNames: recvPlayers.map((p) => p.name),
+        sendPicks: sendPicks.trim(),
+        recvPicks: recvPicks.trim(),
+        sendValue,
+        recvValue,
+        score,
+        verdict: fairnessDescription(score),
+      };
+      fetch("/api/trades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      })
+        .then(() => {
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        })
+        .catch(() => {});
+    }, 1500);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, league.name]);
 
   const saveProfile = useCallback(() => {
     const profileName = league.name.trim() || "Unnamed League";
@@ -942,10 +987,20 @@ export default function TradeAnalyzer() {
       score,
       verdict: fairnessDescription(score),
     };
-    const updated = [entry, ...history].slice(0, MAX_HISTORY);
-    setHistory(updated);
-    saveHistory(updated);
-  }, [league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
+    if (isPro) {
+      // Pro users: persist to Supabase via API route (no localStorage write)
+      fetch("/api/trades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      }).catch(() => {}); // fire-and-forget; errors are silent
+    } else {
+      // Free users: persist to localStorage as before
+      const updated = [entry, ...history].slice(0, MAX_HISTORY);
+      setHistory(updated);
+      saveHistory(updated);
+    }
+  }, [isPro, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     const updated = history.filter((e) => e.id !== id);
@@ -971,6 +1026,7 @@ export default function TradeAnalyzer() {
           <ApiStatus status={dbStatus} meta={dbMeta} playerCount={playerDb.length} />
         </div>
 
+      {!isPro && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="border rounded-2xl p-4">
           <h2 className="font-medium mb-2">League Settings</h2>
@@ -1222,6 +1278,7 @@ export default function TradeAnalyzer() {
           )}
         </div>
       </div>
+      )}
 
       <div className="border rounded-2xl p-4 mb-6">
         <h2 className="font-medium mb-3">Trade Information</h2>
@@ -1268,13 +1325,19 @@ export default function TradeAnalyzer() {
       <div className="border rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-medium">Fairness Result</h2>
-          <button
-            className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-            disabled={!hasAnything}
-            onClick={saveToHistory}
-          >
-            Save to History
-          </button>
+          {isPro ? (
+            autoSaveStatus === "saved" && (
+              <span className="text-xs text-green-600">✓ Auto-saved</span>
+            )
+          ) : (
+            <button
+              className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!hasAnything}
+              onClick={saveToHistory}
+            >
+              Save to History
+            </button>
+          )}
         </div>
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
