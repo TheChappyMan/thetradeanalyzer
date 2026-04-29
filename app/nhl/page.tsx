@@ -919,12 +919,12 @@ export default function TradeAnalyzer() {
           setTimeout(() => setAutoSaveStatus("idle"), 2000);
         })
         .catch(() => {});
-    }, 1500);
+    }, 5000);
 
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, league.name]);
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks]);
 
   const updateLeague = (patch: Partial<League>) =>
     setLeague((prev) => ({ ...prev, ...patch }));
