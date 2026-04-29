@@ -29,8 +29,7 @@ export default function Dashboard() {
           <DashCard
             href="/nfl"
             title="NFL League"
-            description="Analyze NFL trades. Coming soon."
-            comingSoon
+            description="Analyze NFL trades using your league's scoring settings."
           />
           <DashCard
             href="/history"

@@ -3,6 +3,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
 import type { League } from '@/lib/types'
+import type { NflLeague } from '@/lib/nfl-types'
 
 export async function saveLeagueSettings(
   league: League
@@ -31,6 +32,44 @@ export async function saveLeagueSettings(
       const { error } = await supabase
         .from('leagues')
         .insert({ user_id: userId, sport: 'nhl', name: leagueName, settings: league })
+      if (error) return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    }
+  }
+}
+
+export async function saveNflLeagueSettings(
+  league: NflLeague
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { userId } = await auth()
+    if (!userId) return { success: false, error: 'Not authenticated' }
+
+    const { data: existing } = await supabase
+      .from('leagues')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('sport', 'nfl')
+      .maybeSingle()
+
+    const leagueName = league.name.trim() || 'My NFL League'
+
+    if (existing) {
+      const { error } = await supabase
+        .from('leagues')
+        .update({ name: leagueName, settings: league })
+        .eq('id', existing.id)
+      if (error) return { success: false, error: error.message }
+    } else {
+      const { error } = await supabase
+        .from('leagues')
+        .insert({ user_id: userId, sport: 'nfl', name: leagueName, settings: league })
       if (error) return { success: false, error: error.message }
     }
 
