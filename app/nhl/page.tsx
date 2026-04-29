@@ -1377,12 +1377,12 @@ export default function TradeAnalyzer() {
         {/* ── Fairness Scale Bar ───────────────────────────────── */}
         <div className="mb-3">
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>You Lose</span>
+            <span>Opponent Wins</span>
             <span className="font-medium text-gray-600">Fairness Scale</span>
             <span>You Win</span>
           </div>
           <div className="relative h-3 rounded-full overflow-hidden"
-               style={{ background: "linear-gradient(to right, #ef4444, #eab308 50%, #22c55e)" }}>
+               style={{ background: "linear-gradient(to right, #ef4444 0%, #eab308 25%, #22c55e 50%, #eab308 75%, #ef4444 100%)" }}>
             {/* Marker */}
             <div
               className="absolute top-0 h-full w-1 -translate-x-1/2 rounded-full bg-gray-900 shadow"
