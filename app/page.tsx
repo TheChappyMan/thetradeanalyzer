@@ -36,7 +36,6 @@ export default function Dashboard() {
             href="/history"
             title="Trade History"
             description="Review and compare trades you've analyzed."
-            comingSoon
           />
         </div>
       ) : (
