@@ -885,6 +885,17 @@ export default function TradeAnalyzer() {
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
+  const tradeRating = 100 - (Math.abs(score - 50) * 2);
+
+  function tradeRatingLabel(rating: number): string {
+    if (rating >= 90) return "Perfect Trade";
+    if (rating >= 70) return "Excellent Trade";
+    if (rating >= 60) return "Good Trade";
+    if (rating >= 41) return "Decent Trade";
+    if (rating >= 21) return "Uneven Trade";
+    return "Severely Lopsided";
+  }
+
   // Auto-save to Supabase for Pro users — debounced 1500ms.
   // Fires when both sides of the trade have content and at least one value > 0.
   useEffect(() => {
@@ -1339,7 +1350,7 @@ export default function TradeAnalyzer() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-3">
+        <div className="grid grid-cols-4 gap-4 mb-3">
           <div>
             <div className="text-xs text-gray-600">
               {isCatMode ? "You Give (z-score sum)" : "You Give (projected pts)"}
@@ -1357,10 +1368,33 @@ export default function TradeAnalyzer() {
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-600">Fairness</div>
+            <div className="text-xs text-gray-600">Fairness Scale Score</div>
             <div className="text-lg font-semibold">{score.toFixed(1)} / 100</div>
           </div>
+          <div>
+            <div className="text-xs text-gray-600">Trade Rating</div>
+            <div className="text-lg font-semibold">{tradeRating.toFixed(1)}</div>
+            <div className="text-xs text-gray-500">{tradeRatingLabel(tradeRating)}</div>
+          </div>
         </div>
+
+        {/* ── Fairness Scale Bar ───────────────────────────────── */}
+        <div className="mb-3">
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>You Lose</span>
+            <span className="font-medium text-gray-600">Fairness Scale</span>
+            <span>You Win</span>
+          </div>
+          <div className="relative h-3 rounded-full overflow-hidden"
+               style={{ background: "linear-gradient(to right, #ef4444, #eab308 50%, #22c55e)" }}>
+            {/* Marker */}
+            <div
+              className="absolute top-0 h-full w-1 -translate-x-1/2 rounded-full bg-gray-900 shadow"
+              style={{ left: `${score}%` }}
+            />
+          </div>
+        </div>
+
         <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
         <div className="text-xs text-gray-500 mt-2">
           Any score over 50 leans towards you gaining more value than the other person in the
