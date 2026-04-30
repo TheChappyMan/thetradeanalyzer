@@ -369,7 +369,29 @@ export default function NflTradeAnalyzer() {
       replacementLevels, league.teams, keepersPerTeam]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
-  const tradeRating = 100 - Math.abs(score - 50) * 2;
+
+  const minVal = Math.min(sendValue, recvValue);
+  const maxVal = Math.max(sendValue, recvValue);
+  const tradeRating = (minVal === 0 || maxVal === 0)
+    ? 0
+    : Math.round(100 * Math.exp(-2.5 * (maxVal / minVal - 1)) * 10) / 10;
+
+  const ratio = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
+  const youWin = recvValue >= sendValue;
+  const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
+  const displayScore = youWin ? 50 + ratioDistance : 50 - ratioDistance;
+
+  function tradeOutline(ds: number): string {
+    if (ds <= 10.4) return "Horrific trade, don't do this.";
+    if (ds <= 20.4) return "Insanely bad trade.";
+    if (ds <= 30.4) return "You really lose this trade.";
+    if (ds <= 40.4) return "You lose this trade.";
+    if (ds <= 60.4) return "This is in the realm of fairness.";
+    if (ds <= 70.4) return "You win this trade.";
+    if (ds <= 80.4) return "You really win this trade.";
+    if (ds <= 90.4) return "They shouldn't accept this trade, but if they do, good for you.";
+    return "We won't tell, but if they accept this, it's probably collusion.";
+  }
 
   // ── Auto-save trades for Pro users (5s debounce) ──────────
   useEffect(() => {
@@ -690,7 +712,7 @@ export default function NflTradeAnalyzer() {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mb-3">
+          <div className="grid grid-cols-4 gap-4 mb-3">
             <div>
               <div className="text-xs text-gray-600">You Give (VAR pts)</div>
               <div className="text-lg font-semibold">{sendValue.toFixed(1)}</div>
@@ -701,30 +723,38 @@ export default function NflTradeAnalyzer() {
             </div>
             <div>
               <div className="text-xs text-gray-600">Trade Rating</div>
-              <div className="text-lg font-semibold">{tradeRating.toFixed(1)}</div>
-              <div className="text-xs text-gray-500">{tradeRatingLabel(tradeRating)}</div>
+              <div className="text-lg font-semibold">{tradeRating.toFixed(1)} / 100</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-600">Trade Outline</div>
+              <div className="text-sm font-medium text-gray-800">{tradeOutline(displayScore)}</div>
             </div>
           </div>
 
           {/* Fairness Scale Bar */}
           <div className="mb-3">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>You Lose</span>
+              <span>Opponent Wins</span>
               <span className="font-medium text-gray-600">Fairness Scale</span>
-              <span>You Win</span>
+              <span>You Win Too Much</span>
             </div>
-            <div
-              className="relative h-3 rounded-full overflow-hidden"
-              style={{ background: "linear-gradient(to right, #ef4444, #eab308 50%, #22c55e)" }}
-            >
+            <div className="relative h-3 rounded-full overflow-hidden flex">
+              <div style={{ width: "10.5%", background: "#000000" }} />
+              <div style={{ width: "10%",   background: "#cc0000" }} />
+              <div style={{ width: "10%",   background: "#ff6600" }} />
+              <div style={{ width: "10%",   background: "#ffcc00" }} />
+              <div style={{ width: "19%",   background: "#33aa33" }} />
+              <div style={{ width: "10%",   background: "#ffcc00" }} />
+              <div style={{ width: "10%",   background: "#ff6600" }} />
+              <div style={{ width: "10%",   background: "#cc0000" }} />
+              <div style={{ width: "10.5%", background: "#000000" }} />
               <div
-                className="absolute top-0 h-full w-1 -translate-x-1/2 rounded-full bg-gray-900 shadow"
-                style={{ left: `${score}%` }}
+                className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
+                style={{ left: `${displayScore}%` }}
               />
             </div>
           </div>
 
-          <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
           {sendValue === 0 && recvValue === 0 && (
             <div className="text-xs text-amber-700 mt-2">
               All values are 0 — make sure you&apos;ve set scoring weights and added players.
