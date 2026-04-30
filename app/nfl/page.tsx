@@ -336,6 +336,17 @@ export default function NflTradeAnalyzer() {
       .sort((a, b) => b - a);
   }, [playerDb, league.scoringWeights, replacementLevels]);
 
+  // ── League ranking (projected pts desc) for player display ─
+  const rankMap = useMemo(() => {
+    const map = new Map<number, number>();
+    if (playerDb.length === 0) return map;
+    const sorted = [...playerDb].sort(
+      (a, b) => projectedNflValue(b, league.scoringWeights) - projectedNflValue(a, league.scoringWeights)
+    );
+    sorted.forEach((p, i) => map.set(p.id, i + 1));
+    return map;
+  }, [playerDb, league.scoringWeights]);
+
   // ── Parsed picks ───────────────────────────────────────────
   const sendPicksParsed = useMemo(
     () => parsePicks(sendPicks, league.teams), [sendPicks, league.teams]);
@@ -707,6 +718,7 @@ export default function NflTradeAnalyzer() {
               dbStatus={dbStatus}
               scoringWeights={league.scoringWeights}
               replacementLevels={replacementLevels}
+              rankMap={rankMap}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
             />
@@ -723,6 +735,7 @@ export default function NflTradeAnalyzer() {
               dbStatus={dbStatus}
               scoringWeights={league.scoringWeights}
               replacementLevels={replacementLevels}
+              rankMap={rankMap}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
             />
@@ -733,18 +746,8 @@ export default function NflTradeAnalyzer() {
         <div className="border rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-medium">Fairness Result</h2>
-            {isPro ? (
-              autoSaveStatus === "saved" && (
-                <span className="text-xs text-green-600">✓ Auto-saved</span>
-              )
-            ) : (
-              <button
-                className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={!hasAnything}
-                onClick={saveToHistory}
-              >
-                Save to History
-              </button>
+            {isPro && autoSaveStatus === "saved" && (
+              <span className="text-xs text-green-600">✓ Auto-saved</span>
             )}
           </div>
 
@@ -800,25 +803,6 @@ export default function NflTradeAnalyzer() {
           )}
         </div>
 
-        {/* ── Local trade history (free users) ──────────────── */}
-        {history.length > 0 && (
-          <div className="border rounded-2xl p-4 mt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-medium">Trade History</h2>
-              <button
-                className="text-xs text-red-500 hover:text-red-700"
-                onClick={clearHistory}
-              >
-                Clear All
-              </button>
-            </div>
-            <div className="space-y-2">
-              {history.map((entry) => (
-                <NflHistoryRow key={entry.id} entry={entry} onDelete={deleteHistoryEntry} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
@@ -859,13 +843,14 @@ type NflTradeSideProps = {
   dbStatus: DbStatus;
   scoringWeights: NflScoringWeights;
   replacementLevels: Map<NflPlayerPosition, number>;
+  rankMap: Map<number, number>;
   onAdd: (p: NflDbPlayer) => void;
   onRemove: (id: number) => void;
 };
 
 function NflTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
-  playerDb, dbStatus, scoringWeights, replacementLevels, onAdd, onRemove,
+  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, onAdd, onRemove,
 }: NflTradeSideProps) {
   return (
     <div>
@@ -884,6 +869,8 @@ function NflTradeSide({
             dbEntry={playerDb.find((x) => x.id === p.id)}
             scoringWeights={scoringWeights}
             replacementLevels={replacementLevels}
+            rank={rankMap.get(p.id) ?? null}
+            totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
           />
         ))}
@@ -919,11 +906,13 @@ type NflPlayerRowProps = {
   dbEntry: NflDbPlayer | undefined;
   scoringWeights: NflScoringWeights;
   replacementLevels: Map<NflPlayerPosition, number>;
+  rank: number | null;
+  totalPlayers: number;
   onRemove: () => void;
 };
 
 function NflPlayerRow({
-  player, dbEntry, scoringWeights, replacementLevels, onRemove,
+  player, dbEntry, scoringWeights, replacementLevels, rank, totalPlayers, onRemove,
 }: NflPlayerRowProps) {
   if (!dbEntry) return null;
   const projected = projectedNflValue(dbEntry, scoringWeights);
@@ -948,7 +937,12 @@ function NflPlayerRow({
         </button>
       </div>
       <div className="mt-1 flex justify-between text-gray-600">
-        <span>Projected: {projected.toFixed(1)}</span>
+        <span>
+          Projected: {projected.toFixed(1)}
+          {rank !== null && (
+            <span className="ml-3">League Ranking: {rank} / {totalPlayers}</span>
+          )}
+        </span>
         <span className="font-semibold text-gray-800">VAR: {varValue.toFixed(1)}</span>
       </div>
     </div>
