@@ -39,6 +39,8 @@ type ParsedPick = {
 
 type DbStatus = "loading" | "ready" | "error";
 
+type DataMode = "thisTotal" | "thisAvg" | "lastTotal" | "lastAvg";
+
 type HistoryEntry = {
   id: string;
   savedAt: string;
@@ -57,8 +59,9 @@ type HistoryEntry = {
 // PERSISTENCE – localStorage helpers
 // ============================================================
 
-const LS_NFL_CURRENT = "fta-nfl-current-league";
-const LS_NFL_HISTORY  = "fta-nfl-trade-history";
+const LS_NFL_CURRENT   = "fta-nfl-current-league";
+const LS_NFL_HISTORY   = "fta-nfl-trade-history";
+const LS_NFL_DATA_MODE = "fta-nfl-data-mode";
 const MAX_HISTORY = 50;
 
 function loadNflLeague(): NflLeague | null {
@@ -228,6 +231,22 @@ const WEIGHT_LABELS: Record<WeightKey, string> = {
 // MAIN COMPONENT
 // ============================================================
 
+// ── Season normalization ──────────────────────────────────────────────────────
+// All NFL stats are counting totals — no rate stats like NHL's ATOI/GAA/SV%.
+// Scale every stat to a 17-game pace and set gamesPlayed = 17.
+
+function normalizePlayerTo17(player: NflDbPlayer): NflDbPlayer {
+  if (player.gamesPlayed === 0) return player;
+  const gp = player.gamesPlayed;
+  const normalizedStats: typeof player.stats = {};
+  for (const [key, val] of Object.entries(player.stats) as [string, number | undefined][]) {
+    if (val !== undefined) {
+      (normalizedStats as Record<string, number>)[key] = (val / gp) * 17;
+    }
+  }
+  return { ...player, gamesPlayed: 17, stats: normalizedStats };
+}
+
 export default function NflTradeAnalyzer() {
   const { user, isLoaded: clerkLoaded } = useUser();
   const tier  = (user?.publicMetadata?.tier as string) ?? "free";
@@ -252,9 +271,18 @@ export default function NflTradeAnalyzer() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Player database ───────────────────────────────────────
-  const [playerDb,  setPlayerDb]  = useState<NflDbPlayer[]>([]);
+  const [dataMode, setDataMode] = useState<DataMode>(() => {
+    try {
+      return (localStorage.getItem(LS_NFL_DATA_MODE) as DataMode) || "thisTotal";
+    } catch {
+      return "thisTotal";
+    }
+  });
+  const [currentSeasonDb,    setCurrentSeasonDb]    = useState<NflDbPlayer[]>([]);
+  const [priorSeasonDb,      setPriorSeasonDb]      = useState<NflDbPlayer[]>([]);
+  const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
+  const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
   const [dbStatus,  setDbStatus]  = useState<DbStatus>("loading");
-  const [dbSource,  setDbSource]  = useState<"espn" | "fallback" | null>(null);
 
   // ── Trade state ───────────────────────────────────────────
   const [sendPlayers, setSendPlayers] = useState<NflTradePlayer[]>([]);
@@ -265,20 +293,48 @@ export default function NflTradeAnalyzer() {
   // ── History (free users only, local) ─────────────────────
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadNflHistory());
 
-  // ── Load NFL player DB ────────────────────────────────────
+  // ── Load both NFL seasons in one round-trip ───────────────
   useEffect(() => {
+    type SeasonPayload = {
+      seasonId: string;
+      players: NflDbPlayer[];
+      source: "espn" | "fallback";
+    };
     let cancelled = false;
-    fetch("/api/nfl")
+    fetch("/api/nfl?endpoint=all-seasons")
       .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then(({ data, source }: { data: NflDbPlayer[]; source: "espn" | "fallback" }) => {
+      .then(({ currentSeason, priorSeason }: { currentSeason: SeasonPayload; priorSeason: SeasonPayload }) => {
         if (cancelled) return;
-        setPlayerDb(data);
-        setDbSource(source);
+        setCurrentSeasonDb(currentSeason.players);
+        setPriorSeasonDb(priorSeason.players);
+        setCurrentSeasonIdStr(currentSeason.seasonId);
+        setPriorSeasonIdStr(priorSeason.seasonId);
+        // Auto-detect: if no saved preference and current season is sparse, default to last year
+        const savedMode = (() => { try { return localStorage.getItem(LS_NFL_DATA_MODE); } catch { return null; } })();
+        if (!savedMode) {
+          const significant = currentSeason.players.filter((p) => p.gamesPlayed >= 3).length;
+          if (significant < 100) setDataMode("lastTotal");
+        }
         setDbStatus("ready");
       })
       .catch(() => { if (!cancelled) setDbStatus("error"); });
     return () => { cancelled = true; };
   }, []);
+
+  // ── Persist dataMode selection ────────────────────────────
+  useEffect(() => {
+    try { localStorage.setItem(LS_NFL_DATA_MODE, dataMode); } catch {}
+  }, [dataMode]);
+
+  // ── Active player DB: derived from season + mode ──────────
+  const playerDb = useMemo(() => {
+    const base = (dataMode === "thisTotal" || dataMode === "thisAvg")
+      ? currentSeasonDb
+      : priorSeasonDb;
+    return (dataMode === "thisAvg" || dataMode === "lastAvg")
+      ? base.map(normalizePlayerTo17)
+      : base;
+  }, [dataMode, currentSeasonDb, priorSeasonDb]);
 
   // ── Auto-save league settings to localStorage (free only) ─
   useEffect(() => {
@@ -543,7 +599,14 @@ export default function NflTradeAnalyzer() {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold">NFL Trade Analyzer</h1>
-          <NflApiStatus status={dbStatus} source={dbSource} playerCount={playerDb.length} />
+          <NflApiStatus
+            status={dbStatus}
+            playerCount={playerDb.length}
+            currentSeasonId={currentSeasonIdStr}
+            priorSeasonId={priorSeasonIdStr}
+            dataMode={dataMode}
+            setDataMode={setDataMode}
+          />
         </div>
 
         {/* ── League Settings + Scoring (free only) ─────────── */}
@@ -813,17 +876,36 @@ export default function NflTradeAnalyzer() {
 // ============================================================
 
 function NflApiStatus({
-  status, source, playerCount,
-}: { status: DbStatus; source: "espn" | "fallback" | null; playerCount: number }) {
+  status, playerCount, currentSeasonId, priorSeasonId, dataMode, setDataMode,
+}: {
+  status: DbStatus;
+  playerCount: number;
+  currentSeasonId: string;
+  priorSeasonId: string;
+  dataMode: DataMode;
+  setDataMode: (m: DataMode) => void;
+}) {
   if (status === "loading") return <div className="text-xs text-gray-500">Loading NFL data…</div>;
   if (status === "error")   return <div className="text-xs text-red-600">NFL API unavailable — please refresh</div>;
+  const activeId = (dataMode === "thisTotal" || dataMode === "thisAvg")
+    ? currentSeasonId
+    : priorSeasonId;
   return (
-    <div className="text-xs text-gray-600 text-right">
-      <div>{playerCount} players loaded</div>
-      {source === "fallback" && (
-        <div className="text-amber-700">Using curated fallback data</div>
-      )}
-      {source === "espn" && <div>Live ESPN data</div>}
+    <div className="text-xs text-gray-600 text-right flex items-center gap-3">
+      <div>
+        <div>{playerCount} players loaded</div>
+        {activeId && <div>Season: {activeId}</div>}
+      </div>
+      <select
+        className="border rounded-lg px-2 py-1 text-xs text-gray-700 bg-white"
+        value={dataMode}
+        onChange={(e) => setDataMode(e.target.value as DataMode)}
+      >
+        <option value="thisTotal">This Year – Total</option>
+        <option value="thisAvg">This Year – Per-Game Proj.</option>
+        <option value="lastTotal">Last Year – Total</option>
+        <option value="lastAvg">Last Year – Per-Game Proj.</option>
+      </select>
     </div>
   );
 }
