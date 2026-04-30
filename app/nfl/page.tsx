@@ -177,13 +177,18 @@ const NFL_POSITIONS: NflPlayerPosition[] = ["QB", "RB", "WR", "TE", "K", "DST"];
 
 type WeightKey = keyof NflScoringWeights;
 
-const WEIGHT_GROUPS: { heading: string; keys: WeightKey[] }[] = [
-  { heading: "Passing",    keys: ["passYds", "passTDs", "passInt"] },
-  { heading: "Rushing",    keys: ["rushYds", "rushTDs"] },
-  { heading: "Receiving",  keys: ["rec", "recYds", "recTDs"] },
-  { heading: "Misc",       keys: ["fumblesLost"] },
-  { heading: "Kicker",     keys: ["fgMade0to39", "fgMade40to49", "fgMade50plus", "fgMissed", "patMade", "patMissed"] },
-  { heading: "DST Counting", keys: ["sacks", "ints", "fumbRec", "defTDs"] },
+type WeightGroup = { heading: string; keys: WeightKey[] };
+
+const LEFT_WEIGHT_GROUPS: WeightGroup[] = [
+  { heading: "Passing",   keys: ["passYds", "passTDs", "passInt"] },
+  { heading: "Rushing",   keys: ["rushYds", "rushTDs"] },
+  { heading: "Receiving", keys: ["rec", "recYds", "recTDs"] },
+  { heading: "Misc",      keys: ["fumblesLost"] },
+  { heading: "Kicker",    keys: ["fgMade0to39", "fgMade40to49", "fgMade50plus", "fgMissed", "patMade", "patMissed"] },
+];
+
+const RIGHT_WEIGHT_GROUPS: WeightGroup[] = [
+  { heading: "Defense / ST", keys: ["sacks", "ints", "fumbRec", "defTDs"] },
   { heading: "DST Pts Allowed", keys: [
     "ptsAllowed0", "ptsAllowed1to6", "ptsAllowed7to13",
     "ptsAllowed14to20", "ptsAllowed21to27", "ptsAllowed28to34", "ptsAllowed35plus",
@@ -627,29 +632,60 @@ export default function NflTradeAnalyzer() {
                 Changing PPR Format above auto-updates the Reception weight.
                 Adjust any weight to match your league exactly.
               </p>
-              {WEIGHT_GROUPS.map(({ heading, keys }) => (
-                <div key={heading} className="mb-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                    {heading}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-y-1">
-                    {keys.map((key) => (
-                      <div key={key} className="flex items-center justify-between gap-2">
-                        <label className="text-xs text-gray-700 flex-1">
-                          {WEIGHT_LABELS[key]}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="border rounded-xl p-1 w-20 text-sm"
-                          value={league.scoringWeights[key]}
-                          onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
-                        />
+              <div className="grid grid-cols-2 gap-4">
+                {/* Left column */}
+                <div>
+                  {LEFT_WEIGHT_GROUPS.map(({ heading, keys }) => (
+                    <div key={heading} className="mb-3">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                        {heading}
+                      </h3>
+                      <div className="space-y-1">
+                        {keys.map((key) => (
+                          <div key={key} className="flex items-center justify-between gap-2">
+                            <label className="text-xs text-gray-700 flex-1">
+                              {WEIGHT_LABELS[key]}
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              className="border rounded-xl p-1 w-20 text-sm"
+                              value={league.scoringWeights[key]}
+                              onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                {/* Right column */}
+                <div>
+                  {RIGHT_WEIGHT_GROUPS.map(({ heading, keys }) => (
+                    <div key={heading} className="mb-3">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                        {heading}
+                      </h3>
+                      <div className="space-y-1">
+                        {keys.map((key) => (
+                          <div key={key} className="flex items-center justify-between gap-2">
+                            <label className="text-xs text-gray-700 flex-1">
+                              {WEIGHT_LABELS[key]}
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              className="border rounded-xl p-1 w-20 text-sm"
+                              value={league.scoringWeights[key]}
+                              onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
