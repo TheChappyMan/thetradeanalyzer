@@ -2,6 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { League } from '@/lib/types'
+import type { NflLeague } from '@/lib/nfl-types'
 import NhlSettingsForm from './NhlSettingsForm'
 
 export default async function SettingsPage() {
@@ -24,15 +25,24 @@ export default async function SettingsPage() {
     )
   }
 
-  // ── Fetch existing NHL league ────────────────────────────────
-  const { data } = await supabase
-    .from('leagues')
-    .select('settings')
-    .eq('user_id', userId)
-    .eq('sport', 'nhl')
-    .maybeSingle()
+  // ── Fetch NHL and NFL leagues in parallel ────────────────────
+  const [nhlResult, nflResult] = await Promise.all([
+    supabase
+      .from('leagues')
+      .select('settings')
+      .eq('user_id', userId)
+      .eq('sport', 'nhl')
+      .maybeSingle(),
+    supabase
+      .from('leagues')
+      .select('settings')
+      .eq('user_id', userId)
+      .eq('sport', 'nfl')
+      .maybeSingle(),
+  ])
 
-  const initialLeague = (data?.settings ?? null) as League | null
+  const initialLeague    = (nhlResult.data?.settings ?? null) as League    | null
+  const initialNflLeague = (nflResult.data?.settings ?? null) as NflLeague | null
 
-  return <NhlSettingsForm initialLeague={initialLeague} />
+  return <NhlSettingsForm initialLeague={initialLeague} initialNflLeague={initialNflLeague} />
 }

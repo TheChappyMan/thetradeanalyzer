@@ -29,14 +29,12 @@ export default function Dashboard() {
           <DashCard
             href="/nfl"
             title="NFL League"
-            description="Analyze NFL trades. Coming soon."
-            comingSoon
+            description="Analyze NFL trades using your league's scoring settings."
           />
           <DashCard
             href="/history"
             title="Trade History"
             description="Review and compare trades you've analyzed."
-            comingSoon
           />
         </div>
       ) : (
@@ -47,6 +45,11 @@ export default function Dashboard() {
               href="/nhl"
               title="NHL Trade Analyzer"
               description="Analyze NHL trades using your league's scoring settings."
+            />
+            <DashCard
+              href="/nfl"
+              title="NFL Trade Analyzer"
+              description="Analyze NFL trades using your league's scoring settings."
             />
           </div>
 

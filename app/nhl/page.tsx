@@ -779,47 +779,6 @@ export default function TradeAnalyzer() {
     return () => { cancelled = true; };
   }, [isPro, clerkLoaded]);
 
-  // Auto-save to Supabase for Pro users — debounced 1500ms.
-  // Fires when both sides of the trade have content and at least one value > 0.
-  useEffect(() => {
-    if (!isPro) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-
-    const hasSend = sendPlayers.length > 0 || sendPicks.trim() !== "";
-    const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
-    if (!hasSend || !hasRecv || (sendValue === 0 && recvValue === 0)) return;
-
-    autoSaveTimerRef.current = setTimeout(() => {
-      const entry: HistoryEntry = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        savedAt: new Date().toISOString(),
-        leagueName: league.name.trim() || "Unnamed League",
-        sendPlayerNames: sendPlayers.map((p) => p.name),
-        recvPlayerNames: recvPlayers.map((p) => p.name),
-        sendPicks: sendPicks.trim(),
-        recvPicks: recvPicks.trim(),
-        sendValue,
-        recvValue,
-        score,
-        verdict: fairnessDescription(score),
-      };
-      fetch("/api/trades", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry),
-      })
-        .then(() => {
-          setAutoSaveStatus("saved");
-          setTimeout(() => setAutoSaveStatus("idle"), 2000);
-        })
-        .catch(() => {});
-    }, 1500);
-
-    return () => {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, league.name]);
-
   const saveProfile = useCallback(() => {
     const profileName = league.name.trim() || "Unnamed League";
     const updated = [
@@ -871,6 +830,20 @@ export default function TradeAnalyzer() {
     );
   }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
       league.skaterCategories, league.goalieCategories, poolStats]);
+
+  // League ranking: playerId → 1-based rank by projected points value.
+  // Recomputes only when the DB or scoring weights change.
+  const rankMap = useMemo(() => {
+    const map = new Map<number, number>();
+    if (playerDb.length === 0) return map;
+    const sorted = [...playerDb].sort(
+      (a, b) =>
+        projectedSeasonValue(b, league.skaterWeights, league.goalieWeights) -
+        projectedSeasonValue(a, league.skaterWeights, league.goalieWeights)
+    );
+    sorted.forEach((p, i) => map.set(p.id, i + 1));
+    return map;
+  }, [playerDb, league.skaterWeights, league.goalieWeights]);
 
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
@@ -926,6 +899,93 @@ export default function TradeAnalyzer() {
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
+  const minVal = Math.min(sendValue, recvValue);
+  const maxVal = Math.max(sendValue, recvValue);
+  const tradeRating = (minVal === 0 || maxVal === 0)
+    ? 0
+    : Math.round(100 * Math.exp(-2.5 * (maxVal / minVal - 1)) * 10) / 10;
+
+  function tradeRatingLabel(rating: number): string {
+    if (rating >= 90) return "Perfect Trade";
+    if (rating >= 70) return "Excellent Trade";
+    if (rating >= 60) return "Good Trade";
+    if (rating >= 41) return "Uneven Trade";
+    if (rating >= 21) return "Bad Trade";
+    return "Severely Lopsided";
+  }
+
+  // displayScore: ratio-based distance from center mapped to 0–100,
+  // with direction (you win = right of center, opponent wins = left).
+  const ratio = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
+  const youWin = recvValue >= sendValue;
+  const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
+  const displayScore = youWin ? 50 + ratioDistance : 50 - ratioDistance;
+
+  function barColor(ds: number): string {
+    if (ds <= 10.4) return "#000000";
+    if (ds <= 20.4) return "#cc0000";
+    if (ds <= 30.4) return "#ff6600";
+    if (ds <= 40.4) return "#ffcc00";
+    if (ds <= 60.4) return "#33aa33";
+    if (ds <= 70.4) return "#ffcc00";
+    if (ds <= 80.4) return "#ff6600";
+    if (ds <= 90.4) return "#cc0000";
+    return "#000000";
+  }
+
+  function tradeOutline(ds: number): string {
+    if (ds <= 10.4) return "Horrific trade, don't do this.";
+    if (ds <= 20.4) return "Insanely bad trade.";
+    if (ds <= 30.4) return "You really lose this trade.";
+    if (ds <= 40.4) return "You lose this trade.";
+    if (ds <= 60.4) return "This is in the realm of fairness.";
+    if (ds <= 70.4) return "You win this trade.";
+    if (ds <= 80.4) return "You really win this trade.";
+    if (ds <= 90.4) return "They shouldn't accept this trade, but if they do, good for you.";
+    return "We won't tell, but if they accept this, it's probably collusion.";
+  }
+
+  // Auto-save to Supabase for Pro users — debounced 1500ms.
+  // Fires when both sides of the trade have content and at least one value > 0.
+  useEffect(() => {
+    if (!isPro) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+
+    const hasSend = sendPlayers.length > 0 || sendPicks.trim() !== "";
+    const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
+    if (!hasSend || !hasRecv || (sendValue === 0 && recvValue === 0)) return;
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      const entry: HistoryEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        savedAt: new Date().toISOString(),
+        leagueName: league.name.trim() || "Unnamed League",
+        sendPlayerNames: sendPlayers.map((p) => p.name),
+        recvPlayerNames: recvPlayers.map((p) => p.name),
+        sendPicks: sendPicks.trim(),
+        recvPicks: recvPicks.trim(),
+        sendValue,
+        recvValue,
+        score,
+        verdict: fairnessDescription(score),
+      };
+      fetch("/api/trades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+      })
+        .then(() => {
+          setAutoSaveStatus("saved");
+          setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        })
+        .catch(() => {});
+    }, 5000);
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks]);
+
   const updateLeague = (patch: Partial<League>) =>
     setLeague((prev) => ({ ...prev, ...patch }));
   const updateRoster = (pos: RosterKey, val: number) =>
@@ -943,12 +1003,18 @@ export default function TradeAnalyzer() {
     const setter = side === "send" ? setSendPlayers : setRecvPlayers;
     const list = side === "send" ? sendPlayers : recvPlayers;
     if (list.find((p) => p.id === dbEntry.id)) return;
+    const pos = dbEntry.position;
+    const useW =
+      (pos === "LW" || pos === "RW") &&
+      (league.roster.LW ?? 0) === 0 &&
+      (league.roster.RW ?? 0) === 0 &&
+      (league.roster.W  ?? 0) > 0;
     const newEntry: TradePlayer = {
       id: dbEntry.id,
       name: dbEntry.name,
       team: dbEntry.team,
-      primaryPosition: dbEntry.position,
-      positions: [dbEntry.position],
+      primaryPosition: pos,
+      positions: useW ? ["W"] : [pos],
     };
     setter([...list, newEntry]);
   };
@@ -1093,57 +1159,6 @@ export default function TradeAnalyzer() {
             Total roster size: <span className="font-semibold">{totalRosterSize}</span>
           </div>
 
-          {!isPro && (
-          <div className="mt-4 border-t pt-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">Saved Profiles</h3>
-              <div className="flex items-center gap-2">
-                {saveStatus === "saved" && (
-                  <span className="text-xs text-green-600">✓ Auto-saved</span>
-                )}
-                <button
-                  className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700"
-                  onClick={saveProfile}
-                >
-                  Save Profile
-                </button>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mb-2">
-              Your settings are auto-saved for next visit. Use profiles to switch between leagues.
-            </p>
-            {profiles.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">No saved profiles yet.</p>
-            ) : (
-              <div className="space-y-1">
-                {profiles.map((p) => (
-                  <div key={p.name} className="flex items-center justify-between border rounded-lg px-2 py-1.5 bg-gray-50 text-xs">
-                    <div>
-                      <span className="font-medium">{p.name}</span>
-                      <span className="text-gray-400 ml-2">
-                        {new Date(p.savedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="text-blue-600 hover:text-blue-800"
-                        onClick={() => loadProfile(p)}
-                      >
-                        Load
-                      </button>
-                      <button
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => deleteProfile(p.name)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          )}
         </div>
 
         <div className="border rounded-2xl p-4">
@@ -1297,6 +1312,7 @@ export default function TradeAnalyzer() {
             roster={league.roster}
             skaterWeights={league.skaterWeights}
             goalieWeights={league.goalieWeights}
+            rankMap={rankMap}
             onAdd={(p) => addPlayer("send", p)}
             onRemove={(id) => removePlayer("send", id)}
             onTogglePos={(id, pos) => togglePosition("send", id, pos)}
@@ -1315,6 +1331,7 @@ export default function TradeAnalyzer() {
             roster={league.roster}
             skaterWeights={league.skaterWeights}
             goalieWeights={league.goalieWeights}
+            rankMap={rankMap}
             onAdd={(p) => addPlayer("recv", p)}
             onRemove={(id) => removePlayer("recv", id)}
             onTogglePos={(id, pos) => togglePosition("recv", id, pos)}
@@ -1325,21 +1342,11 @@ export default function TradeAnalyzer() {
       <div className="border rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-medium">Fairness Result</h2>
-          {isPro ? (
-            autoSaveStatus === "saved" && (
-              <span className="text-xs text-green-600">✓ Auto-saved</span>
-            )
-          ) : (
-            <button
-              className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-              disabled={!hasAnything}
-              onClick={saveToHistory}
-            >
-              Save to History
-            </button>
+          {isPro && autoSaveStatus === "saved" && (
+            <span className="text-xs text-green-600">✓ Auto-saved</span>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-3">
+        <div className="grid grid-cols-4 gap-4 mb-3">
           <div>
             <div className="text-xs text-gray-600">
               {isCatMode ? "You Give (z-score sum)" : "You Give (projected pts)"}
@@ -1357,15 +1364,44 @@ export default function TradeAnalyzer() {
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-600">Fairness</div>
-            <div className="text-lg font-semibold">{score.toFixed(1)} / 100</div>
+            <div className="text-xs text-gray-600">Trade Rating</div>
+            <div className="text-lg font-semibold">{tradeRating.toFixed(1)} / 100</div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-600">Trade Outline</div>
+            {(sendValue > 0 || recvValue > 0) && (
+              <div className="text-sm font-medium text-gray-800">{tradeOutline(displayScore)}</div>
+            )}
           </div>
         </div>
-        <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
-        <div className="text-xs text-gray-500 mt-2">
-          Any score over 50 leans towards you gaining more value than the other person in the
-          trade. Any score below 50 means you lose value compared to the other person in the trade.
+
+        {/* ── Fairness Scale Bar ───────────────────────────────── */}
+        <div className="mb-3">
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>Opponent Wins</span>
+            <span className="font-medium text-gray-600">Fairness Scale</span>
+            <span>You Win Too Much</span>
+          </div>
+          {/* Segmented bar — all zones always visible, marker moves */}
+          <div className="relative h-3 rounded-full overflow-hidden flex">
+            {/* Each width = segment range / 100 * 100% */}
+            <div style={{ width: "10.5%",  background: "#000000" }} />
+            <div style={{ width: "10%",    background: "#cc0000" }} />
+            <div style={{ width: "10%",    background: "#ff6600" }} />
+            <div style={{ width: "10%",    background: "#ffcc00" }} />
+            <div style={{ width: "19%",    background: "#33aa33" }} />
+            <div style={{ width: "10%",    background: "#ffcc00" }} />
+            <div style={{ width: "10%",    background: "#ff6600" }} />
+            <div style={{ width: "10%",    background: "#cc0000" }} />
+            <div style={{ width: "10.5%",  background: "#000000" }} />
+            {/* Marker */}
+            <div
+              className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
+              style={{ left: `${displayScore}%` }}
+            />
+          </div>
         </div>
+
         {(sendValue === 0 && recvValue === 0) && (
           <div className="text-xs text-amber-700 mt-2">
             {isCatMode
@@ -1375,24 +1411,6 @@ export default function TradeAnalyzer() {
         )}
       </div>
 
-        {history.length > 0 && (
-          <div className="border rounded-2xl p-4 mt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-medium">Trade History</h2>
-              <button
-                className="text-xs text-red-500 hover:text-red-700"
-                onClick={clearHistory}
-              >
-                Clear All
-              </button>
-            </div>
-            <div className="space-y-2">
-              {history.map((entry) => (
-                <HistoryRow key={entry.id} entry={entry} onDelete={deleteHistoryEntry} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
@@ -1439,6 +1457,7 @@ type TradeSideProps = {
   roster: Roster;
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  rankMap: Map<number, number>;
   onAdd: (p: DbPlayer) => void;
   onRemove: (id: number) => void;
   onTogglePos: (id: number, pos: string) => void;
@@ -1447,7 +1466,7 @@ type TradeSideProps = {
 function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
-  roster, skaterWeights, goalieWeights,
+  roster, skaterWeights, goalieWeights, rankMap,
   onAdd, onRemove, onTogglePos,
 }: TradeSideProps) {
   return (
@@ -1468,6 +1487,8 @@ function TradeSide({
             roster={roster}
             skaterWeights={skaterWeights}
             goalieWeights={goalieWeights}
+            rank={rankMap.get(p.id) ?? null}
+            totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
             onTogglePos={(pos) => onTogglePos(p.id, pos)}
           />
@@ -1649,12 +1670,15 @@ type PlayerRowProps = {
   roster: Roster;
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  rank: number | null;
+  totalPlayers: number;
   onRemove: () => void;
   onTogglePos: (pos: string) => void;
 };
 
 function PlayerRow({
-  player, dbEntry, roster, skaterWeights, goalieWeights, onRemove, onTogglePos,
+  player, dbEntry, roster, skaterWeights, goalieWeights, rank, totalPlayers,
+  onRemove, onTogglePos,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
   const mult = positionMultiplier(player.positions, roster);
@@ -1712,7 +1736,12 @@ function PlayerRow({
         </div>
       )}
       <div className="mt-1 flex justify-between">
-        <span className="text-gray-600">Base value: {baseValue.toFixed(1)}</span>
+        <span className="text-gray-600">
+          Base value: {baseValue.toFixed(1)}
+          {rank !== null && (
+            <span className="ml-3">League Ranking: {rank} / {totalPlayers}</span>
+          )}
+        </span>
         <span className="font-semibold">Adjusted: {adjValue.toFixed(1)}</span>
       </div>
     </div>
