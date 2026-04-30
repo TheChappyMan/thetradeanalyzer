@@ -88,6 +88,7 @@ function saveProfiles(profiles: SavedProfile[]) {
 
 const LS_HISTORY = "fta-trade-history";
 const MAX_HISTORY = 50;
+const LS_DATA_MODE = "fta-data-mode";
 
 type HistoryEntry = {
   id: string;
@@ -149,57 +150,11 @@ type ParsedPick = {
 
 type DbStatus = "loading" | "ready" | "error";
 
-type DbMeta = { seasonUsed: string | null; isFallback: boolean };
+type DataMode = "thisTotal" | "thisAvg" | "lastTotal" | "lastAvg";
 
 // ============================================================
 // DATA LAYER – NHL API (via server proxy to avoid CORS)
 // ============================================================
-
-function currentSeasonId(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const startYear = month >= 9 ? year : year - 1;
-  return `${startYear}${startYear + 1}`;
-}
-
-function priorSeasonId(): string {
-  const cur = currentSeasonId();
-  const start = parseInt(cur.slice(0, 4), 10) - 1;
-  return `${start}${start + 1}`;
-}
-
-async function fetchJson<T = unknown>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API ${res.status}: ${url}`);
-  return res.json() as Promise<T>;
-}
-
-type NhlApiResponse<T> = { data?: T[] };
-
-async function fetchSkaterSummary(seasonId: string) {
-  const url = `/api/nhl?endpoint=skater-summary&season=${seasonId}`;
-  const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
-  return json.data || [];
-}
-
-async function fetchSkaterRealtime(seasonId: string) {
-  const url = `/api/nhl?endpoint=skater-realtime&season=${seasonId}`;
-  const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
-  return json.data || [];
-}
-
-async function fetchSkaterFaceoffs(seasonId: string) {
-  const url = `/api/nhl?endpoint=skater-faceoffs&season=${seasonId}`;
-  const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
-  return json.data || [];
-}
-
-async function fetchGoalieSummary(seasonId: string) {
-  const url = `/api/nhl?endpoint=goalie-summary&season=${seasonId}`;
-  const json = await fetchJson<NhlApiResponse<Record<string, unknown>>>(url);
-  return json.data || [];
-}
 
 function asNumber(v: unknown): number {
   return typeof v === "number" ? v : 0;
@@ -293,39 +248,6 @@ function buildPlayerDatabase(args: {
   return Array.from(db.values());
 }
 
-async function loadPlayerDatabase(): Promise<{
-  players: DbPlayer[];
-  seasonUsed: string;
-  isFallback: boolean;
-}> {
-  const curSeason = currentSeasonId();
-  try {
-    const [summary, realtime, faceoffs, goalies] = await Promise.all([
-      fetchSkaterSummary(curSeason),
-      fetchSkaterRealtime(curSeason),
-      fetchSkaterFaceoffs(curSeason),
-      fetchGoalieSummary(curSeason),
-    ]);
-
-    const significantPlayers = summary.filter(
-      (s) => asNumber(s.gamesPlayed) >= 10
-    ).length;
-    if (significantPlayers < 100) throw new Error("sparse");
-
-    const players = buildPlayerDatabase({ summary, realtime, faceoffs, goalies });
-    return { players, seasonUsed: curSeason, isFallback: false };
-  } catch {
-    const priorSeason = priorSeasonId();
-    const [summary, realtime, faceoffs, goalies] = await Promise.all([
-      fetchSkaterSummary(priorSeason),
-      fetchSkaterRealtime(priorSeason),
-      fetchSkaterFaceoffs(priorSeason),
-      fetchGoalieSummary(priorSeason),
-    ]);
-    const players = buildPlayerDatabase({ summary, realtime, faceoffs, goalies });
-    return { players, seasonUsed: priorSeason, isFallback: true };
-  }
-}
 
 // ============================================================
 // MATH HELPERS
@@ -673,6 +595,27 @@ function emptyGoalieCategories(): Record<GoalieStatKey, CategoryConfig | null> {
 }
 
 // ============================================================
+// SEASON NORMALIZATION
+// ============================================================
+
+// Rate stats are already per-game; all other stats are counting totals.
+const RATE_STAT_KEYS = new Set<string>(["ATOI", "GAA", "SV%"]);
+
+/** Return a copy of `player` with all counting stats scaled to an 82-game pace. */
+function normalizePlayerTo82(player: DbPlayer): DbPlayer {
+  if (player.gamesPlayed === 0) return player;
+  const gp = player.gamesPlayed;
+  const normalizedStats: PlayerStats = {};
+  for (const [key, val] of Object.entries(player.stats) as [string, number | undefined][]) {
+    if (val === undefined) continue;
+    (normalizedStats as Record<string, number>)[key] = RATE_STAT_KEYS.has(key)
+      ? val
+      : (val / gp) * 82;
+  }
+  return { ...player, gamesPlayed: 82, stats: normalizedStats };
+}
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 
@@ -721,26 +664,74 @@ export default function TradeAnalyzer() {
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saved">("idle");
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [playerDb, setPlayerDb] = useState<DbPlayer[]>([]);
+  const [dataMode, setDataMode] = useState<DataMode>(() => {
+    try {
+      return (localStorage.getItem(LS_DATA_MODE) as DataMode) || "thisTotal";
+    } catch {
+      return "thisTotal";
+    }
+  });
+  const [currentSeasonDb,  setCurrentSeasonDb]  = useState<DbPlayer[]>([]);
+  const [priorSeasonDb,    setPriorSeasonDb]    = useState<DbPlayer[]>([]);
+  const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
+  const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
-  const [dbMeta, setDbMeta] = useState<DbMeta>({ seasonUsed: null, isFallback: false });
 
+  // ── Load both seasons in one round-trip ──────────────────────
   useEffect(() => {
+    type SeasonPayload = {
+      seasonId: string;
+      summary:  Record<string, unknown>[];
+      realtime: Record<string, unknown>[];
+      faceoffs: Record<string, unknown>[];
+      goalies:  Record<string, unknown>[];
+    };
     let cancelled = false;
-    loadPlayerDatabase()
-      .then(({ players, seasonUsed, isFallback }) => {
+    fetch("/api/nhl?endpoint=all-seasons")
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then(({ currentSeason, priorSeason }: { currentSeason: SeasonPayload; priorSeason: SeasonPayload }) => {
         if (cancelled) return;
-        setPlayerDb(players);
-        setDbMeta({ seasonUsed, isFallback });
+        const curPlayers = buildPlayerDatabase({
+          summary: currentSeason.summary, realtime: currentSeason.realtime,
+          faceoffs: currentSeason.faceoffs, goalies: currentSeason.goalies,
+        });
+        const priPlayers = buildPlayerDatabase({
+          summary: priorSeason.summary, realtime: priorSeason.realtime,
+          faceoffs: priorSeason.faceoffs, goalies: priorSeason.goalies,
+        });
+        setCurrentSeasonDb(curPlayers);
+        setPriorSeasonDb(priPlayers);
+        setCurrentSeasonIdStr(currentSeason.seasonId);
+        setPriorSeasonIdStr(priorSeason.seasonId);
+        // Auto-detect: if user has no saved preference and current season is sparse,
+        // default to last year's data.
+        const savedMode = (() => { try { return localStorage.getItem(LS_DATA_MODE); } catch { return null; } })();
+        if (!savedMode) {
+          const significant = currentSeason.summary.filter(
+            (s) => asNumber(s.gamesPlayed) >= 10
+          ).length;
+          if (significant < 100) setDataMode("lastTotal");
+        }
         setDbStatus("ready");
       })
-      .catch((err) => {
-        if (cancelled) return;
-        console.error("NHL API load failed:", err);
-        setDbStatus("error");
-      });
+      .catch(() => { if (!cancelled) setDbStatus("error"); });
     return () => { cancelled = true; };
   }, []);
+
+  // ── Persist dataMode selection ────────────────────────────────
+  useEffect(() => {
+    try { localStorage.setItem(LS_DATA_MODE, dataMode); } catch {}
+  }, [dataMode]);
+
+  // ── Active player database: derived from season + mode ───────
+  const playerDb = useMemo(() => {
+    const base = (dataMode === "thisTotal" || dataMode === "thisAvg")
+      ? currentSeasonDb
+      : priorSeasonDb;
+    return (dataMode === "thisAvg" || dataMode === "lastAvg")
+      ? base.map(normalizePlayerTo82)
+      : base;
+  }, [dataMode, currentSeasonDb, priorSeasonDb]);
 
   // Auto-save current league settings whenever they change (free users only)
   useEffect(() => {
@@ -1089,7 +1080,14 @@ export default function TradeAnalyzer() {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold">Fantasy Trade Analyzer (NHL) — V3</h1>
-          <ApiStatus status={dbStatus} meta={dbMeta} playerCount={playerDb.length} />
+          <ApiStatus
+            status={dbStatus}
+            playerCount={playerDb.length}
+            currentSeasonId={currentSeasonIdStr}
+            priorSeasonId={priorSeasonIdStr}
+            dataMode={dataMode}
+            setDataMode={setDataMode}
+          />
         </div>
 
       {!isPro && (
@@ -1421,24 +1419,43 @@ export default function TradeAnalyzer() {
 // ============================================================
 
 function ApiStatus({
-  status, meta, playerCount,
-}: { status: DbStatus; meta: DbMeta; playerCount: number }) {
+  status, playerCount, currentSeasonId, priorSeasonId, dataMode, setDataMode,
+}: {
+  status: DbStatus;
+  playerCount: number;
+  currentSeasonId: string;
+  priorSeasonId: string;
+  dataMode: DataMode;
+  setDataMode: (m: DataMode) => void;
+}) {
   if (status === "loading") {
     return <div className="text-xs text-gray-500">Loading NHL data…</div>;
   }
   if (status === "error") {
     return <div className="text-xs text-red-600">NHL API unavailable — please refresh</div>;
   }
-  const seasonDisplay = meta.seasonUsed
-    ? `${meta.seasonUsed.slice(0, 4)}-${meta.seasonUsed.slice(6)}`
+  const activeId = (dataMode === "thisTotal" || dataMode === "thisAvg")
+    ? currentSeasonId
+    : priorSeasonId;
+  const seasonDisplay = activeId
+    ? `${activeId.slice(0, 4)}-${activeId.slice(6)}`
     : "";
   return (
-    <div className="text-xs text-gray-600 text-right">
-      <div>{playerCount} players loaded</div>
+    <div className="text-xs text-gray-600 text-right flex items-center gap-3">
       <div>
-        Season: {seasonDisplay}
-        {meta.isFallback && <span className="text-amber-700"> (prior — current too sparse)</span>}
+        <div>{playerCount} players loaded</div>
+        {seasonDisplay && <div>Season: {seasonDisplay}</div>}
       </div>
+      <select
+        className="border rounded-lg px-2 py-1 text-xs text-gray-700 bg-white"
+        value={dataMode}
+        onChange={(e) => setDataMode(e.target.value as DataMode)}
+      >
+        <option value="thisTotal">This Year – Total</option>
+        <option value="thisAvg">This Year – Per-Game Proj.</option>
+        <option value="lastTotal">Last Year – Total</option>
+        <option value="lastAvg">Last Year – Per-Game Proj.</option>
+      </select>
     </div>
   );
 }
