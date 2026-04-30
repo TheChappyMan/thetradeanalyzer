@@ -885,7 +885,11 @@ export default function TradeAnalyzer() {
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
-  const tradeRating = 100 - (Math.abs(score - 50) * 2);
+  const minVal = Math.min(sendValue, recvValue);
+  const maxVal = Math.max(sendValue, recvValue);
+  const tradeRating = (minVal === 0 || maxVal === 0)
+    ? 0
+    : Math.round(100 * Math.exp(-2.5 * (maxVal / minVal - 1)) * 10) / 10;
 
   function tradeRatingLabel(rating: number): string {
     if (rating >= 90) return "Perfect Trade";
