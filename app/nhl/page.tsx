@@ -1380,7 +1380,7 @@ export default function TradeAnalyzer() {
           <div className="flex justify-between text-xs text-gray-500 mb-1">
             <span>Opponent Wins</span>
             <span className="font-medium text-gray-600">Fairness Scale</span>
-            <span>You Win Too Much</span>
+            <span>You Win</span>
           </div>
           {/* Segmented bar — all zones always visible, marker moves */}
           <div className="relative h-3 rounded-full overflow-hidden flex">
