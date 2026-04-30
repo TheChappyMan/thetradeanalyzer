@@ -900,6 +900,37 @@ export default function TradeAnalyzer() {
     return "Severely Lopsided";
   }
 
+  // displayScore: ratio-based distance from center mapped to 0–100,
+  // with direction (you win = right of center, opponent wins = left).
+  const ratio = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
+  const youWin = recvValue >= sendValue;
+  const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
+  const displayScore = youWin ? 50 + ratioDistance : 50 - ratioDistance;
+
+  function barColor(ds: number): string {
+    if (ds <= 10.4) return "#000000";
+    if (ds <= 20.4) return "#cc0000";
+    if (ds <= 30.4) return "#ff6600";
+    if (ds <= 40.4) return "#ffcc00";
+    if (ds <= 60.4) return "#33aa33";
+    if (ds <= 70.4) return "#ffcc00";
+    if (ds <= 80.4) return "#ff6600";
+    if (ds <= 90.4) return "#cc0000";
+    return "#000000";
+  }
+
+  function tradeOutline(ds: number): string {
+    if (ds <= 10.4) return "Horrific trade, don't do this.";
+    if (ds <= 20.4) return "Insanely bad trade.";
+    if (ds <= 30.4) return "You really lose this trade.";
+    if (ds <= 40.4) return "You lose this trade.";
+    if (ds <= 60.4) return "This is in the realm of fairness.";
+    if (ds <= 70.4) return "You win this trade.";
+    if (ds <= 80.4) return "You really win this trade.";
+    if (ds <= 90.4) return "They shouldn't accept this trade, but if they do, good for you.";
+    return "We won't tell, but if they accept this, it's probably collusion.";
+  }
+
   // Auto-save to Supabase for Pro users — debounced 1500ms.
   // Fires when both sides of the trade have content and at least one value > 0.
   useEffect(() => {
@@ -1373,8 +1404,11 @@ export default function TradeAnalyzer() {
           </div>
           <div>
             <div className="text-xs text-gray-600">Trade Rating</div>
-            <div className="text-lg font-semibold">{tradeRating.toFixed(1)}</div>
-            <div className="text-xs text-gray-500">{tradeRatingLabel(tradeRating)}</div>
+            <div className="text-lg font-semibold">{tradeRating.toFixed(1)} / 100</div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-600">Trade Outline</div>
+            <div className="text-sm font-medium text-gray-800">{tradeOutline(displayScore)}</div>
           </div>
         </div>
 
@@ -1386,16 +1420,15 @@ export default function TradeAnalyzer() {
             <span>You Win</span>
           </div>
           <div className="relative h-3 rounded-full overflow-hidden"
-               style={{ background: "linear-gradient(to right, #ef4444 0%, #eab308 25%, #22c55e 50%, #eab308 75%, #ef4444 100%)" }}>
+               style={{ background: barColor(displayScore) }}>
             {/* Marker */}
             <div
-              className="absolute top-0 h-full w-1 -translate-x-1/2 rounded-full bg-gray-900 shadow"
-              style={{ left: `${score}%` }}
+              className="absolute top-0 h-full w-1 -translate-x-1/2 rounded-full bg-white shadow"
+              style={{ left: `${displayScore}%` }}
             />
           </div>
         </div>
 
-        <div className="text-sm text-gray-700">{fairnessDescription(score)}</div>
         {(sendValue === 0 && recvValue === 0) && (
           <div className="text-xs text-amber-700 mt-2">
             {isCatMode
