@@ -831,6 +831,20 @@ export default function TradeAnalyzer() {
   }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
       league.skaterCategories, league.goalieCategories, poolStats]);
 
+  // League ranking: playerId → 1-based rank by projected points value.
+  // Recomputes only when the DB or scoring weights change.
+  const rankMap = useMemo(() => {
+    const map = new Map<number, number>();
+    if (playerDb.length === 0) return map;
+    const sorted = [...playerDb].sort(
+      (a, b) =>
+        projectedSeasonValue(b, league.skaterWeights, league.goalieWeights) -
+        projectedSeasonValue(a, league.skaterWeights, league.goalieWeights)
+    );
+    sorted.forEach((p, i) => map.set(p.id, i + 1));
+    return map;
+  }, [playerDb, league.skaterWeights, league.goalieWeights]);
+
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
     () => parsePicks(sendPicks, league.teams),
@@ -989,12 +1003,18 @@ export default function TradeAnalyzer() {
     const setter = side === "send" ? setSendPlayers : setRecvPlayers;
     const list = side === "send" ? sendPlayers : recvPlayers;
     if (list.find((p) => p.id === dbEntry.id)) return;
+    const pos = dbEntry.position;
+    const useW =
+      (pos === "LW" || pos === "RW") &&
+      (league.roster.LW ?? 0) === 0 &&
+      (league.roster.RW ?? 0) === 0 &&
+      (league.roster.W  ?? 0) > 0;
     const newEntry: TradePlayer = {
       id: dbEntry.id,
       name: dbEntry.name,
       team: dbEntry.team,
-      primaryPosition: dbEntry.position,
-      positions: [dbEntry.position],
+      primaryPosition: pos,
+      positions: useW ? ["W"] : [pos],
     };
     setter([...list, newEntry]);
   };
@@ -1139,57 +1159,6 @@ export default function TradeAnalyzer() {
             Total roster size: <span className="font-semibold">{totalRosterSize}</span>
           </div>
 
-          {!isPro && (
-          <div className="mt-4 border-t pt-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">Saved Profiles</h3>
-              <div className="flex items-center gap-2">
-                {saveStatus === "saved" && (
-                  <span className="text-xs text-green-600">✓ Auto-saved</span>
-                )}
-                <button
-                  className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700"
-                  onClick={saveProfile}
-                >
-                  Save Profile
-                </button>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mb-2">
-              Your settings are auto-saved for next visit. Use profiles to switch between leagues.
-            </p>
-            {profiles.length === 0 ? (
-              <p className="text-xs text-gray-400 italic">No saved profiles yet.</p>
-            ) : (
-              <div className="space-y-1">
-                {profiles.map((p) => (
-                  <div key={p.name} className="flex items-center justify-between border rounded-lg px-2 py-1.5 bg-gray-50 text-xs">
-                    <div>
-                      <span className="font-medium">{p.name}</span>
-                      <span className="text-gray-400 ml-2">
-                        {new Date(p.savedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="text-blue-600 hover:text-blue-800"
-                        onClick={() => loadProfile(p)}
-                      >
-                        Load
-                      </button>
-                      <button
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => deleteProfile(p.name)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          )}
         </div>
 
         <div className="border rounded-2xl p-4">
@@ -1343,6 +1312,7 @@ export default function TradeAnalyzer() {
             roster={league.roster}
             skaterWeights={league.skaterWeights}
             goalieWeights={league.goalieWeights}
+            rankMap={rankMap}
             onAdd={(p) => addPlayer("send", p)}
             onRemove={(id) => removePlayer("send", id)}
             onTogglePos={(id, pos) => togglePosition("send", id, pos)}
@@ -1361,6 +1331,7 @@ export default function TradeAnalyzer() {
             roster={league.roster}
             skaterWeights={league.skaterWeights}
             goalieWeights={league.goalieWeights}
+            rankMap={rankMap}
             onAdd={(p) => addPlayer("recv", p)}
             onRemove={(id) => removePlayer("recv", id)}
             onTogglePos={(id, pos) => togglePosition("recv", id, pos)}
@@ -1371,18 +1342,8 @@ export default function TradeAnalyzer() {
       <div className="border rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-medium">Fairness Result</h2>
-          {isPro ? (
-            autoSaveStatus === "saved" && (
-              <span className="text-xs text-green-600">✓ Auto-saved</span>
-            )
-          ) : (
-            <button
-              className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-              disabled={!hasAnything}
-              onClick={saveToHistory}
-            >
-              Save to History
-            </button>
+          {isPro && autoSaveStatus === "saved" && (
+            <span className="text-xs text-green-600">✓ Auto-saved</span>
           )}
         </div>
         <div className="grid grid-cols-4 gap-4 mb-3">
@@ -1450,24 +1411,6 @@ export default function TradeAnalyzer() {
         )}
       </div>
 
-        {history.length > 0 && (
-          <div className="border rounded-2xl p-4 mt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-medium">Trade History</h2>
-              <button
-                className="text-xs text-red-500 hover:text-red-700"
-                onClick={clearHistory}
-              >
-                Clear All
-              </button>
-            </div>
-            <div className="space-y-2">
-              {history.map((entry) => (
-                <HistoryRow key={entry.id} entry={entry} onDelete={deleteHistoryEntry} />
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
@@ -1514,6 +1457,7 @@ type TradeSideProps = {
   roster: Roster;
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  rankMap: Map<number, number>;
   onAdd: (p: DbPlayer) => void;
   onRemove: (id: number) => void;
   onTogglePos: (id: number, pos: string) => void;
@@ -1522,7 +1466,7 @@ type TradeSideProps = {
 function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
-  roster, skaterWeights, goalieWeights,
+  roster, skaterWeights, goalieWeights, rankMap,
   onAdd, onRemove, onTogglePos,
 }: TradeSideProps) {
   return (
@@ -1543,6 +1487,8 @@ function TradeSide({
             roster={roster}
             skaterWeights={skaterWeights}
             goalieWeights={goalieWeights}
+            rank={rankMap.get(p.id) ?? null}
+            totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
             onTogglePos={(pos) => onTogglePos(p.id, pos)}
           />
@@ -1724,12 +1670,15 @@ type PlayerRowProps = {
   roster: Roster;
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  rank: number | null;
+  totalPlayers: number;
   onRemove: () => void;
   onTogglePos: (pos: string) => void;
 };
 
 function PlayerRow({
-  player, dbEntry, roster, skaterWeights, goalieWeights, onRemove, onTogglePos,
+  player, dbEntry, roster, skaterWeights, goalieWeights, rank, totalPlayers,
+  onRemove, onTogglePos,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
   const mult = positionMultiplier(player.positions, roster);
@@ -1787,7 +1736,12 @@ function PlayerRow({
         </div>
       )}
       <div className="mt-1 flex justify-between">
-        <span className="text-gray-600">Base value: {baseValue.toFixed(1)}</span>
+        <span className="text-gray-600">
+          Base value: {baseValue.toFixed(1)}
+          {rank !== null && (
+            <span className="ml-3">League Ranking: {rank} / {totalPlayers}</span>
+          )}
+        </span>
         <span className="font-semibold">Adjusted: {adjValue.toFixed(1)}</span>
       </div>
     </div>
