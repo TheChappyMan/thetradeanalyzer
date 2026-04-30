@@ -46,6 +46,11 @@ export default function Dashboard() {
               title="NHL Trade Analyzer"
               description="Analyze NHL trades using your league's scoring settings."
             />
+            <DashCard
+              href="/nfl"
+              title="NFL Trade Analyzer"
+              description="Analyze NFL trades using your league's scoring settings."
+            />
           </div>
 
           <div className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-xs text-gray-500 mb-4">

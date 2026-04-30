@@ -1417,13 +1417,23 @@ export default function TradeAnalyzer() {
           <div className="flex justify-between text-xs text-gray-500 mb-1">
             <span>Opponent Wins</span>
             <span className="font-medium text-gray-600">Fairness Scale</span>
-            <span>You Win</span>
+            <span>You Win Too Much</span>
           </div>
-          <div className="relative h-3 rounded-full overflow-hidden"
-               style={{ background: barColor(displayScore) }}>
+          {/* Segmented bar — all zones always visible, marker moves */}
+          <div className="relative h-3 rounded-full overflow-hidden flex">
+            {/* Each width = segment range / 100 * 100% */}
+            <div style={{ width: "10.5%",  background: "#000000" }} />
+            <div style={{ width: "10%",    background: "#cc0000" }} />
+            <div style={{ width: "10%",    background: "#ff6600" }} />
+            <div style={{ width: "10%",    background: "#ffcc00" }} />
+            <div style={{ width: "19%",    background: "#33aa33" }} />
+            <div style={{ width: "10%",    background: "#ffcc00" }} />
+            <div style={{ width: "10%",    background: "#ff6600" }} />
+            <div style={{ width: "10%",    background: "#cc0000" }} />
+            <div style={{ width: "10.5%",  background: "#000000" }} />
             {/* Marker */}
             <div
-              className="absolute top-0 h-full w-1 -translate-x-1/2 rounded-full bg-white shadow"
+              className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
               style={{ left: `${displayScore}%` }}
             />
           </div>
