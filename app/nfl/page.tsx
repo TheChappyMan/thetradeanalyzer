@@ -631,7 +631,7 @@ export default function NflTradeAnalyzer() {
                 Total roster size: <span className="font-semibold">{totalRosterSize}</span>
               </div>
 
-              {saveStatus === "saved" && (
+              {isPro && saveStatus === "saved" && (
                 <div className="text-xs text-green-600 mt-2">✓ Auto-saved</div>
               )}
             </div>
