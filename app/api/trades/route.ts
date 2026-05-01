@@ -16,8 +16,9 @@ async function getTier(): Promise<string | undefined> {
 
 // ── GET /api/trades ────────────────────────────────────────────────────────
 // Returns trades for the current user, newest first.
-// ?leagueId=uuid  → trades for a specific league
-// ?sport=nhl      → all trades for that sport (across leagues)
+// ?leagueId=uuid  → trades for that specific league (exact match on league_id)
+// ?sport=nhl      → all trades across leagues where sport = "nhl"
+//                   (looks up league IDs first, then filters by league_id IN [...])
 // (no params)     → all trades for the user
 // Response: { data: TradeRow[] }
 export async function GET(request: Request) {
@@ -36,8 +37,30 @@ export async function GET(request: Request) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  if (leagueId) query = query.eq('league_id', leagueId)
-  else if (sport) query = query.eq('sport', sport)
+  if (leagueId) {
+    // Exact match on the league_id column
+    query = query.eq('league_id', leagueId)
+  } else if (sport) {
+    // Resolve all league IDs for this user + sport, then filter trades by those IDs
+    const { data: leagueRows, error: leagueErr } = await supabase
+      .from('leagues')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('sport', sport)
+
+    if (leagueErr) {
+      return NextResponse.json({ error: leagueErr.message }, { status: 500 })
+    }
+
+    const leagueIds = (leagueRows ?? []).map((r: { id: string }) => r.id)
+
+    if (leagueIds.length === 0) {
+      // No leagues for this sport → no trades possible
+      return NextResponse.json({ data: [] })
+    }
+
+    query = query.in('league_id', leagueIds)
+  }
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -54,16 +77,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let body: unknown
+  let body: { leagueId?: string; [key: string]: unknown }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
+  // Extract league_id from the entry so it's a queryable top-level column.
+  // All other fields remain in trade_data for display purposes.
+  const league_id = body.leagueId ?? null
+
   const { data, error } = await supabase
     .from('trades')
-    .insert({ user_id: userId, trade_data: body })
+    .insert({ user_id: userId, league_id, trade_data: body })
     .select()
     .single()
 
