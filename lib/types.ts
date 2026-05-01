@@ -10,6 +10,15 @@
 // TYPES
 // ============================================================
 
+/** A row from the Supabase leagues table. */
+export type LeagueRow = {
+  id: string;
+  name: string;
+  sport: string;
+  settings: unknown;
+  created_at: string;
+};
+
 export type SkaterStatKey =
   | "G" | "A" | "P" | "PM" | "PIM"
   | "PPG" | "PPA" | "PPP"

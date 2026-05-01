@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+import { useLeagueContext } from "@/lib/league-context";
 import {
   DEFAULT_NFL_LEAGUE,
   type NflLeague,
@@ -45,6 +46,8 @@ type HistoryEntry = {
   id: string;
   savedAt: string;
   leagueName: string;
+  sport?: string;
+  leagueId?: string;
   sendPlayerNames: string[];
   recvPlayerNames: string[];
   sendPicks: string;
@@ -54,6 +57,8 @@ type HistoryEntry = {
   score: number;
   verdict: string;
 };
+
+type LeagueRow = { id: string; name: string; sport: string; settings: unknown };
 
 // ============================================================
 // PERSISTENCE – localStorage helpers
@@ -249,8 +254,10 @@ function normalizePlayerTo17(player: NflDbPlayer): NflDbPlayer {
 
 export default function NflTradeAnalyzer() {
   const { user, isLoaded: clerkLoaded } = useUser();
-  const tier  = (user?.publicMetadata?.tier as string) ?? "free";
-  const isPro = tier === "tier1" || tier === "tier2";
+  const tier    = (user?.publicMetadata?.tier as string) ?? "free";
+  const isPro   = tier === "tier1" || tier === "tier2";
+  const isTier2 = tier === "tier2";
+  const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
   // ── League state ──────────────────────────────────────────
   const [league, setLeague] = useState<NflLeague>(() => {
@@ -283,6 +290,10 @@ export default function NflTradeAnalyzer() {
   const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
   const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
   const [dbStatus,  setDbStatus]  = useState<DbStatus>("loading");
+
+  // ── Tier 2: multi-league state ───────────────────────────────
+  const [t2Leagues,      setT2Leagues]      = useState<LeagueRow[]>([]);
+  const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
 
   // ── Trade state ───────────────────────────────────────────
   const [sendPlayers, setSendPlayers] = useState<NflTradePlayer[]>([]);
@@ -345,27 +356,46 @@ export default function NflTradeAnalyzer() {
     saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
   }, [league, isPro]);
 
-  // ── Load Pro settings from Supabase ──────────────────────
+  // ── Apply saved NFL league settings into component state ────
+  const applyLeagueSettings = useCallback((settings: NflLeague) => {
+    setLeague({
+      ...DEFAULT_NFL_LEAGUE,
+      ...settings,
+      roster:         { ...DEFAULT_NFL_LEAGUE.roster,         ...settings.roster },
+      scoringWeights: { ...DEFAULT_NFL_LEAGUE.scoringWeights, ...settings.scoringWeights },
+    });
+  }, []);
+
+  // On load, fetch saved leagues from Supabase for Pro users.
+  // Tier 1: load the single league. Tier 2: populate the league selector.
   useEffect(() => {
     if (!clerkLoaded || !isPro) return;
     let cancelled = false;
     fetch("/api/leagues?sport=nfl")
       .then((res) => (res.ok ? res.json() : null))
-      .then((json: { data: { settings: unknown } | null } | null) => {
+      .then((json: { data: LeagueRow[] } | null) => {
         if (cancelled) return;
-        const settings = json?.data?.settings;
-        if (!settings) return;
-        const saved = settings as NflLeague;
-        setLeague({
-          ...DEFAULT_NFL_LEAGUE,
-          ...saved,
-          roster:         { ...DEFAULT_NFL_LEAGUE.roster,         ...saved.roster },
-          scoringWeights: { ...DEFAULT_NFL_LEAGUE.scoringWeights, ...saved.scoringWeights },
-        });
+        const rows = json?.data ?? [];
+        if (isTier2) {
+          setT2Leagues(rows);
+          const ctxId = ctxLeagueIds["nfl"];
+          const target = rows.find((r) => r.id === ctxId)?.id ?? rows[0]?.id ?? null;
+          setActiveLeagueId(target);
+        } else {
+          const settings = rows[0]?.settings;
+          if (settings) applyLeagueSettings(settings as NflLeague);
+        }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [isPro, clerkLoaded]);
+  }, [isPro, isTier2, clerkLoaded, applyLeagueSettings]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When the active Tier 2 league changes, reload settings
+  useEffect(() => {
+    if (!isTier2 || !activeLeagueId || t2Leagues.length === 0) return;
+    const row = t2Leagues.find((r) => r.id === activeLeagueId);
+    if (row?.settings) applyLeagueSettings(row.settings as NflLeague);
+  }, [isTier2, activeLeagueId, t2Leagues, applyLeagueSettings]);
 
   // ── Replacement levels per position ───────────────────────
   const replacementLevels = useMemo(() => {
@@ -476,6 +506,8 @@ export default function NflTradeAnalyzer() {
       const entry: HistoryEntry = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         savedAt: new Date().toISOString(),
+        sport: "nfl",
+        leagueId: isTier2 && activeLeagueId ? activeLeagueId : undefined,
         leagueName: league.name.trim() || "Unnamed NFL League",
         sendPlayerNames: sendPlayers.map((p) => p.name),
         recvPlayerNames: recvPlayers.map((p) => p.name),
@@ -498,7 +530,7 @@ export default function NflTradeAnalyzer() {
         .catch(() => {});
     }, 5000);
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks]);
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, isTier2, activeLeagueId]);
 
   // ── Updaters ───────────────────────────────────────────────
   const updateLeague = (patch: Partial<NflLeague>) =>
@@ -543,6 +575,8 @@ export default function NflTradeAnalyzer() {
     const entry: HistoryEntry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       savedAt: new Date().toISOString(),
+      sport: "nfl",
+      leagueId: isTier2 && activeLeagueId ? activeLeagueId : undefined,
       leagueName: league.name.trim() || "Unnamed NFL League",
       sendPlayerNames: sendPlayers.map((p) => p.name),
       recvPlayerNames: recvPlayers.map((p) => p.name),
@@ -564,7 +598,7 @@ export default function NflTradeAnalyzer() {
       setHistory(updated);
       saveNflHistory(updated);
     }
-  }, [isPro, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks,
+  }, [isPro, isTier2, activeLeagueId, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks,
       sendValue, recvValue, score, history]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
@@ -608,6 +642,29 @@ export default function NflTradeAnalyzer() {
             setDataMode={setDataMode}
           />
         </div>
+
+        {/* ── Tier 2 league selector ────────────────────────── */}
+        {isTier2 && (
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm text-gray-600 shrink-0">League:</label>
+            {t2Leagues.length > 0 ? (
+              <select
+                className="border rounded-xl px-3 py-1.5 text-sm"
+                value={activeLeagueId ?? ""}
+                onChange={(e) => setActiveLeagueId(e.target.value || null)}
+              >
+                {t2Leagues.map((l) => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-gray-400 italic">No leagues yet</span>
+            )}
+            <Link href="/settings" className="text-xs text-blue-600 hover:underline whitespace-nowrap">
+              + New League
+            </Link>
+          </div>
+        )}
 
         {/* ── League Settings + Scoring (free only) ─────────── */}
         {!isPro && (

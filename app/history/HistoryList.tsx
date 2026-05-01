@@ -6,6 +6,12 @@ export type HistoryEntry = {
   id: string;
   savedAt: string;
   leagueName: string;
+  /** Supabase row UUID — present for Tier 2 delete; absent for Tier 1 read-only view */
+  dbId?: string;
+  /** Sport tag added when saving from Tier 2 pages */
+  sport?: string;
+  /** League UUID tag added when saving from Tier 2 pages */
+  leagueId?: string;
   sendPlayerNames: string[];
   recvPlayerNames: string[];
   sendPicks: string;
@@ -18,14 +24,16 @@ export type HistoryEntry = {
 
 type Props = {
   entries: HistoryEntry[];
+  /** When provided a delete button is shown on each row (Tier 2 only). */
+  onDelete?: (dbId: string) => void;
 };
 
-export default function HistoryList({ entries }: Props) {
+export default function HistoryList({ entries, onDelete }: Props) {
   if (entries.length === 0) {
     return (
       <p className="text-sm text-gray-400 italic">
-        No trades saved yet. Use the NHL analyzer to evaluate a trade, then click
-        &ldquo;Save to History&rdquo;.
+        No trades saved yet. Use the analyzer to evaluate a trade — it will be
+        saved automatically.
       </p>
     );
   }
@@ -33,14 +41,25 @@ export default function HistoryList({ entries }: Props) {
   return (
     <div className="space-y-2">
       {entries.map((entry) => (
-        <HistoryRow key={entry.id} entry={entry} />
+        <HistoryRow
+          key={entry.dbId ?? entry.id}
+          entry={entry}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   );
 }
 
-function HistoryRow({ entry }: { entry: HistoryEntry }) {
+function HistoryRow({
+  entry,
+  onDelete,
+}: {
+  entry: HistoryEntry;
+  onDelete?: (dbId: string) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const date = new Date(entry.savedAt);
   const dateStr = date.toLocaleDateString();
@@ -57,10 +76,7 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
     [
       ...entry.sendPlayerNames,
       ...(entry.sendPicks
-        ? entry.sendPicks
-            .split(/[\n,;]+/)
-            .map((s) => s.trim())
-            .filter(Boolean)
+        ? entry.sendPicks.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean)
         : []),
     ].join(", ") || "—";
 
@@ -68,16 +84,20 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
     [
       ...entry.recvPlayerNames,
       ...(entry.recvPicks
-        ? entry.recvPicks
-            .split(/[\n,;]+/)
-            .map((s) => s.trim())
-            .filter(Boolean)
+        ? entry.recvPicks.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean)
         : []),
     ].join(", ") || "—";
 
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!entry.dbId || !onDelete) return;
+    setDeleting(true);
+    onDelete(entry.dbId);
+  }
+
   return (
     <div className={`border rounded-xl text-xs ${scoreBg}`}>
-      {/* ── Collapsed row ──────────────────────────────────────── */}
+      {/* ── Collapsed row ────────────────────────────────────── */}
       <div
         className="flex items-center justify-between px-3 py-2 cursor-pointer select-none"
         onClick={() => setExpanded((v) => !v)}
@@ -97,11 +117,21 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-2">
           <span className="font-semibold">{entry.score.toFixed(1)} / 100</span>
+          {onDelete && entry.dbId && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40 px-1"
+              title="Delete trade"
+            >
+              ✕
+            </button>
+          )}
           <span className="text-gray-400">{expanded ? "▲" : "▼"}</span>
         </div>
       </div>
 
-      {/* ── Expanded detail ────────────────────────────────────── */}
+      {/* ── Expanded detail ──────────────────────────────────── */}
       {expanded && (
         <div className="px-3 pb-3 border-t border-inherit pt-2 space-y-2">
           <div className="grid grid-cols-2 gap-3">
@@ -114,8 +144,7 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
                 <div className="text-gray-500">Picks: {entry.sendPicks}</div>
               )}
               <div className="text-gray-600 mt-1">
-                Value:{" "}
-                <span className="font-medium">{entry.sendValue.toFixed(1)}</span>
+                Value: <span className="font-medium">{entry.sendValue.toFixed(1)}</span>
               </div>
             </div>
             <div>
@@ -127,8 +156,7 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
                 <div className="text-gray-500">Picks: {entry.recvPicks}</div>
               )}
               <div className="text-gray-600 mt-1">
-                Value:{" "}
-                <span className="font-medium">{entry.recvValue.toFixed(1)}</span>
+                Value: <span className="font-medium">{entry.recvValue.toFixed(1)}</span>
               </div>
             </div>
           </div>

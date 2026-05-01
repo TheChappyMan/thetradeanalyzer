@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
 import HistoryList from './HistoryList'
+import HistoryClientPage from './HistoryClientPage'
 import type { HistoryEntry } from './HistoryList'
 
 // ── Server component ─────────────────────────────────────────────────────────
@@ -14,7 +15,7 @@ export default async function HistoryPage() {
 
   // ── Tier gate ────────────────────────────────────────────────
   const user = await currentUser()
-  const tier = user?.publicMetadata?.tier as string | undefined
+  const tier = (user?.publicMetadata?.tier as string | undefined) ?? 'free'
 
   if (tier !== 'tier1' && tier !== 'tier2') {
     return (
@@ -27,14 +28,28 @@ export default async function HistoryPage() {
     )
   }
 
-  // ── Fetch trades ─────────────────────────────────────────────
+  // ── Tier 2: fully client-side (sport tabs + league filter + delete) ───
+  if (tier === 'tier2') {
+    return (
+      <>
+        <ProNav />
+        <div className="p-6 max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-semibold">Trade History</h1>
+          </div>
+          <HistoryClientPage />
+        </div>
+      </>
+    )
+  }
+
+  // ── Tier 1: server-side fetch, read-only list ─────────────────────────
   const { data: rows, error } = await supabase
     .from('trades')
-    .select('trade_data, created_at')
+    .select('id, trade_data, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
-  // Surface a clean error rather than crashing
   if (error) {
     return (
       <>
@@ -49,22 +64,21 @@ export default async function HistoryPage() {
     )
   }
 
-  // Map DB rows → HistoryEntry, using the DB created_at as the canonical
-  // timestamp so ordering is consistent with the server-side sort.
   const entries: HistoryEntry[] = (rows ?? []).map((row) => {
     const td = row.trade_data as Partial<HistoryEntry> | null
     return {
-      id:               td?.id       ?? row.created_at,
-      savedAt:          row.created_at,
-      leagueName:       td?.leagueName       ?? '',
-      sendPlayerNames:  td?.sendPlayerNames  ?? [],
-      recvPlayerNames:  td?.recvPlayerNames  ?? [],
-      sendPicks:        td?.sendPicks        ?? '',
-      recvPicks:        td?.recvPicks        ?? '',
-      sendValue:        td?.sendValue        ?? 0,
-      recvValue:        td?.recvValue        ?? 0,
-      score:            td?.score            ?? 50,
-      verdict:          td?.verdict          ?? '',
+      id:              td?.id              ?? row.created_at,
+      dbId:            row.id,
+      savedAt:         row.created_at,
+      leagueName:      td?.leagueName      ?? '',
+      sendPlayerNames: td?.sendPlayerNames ?? [],
+      recvPlayerNames: td?.recvPlayerNames ?? [],
+      sendPicks:       td?.sendPicks       ?? '',
+      recvPicks:       td?.recvPicks       ?? '',
+      sendValue:       td?.sendValue       ?? 0,
+      recvValue:       td?.recvValue       ?? 0,
+      score:           td?.score           ?? 50,
+      verdict:         td?.verdict         ?? '',
     }
   })
 
@@ -74,9 +88,10 @@ export default async function HistoryPage() {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold">Trade History</h1>
-          <span className="text-xs text-gray-500">{entries.length} trade{entries.length !== 1 ? 's' : ''}</span>
+          <span className="text-xs text-gray-500">
+            {entries.length} trade{entries.length !== 1 ? 's' : ''}
+          </span>
         </div>
-
         <HistoryList entries={entries} />
       </div>
     </>
@@ -84,7 +99,6 @@ export default async function HistoryPage() {
 }
 
 // ── ProNav ───────────────────────────────────────────────────────────────────
-// Mirrors the ProNav in app/nhl/page.tsx exactly.
 
 function ProNav() {
   const links = [
@@ -99,11 +113,7 @@ function ProNav() {
         Trade Analyzer
       </span>
       {links.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          className="text-gray-200 hover:text-white transition-colors"
-        >
+        <Link key={href} href={href} className="text-gray-200 hover:text-white transition-colors">
           {label}
         </Link>
       ))}

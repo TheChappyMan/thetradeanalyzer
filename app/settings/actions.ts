@@ -5,14 +5,37 @@ import { supabase } from '@/lib/supabase'
 import type { League } from '@/lib/types'
 import type { NflLeague } from '@/lib/nfl-types'
 
+type ActionResult = { success: boolean; error?: string; id?: string }
+
+// ── NHL ───────────────────────────────────────────────────────────────────────
+
+/**
+ * Save NHL league settings.
+ * - Tier 2: pass leagueId to update a specific row by ID.
+ * - Tier 1: omit leagueId — upserts by (user_id, sport) as before.
+ */
 export async function saveLeagueSettings(
-  league: League
-): Promise<{ success: boolean; error?: string }> {
+  league: League,
+  leagueId?: string
+): Promise<ActionResult> {
   try {
     const { userId } = await auth()
     if (!userId) return { success: false, error: 'Not authenticated' }
 
-    // Check for an existing NHL league for this user
+    const leagueName = league.name.trim() || 'My NHL League'
+
+    if (leagueId) {
+      // Tier 2: update the specific league row
+      const { error } = await supabase
+        .from('leagues')
+        .update({ name: leagueName, settings: league })
+        .eq('id', leagueId)
+        .eq('user_id', userId)
+      if (error) return { success: false, error: error.message }
+      return { success: true, id: leagueId }
+    }
+
+    // Tier 1: upsert by (user_id, sport)
     const { data: existing } = await supabase
       .from('leagues')
       .select('id')
@@ -20,36 +43,74 @@ export async function saveLeagueSettings(
       .eq('sport', 'nhl')
       .maybeSingle()
 
-    const leagueName = league.name.trim() || 'My NHL League'
-
     if (existing) {
       const { error } = await supabase
         .from('leagues')
         .update({ name: leagueName, settings: league })
         .eq('id', existing.id)
       if (error) return { success: false, error: error.message }
-    } else {
-      const { error } = await supabase
-        .from('leagues')
-        .insert({ user_id: userId, sport: 'nhl', name: leagueName, settings: league })
-      if (error) return { success: false, error: error.message }
+      return { success: true, id: existing.id }
     }
 
-    return { success: true }
+    const { data, error } = await supabase
+      .from('leagues')
+      .insert({ user_id: userId, sport: 'nhl', name: leagueName, settings: league })
+      .select('id')
+      .single()
+    if (error) return { success: false, error: error.message }
+    return { success: true, id: data?.id }
   } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
-    }
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
 
-export async function saveNflLeagueSettings(
-  league: NflLeague
-): Promise<{ success: boolean; error?: string }> {
+/** Create a brand-new NHL league (Tier 2). */
+export async function createNhlLeague(
+  name: string,
+  settings: League
+): Promise<ActionResult> {
   try {
     const { userId } = await auth()
     if (!userId) return { success: false, error: 'Not authenticated' }
+
+    const { data, error } = await supabase
+      .from('leagues')
+      .insert({ user_id: userId, sport: 'nhl', name: name.trim() || 'New League', settings })
+      .select('id')
+      .single()
+    if (error) return { success: false, error: error.message }
+    return { success: true, id: data?.id }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ── NFL ───────────────────────────────────────────────────────────────────────
+
+/**
+ * Save NFL league settings.
+ * - Tier 2: pass leagueId to update a specific row by ID.
+ * - Tier 1: omit leagueId — upserts by (user_id, sport) as before.
+ */
+export async function saveNflLeagueSettings(
+  league: NflLeague,
+  leagueId?: string
+): Promise<ActionResult> {
+  try {
+    const { userId } = await auth()
+    if (!userId) return { success: false, error: 'Not authenticated' }
+
+    const leagueName = league.name.trim() || 'My NFL League'
+
+    if (leagueId) {
+      const { error } = await supabase
+        .from('leagues')
+        .update({ name: leagueName, settings: league })
+        .eq('id', leagueId)
+        .eq('user_id', userId)
+      if (error) return { success: false, error: error.message }
+      return { success: true, id: leagueId }
+    }
 
     const { data: existing } = await supabase
       .from('leagues')
@@ -58,26 +119,44 @@ export async function saveNflLeagueSettings(
       .eq('sport', 'nfl')
       .maybeSingle()
 
-    const leagueName = league.name.trim() || 'My NFL League'
-
     if (existing) {
       const { error } = await supabase
         .from('leagues')
         .update({ name: leagueName, settings: league })
         .eq('id', existing.id)
       if (error) return { success: false, error: error.message }
-    } else {
-      const { error } = await supabase
-        .from('leagues')
-        .insert({ user_id: userId, sport: 'nfl', name: leagueName, settings: league })
-      if (error) return { success: false, error: error.message }
+      return { success: true, id: existing.id }
     }
 
-    return { success: true }
+    const { data, error } = await supabase
+      .from('leagues')
+      .insert({ user_id: userId, sport: 'nfl', name: leagueName, settings: league })
+      .select('id')
+      .single()
+    if (error) return { success: false, error: error.message }
+    return { success: true, id: data?.id }
   } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : 'Unknown error',
-    }
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+/** Create a brand-new NFL league (Tier 2). */
+export async function createNflLeague(
+  name: string,
+  settings: NflLeague
+): Promise<ActionResult> {
+  try {
+    const { userId } = await auth()
+    if (!userId) return { success: false, error: 'Not authenticated' }
+
+    const { data, error } = await supabase
+      .from('leagues')
+      .insert({ user_id: userId, sport: 'nfl', name: name.trim() || 'New League', settings })
+      .select('id')
+      .single()
+    if (error) return { success: false, error: error.message }
+    return { success: true, id: data?.id }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

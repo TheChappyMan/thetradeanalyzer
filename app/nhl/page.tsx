@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+import { useLeagueContext } from "@/lib/league-context";
 
 /**
  * Fantasy Trade Analyzer – V3 (Next.js 15 / TypeScript)
@@ -94,6 +95,8 @@ type HistoryEntry = {
   id: string;
   savedAt: string;
   leagueName: string;
+  sport?: string;
+  leagueId?: string;
   sendPlayerNames: string[];
   recvPlayerNames: string[];
   sendPicks: string;
@@ -151,6 +154,8 @@ type ParsedPick = {
 type DbStatus = "loading" | "ready" | "error";
 
 type DataMode = "thisTotal" | "thisAvg" | "lastTotal" | "lastAvg";
+
+type LeagueRow = { id: string; name: string; sport: string; settings: unknown };
 
 // ============================================================
 // DATA LAYER – NHL API (via server proxy to avoid CORS)
@@ -648,8 +653,10 @@ const DEFAULT_LEAGUE: League = {
 
 export default function TradeAnalyzer() {
   const { user, isLoaded: clerkLoaded } = useUser();
-  const tier = (user?.publicMetadata?.tier as string) ?? "free";
-  const isPro = tier === "tier1" || tier === "tier2";
+  const tier    = (user?.publicMetadata?.tier as string) ?? "free";
+  const isPro   = tier === "tier1" || tier === "tier2";
+  const isTier2 = tier === "tier2";
+  const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
   const [league, setLeague] = useState<League>(() => {
     const saved = loadCurrentLeague();
@@ -703,6 +710,10 @@ export default function TradeAnalyzer() {
   const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
   const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
+
+  // ── Tier 2: multi-league state ───────────────────────────────
+  const [t2Leagues,     setT2Leagues]     = useState<LeagueRow[]>([]);
+  const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
 
   // ── Load both seasons in one round-trip ──────────────────────
   useEffect(() => {
@@ -769,33 +780,54 @@ export default function TradeAnalyzer() {
     saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
   }, [league, isPro]);
 
-  // On load, fetch saved league from Supabase for Pro users and override
-  // the localStorage-seeded state. Runs once when Clerk finishes loading.
+  // ── Apply saved league settings into component state ────────
+  const applyLeagueSettings = useCallback((settings: League) => {
+    setLeague({
+      ...DEFAULT_LEAGUE,
+      ...settings,
+      scoringType: settings.scoringType ?? "points",
+      skaterCategories: settings.skaterCategories
+        ? { ...DEFAULT_LEAGUE.skaterCategories, ...settings.skaterCategories }
+        : emptySkaterCategories(),
+      goalieCategories: settings.goalieCategories
+        ? { ...DEFAULT_LEAGUE.goalieCategories, ...settings.goalieCategories }
+        : emptyGoalieCategories(),
+    });
+  }, []);
+
+  // On load, fetch saved leagues from Supabase for Pro users.
+  // Tier 1: load the single league. Tier 2: populate the league selector.
   useEffect(() => {
     if (!clerkLoaded || !isPro) return;
     let cancelled = false;
     fetch("/api/leagues?sport=nhl")
       .then((res) => (res.ok ? res.json() : null))
-      .then((json: { data: { settings: unknown } | null } | null) => {
+      .then((json: { data: LeagueRow[] } | null) => {
         if (cancelled) return;
-        const settings = json?.data?.settings;
-        if (!settings) return; // no saved league — keep defaults
-        const saved = settings as League;
-        setLeague({
-          ...DEFAULT_LEAGUE,
-          ...saved,
-          scoringType: saved.scoringType ?? "points",
-          skaterCategories: saved.skaterCategories
-            ? { ...DEFAULT_LEAGUE.skaterCategories, ...saved.skaterCategories }
-            : emptySkaterCategories(),
-          goalieCategories: saved.goalieCategories
-            ? { ...DEFAULT_LEAGUE.goalieCategories, ...saved.goalieCategories }
-            : emptyGoalieCategories(),
-        });
+        const rows = json?.data ?? [];
+        if (isTier2) {
+          setT2Leagues(rows);
+          // Prefer the league selected on the dashboard via context
+          const ctxId = ctxLeagueIds["nhl"];
+          const target = rows.find((r) => r.id === ctxId)?.id ?? rows[0]?.id ?? null;
+          setActiveLeagueId(target);
+          // Settings applied by the activeLeagueId effect below
+        } else {
+          // Tier 1: load the first (and only) league directly
+          const settings = rows[0]?.settings;
+          if (settings) applyLeagueSettings(settings as League);
+        }
       })
-      .catch(() => {}); // silently keep defaults on network error
+      .catch(() => {});
     return () => { cancelled = true; };
-  }, [isPro, clerkLoaded]);
+  }, [isPro, isTier2, clerkLoaded, applyLeagueSettings]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When the active Tier 2 league changes, reload settings
+  useEffect(() => {
+    if (!isTier2 || !activeLeagueId || t2Leagues.length === 0) return;
+    const row = t2Leagues.find((r) => r.id === activeLeagueId);
+    if (row?.settings) applyLeagueSettings(row.settings as League);
+  }, [isTier2, activeLeagueId, t2Leagues, applyLeagueSettings]);
 
   const saveProfile = useCallback(() => {
     const profileName = league.name.trim() || "Unnamed League";
@@ -1004,6 +1036,8 @@ export default function TradeAnalyzer() {
       const entry: HistoryEntry = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         savedAt: new Date().toISOString(),
+        sport: "nhl",
+        leagueId: isTier2 && activeLeagueId ? activeLeagueId : undefined,
         leagueName: league.name.trim() || "Unnamed League",
         sendPlayerNames: sendPlayers.map((p) => p.name),
         recvPlayerNames: recvPlayers.map((p) => p.name),
@@ -1029,7 +1063,7 @@ export default function TradeAnalyzer() {
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks]);
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, isTier2, activeLeagueId]);
 
   const updateLeague = (patch: Partial<League>) =>
     setLeague((prev) => ({ ...prev, ...patch }));
@@ -1088,6 +1122,8 @@ export default function TradeAnalyzer() {
     const entry: HistoryEntry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       savedAt: new Date().toISOString(),
+      sport: "nhl",
+      leagueId: isTier2 && activeLeagueId ? activeLeagueId : undefined,
       leagueName: league.name.trim() || "Unnamed League",
       sendPlayerNames: sendPlayers.map((p) => p.name),
       recvPlayerNames: recvPlayers.map((p) => p.name),
@@ -1111,7 +1147,7 @@ export default function TradeAnalyzer() {
       setHistory(updated);
       saveHistory(updated);
     }
-  }, [isPro, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
+  }, [isPro, isTier2, activeLeagueId, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     const updated = history.filter((e) => e.id !== id);
@@ -1143,6 +1179,32 @@ export default function TradeAnalyzer() {
             setDataMode={setDataMode}
           />
         </div>
+
+        {/* ── Tier 2: league selector ──────────────────────── */}
+        {isTier2 && (
+          <div className="flex items-center gap-3 mb-4">
+            <label className="text-sm text-gray-600 shrink-0">League:</label>
+            {t2Leagues.length > 0 ? (
+              <select
+                className="border rounded-xl px-3 py-1.5 text-sm"
+                value={activeLeagueId ?? ""}
+                onChange={(e) => setActiveLeagueId(e.target.value || null)}
+              >
+                {t2Leagues.map((l) => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm text-gray-400 italic">No leagues yet</span>
+            )}
+            <Link
+              href="/settings"
+              className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+            >
+              + New League
+            </Link>
+          </div>
+        )}
 
       {!isPro && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
