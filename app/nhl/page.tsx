@@ -712,8 +712,10 @@ export default function TradeAnalyzer() {
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
 
   // ── Tier 2: multi-league state ───────────────────────────────
-  const [t2Leagues,     setT2Leagues]     = useState<LeagueRow[]>([]);
+  const [t2Leagues,      setT2Leagues]      = useState<LeagueRow[]>([]);
   const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
+  // Supabase UUID of the currently active league (set for both Tier 1 and Tier 2)
+  const [currentLeagueId, setCurrentLeagueId] = useState<string | null>(null);
 
   // ── Load both seasons in one round-trip ──────────────────────
   useEffect(() => {
@@ -811,22 +813,25 @@ export default function TradeAnalyzer() {
           const ctxId = ctxLeagueIds["nhl"];
           const target = rows.find((r) => r.id === ctxId)?.id ?? rows[0]?.id ?? null;
           setActiveLeagueId(target);
+          setCurrentLeagueId(target);
           // Settings applied by the activeLeagueId effect below
         } else {
           // Tier 1: load the first (and only) league directly
           const settings = rows[0]?.settings;
           if (settings) applyLeagueSettings(settings as League);
+          setCurrentLeagueId(rows[0]?.id ?? null);
         }
       })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [isPro, isTier2, clerkLoaded, applyLeagueSettings]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When the active Tier 2 league changes, reload settings
+  // When the active Tier 2 league changes, reload settings and sync currentLeagueId
   useEffect(() => {
     if (!isTier2 || !activeLeagueId || t2Leagues.length === 0) return;
     const row = t2Leagues.find((r) => r.id === activeLeagueId);
     if (row?.settings) applyLeagueSettings(row.settings as League);
+    setCurrentLeagueId(activeLeagueId);
   }, [isTier2, activeLeagueId, t2Leagues, applyLeagueSettings]);
 
   const saveProfile = useCallback(() => {
@@ -1037,7 +1042,7 @@ export default function TradeAnalyzer() {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         savedAt: new Date().toISOString(),
         sport: "nhl",
-        leagueId: isTier2 && activeLeagueId ? activeLeagueId : undefined,
+        leagueId: currentLeagueId ?? undefined,
         leagueName: league.name.trim() || "Unnamed League",
         sendPlayerNames: sendPlayers.map((p) => p.name),
         recvPlayerNames: recvPlayers.map((p) => p.name),
@@ -1063,7 +1068,7 @@ export default function TradeAnalyzer() {
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, isTier2, activeLeagueId]);
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, currentLeagueId]);
 
   const updateLeague = (patch: Partial<League>) =>
     setLeague((prev) => ({ ...prev, ...patch }));
@@ -1123,7 +1128,7 @@ export default function TradeAnalyzer() {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       savedAt: new Date().toISOString(),
       sport: "nhl",
-      leagueId: isTier2 && activeLeagueId ? activeLeagueId : undefined,
+      leagueId: currentLeagueId ?? undefined,
       leagueName: league.name.trim() || "Unnamed League",
       sendPlayerNames: sendPlayers.map((p) => p.name),
       recvPlayerNames: recvPlayers.map((p) => p.name),
@@ -1147,7 +1152,7 @@ export default function TradeAnalyzer() {
       setHistory(updated);
       saveHistory(updated);
     }
-  }, [isPro, isTier2, activeLeagueId, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
+  }, [isPro, currentLeagueId, league.name, sendPlayers, recvPlayers, sendPicks, recvPicks, sendValue, recvValue, score, history]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     const updated = history.filter((e) => e.id !== id);
