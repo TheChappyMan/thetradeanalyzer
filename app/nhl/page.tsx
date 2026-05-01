@@ -1053,6 +1053,7 @@ export default function TradeAnalyzer() {
         score,
         verdict: fairnessDescription(score),
       };
+      console.log("Auto-save firing, currentLeagueId:", currentLeagueId);
       fetch("/api/trades", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
