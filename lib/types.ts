@@ -11,7 +11,7 @@
 // ============================================================
 
 export type SkaterStatKey =
-  | "G" | "A" | "P" | "PLUS" | "MINUS" | "PIM"
+  | "G" | "A" | "P" | "PM" | "PIM"
   | "PPG" | "PPA" | "PPP"
   | "SHG" | "SHA" | "SHP"
   | "GWG" | "SOG" | "HIT" | "BLK" | "FW" | "FL"
@@ -46,7 +46,7 @@ export type League = {
 // ============================================================
 
 export const SKATER_STATS: SkaterStatKey[] = [
-  "G", "A", "P", "PLUS", "MINUS", "PIM",
+  "G", "A", "P", "PM", "PIM",
   "PPG", "PPA", "PPP",
   "SHG", "SHA", "SHP",
   "GWG", "SOG", "HIT", "BLK", "FW", "FL",

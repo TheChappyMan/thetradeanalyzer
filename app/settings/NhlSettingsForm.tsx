@@ -337,7 +337,7 @@ export default function NhlSettingsForm({ initialLeague, initialNflLeague }: Pro
                   {SKATER_STATS.map((stat) => (
                     <div key={stat} className="flex items-center justify-between gap-2">
                       <label className="text-sm w-16">
-                        {stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat}
+                        {stat === "PM" ? "+/-" : stat}
                       </label>
                       <input
                         type="number" step="0.1"
@@ -375,7 +375,7 @@ export default function NhlSettingsForm({ initialLeague, initialNflLeague }: Pro
                     <div className="space-y-1">
                       {SKATER_STATS.map((stat) => {
                         const cfg = league.skaterCategories[stat];
-                        const label = stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat;
+                        const label = stat === "PM" ? "+/-" : stat;
                         return (
                           <div key={stat} className="flex items-center gap-2 text-sm">
                             <input

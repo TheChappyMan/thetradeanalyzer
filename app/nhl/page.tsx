@@ -17,7 +17,7 @@ import { useUser } from "@clerk/nextjs";
 // ============================================================
 
 type SkaterStatKey =
-  | "G" | "A" | "P" | "PLUS" | "MINUS" | "PIM"
+  | "G" | "A" | "P" | "PM" | "PIM"
   | "PPG" | "PPA" | "PPP"
   | "SHG" | "SHA" | "SHP"
   | "GWG" | "SOG" | "HIT" | "BLK" | "FW" | "FL"
@@ -189,8 +189,7 @@ function buildPlayerDatabase(args: {
         G: asNumber(s.goals),
         A: asNumber(s.assists),
         P: asNumber(s.points),
-        PLUS: Math.max(0, asNumber(s.plusMinus)),
-        MINUS: Math.min(0, asNumber(s.plusMinus)),
+        PM: asNumber(s.plusMinus),
         PIM: asNumber(s.penaltyMinutes),
         PPG: ppGoals,
         PPA: ppPoints - ppGoals,
@@ -407,7 +406,8 @@ function buildTalentRanking(
   goalieCategories?: Record<GoalieStatKey, CategoryConfig | null>,
   poolStats?: PoolStats | null,
   skaterStatKeys?: SkaterStatKey[],
-  goalieStatKeys?: GoalieStatKey[]
+  goalieStatKeys?: GoalieStatKey[],
+  useRates?: boolean
 ): number[] {
   return playerDb
     .map((p) => {
@@ -416,7 +416,7 @@ function buildTalentRanking(
         skaterCategories && goalieCategories && poolStats &&
         skaterStatKeys && goalieStatKeys
       ) {
-        return zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys);
+        return zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys, useRates ?? true);
       }
       return projectedSeasonValue(p, skaterWeights, goalieWeights);
     })
@@ -470,7 +470,8 @@ function computePoolStats(
   teams: number,
   roster: Roster,
   skaterStats: SkaterStatKey[],
-  goalieStats: GoalieStatKey[]
+  goalieStats: GoalieStatKey[],
+  useRates: boolean
 ): PoolStats {
   const skaters = playerDb.filter((p) => !p.isGoalie && p.gamesPlayed > 0);
   const goalies = playerDb.filter((p) => p.isGoalie && p.gamesPlayed > 0);
@@ -491,6 +492,7 @@ function computePoolStats(
   for (const stat of skaterStats) {
     const values = topSkaters.map((p) => {
       const raw = p.stats[stat] || 0;
+      if (!useRates) return raw;
       return RATE_SKATER.has(stat) ? raw : raw / p.gamesPlayed;
     });
     skaterPoolStats[stat] = _meanStddev(values);
@@ -498,19 +500,23 @@ function computePoolStats(
 
   const goaliePoolStats = {} as Record<GoalieStatKey, StatPoolStats>;
   for (const stat of goalieStats) {
-    if (stat === "SV%") {
+    if (useRates && stat === "SV%") {
       const values = topGoalies.map((p) => p.stats["SV%"] || 0);
       const volumes = topGoalies.map((p) => (p.stats.SV || 0) / p.gamesPlayed);
       const { mean, stddev } = _meanStddev(values);
       const avgVolume = volumes.reduce((a, b) => a + b, 0) / (volumes.length || 1);
       goaliePoolStats[stat] = { mean, stddev, avgVolume };
-    } else if (stat === "GAA") {
+    } else if (useRates && stat === "GAA") {
       const values = topGoalies.map((p) => p.stats.GAA || 0);
       const { mean, stddev } = _meanStddev(values);
       const avgVolume = topGoalies.reduce((a, p) => a + p.gamesPlayed, 0) / (topGoalies.length || 1);
       goaliePoolStats[stat] = { mean, stddev, avgVolume };
-    } else {
+    } else if (useRates) {
       const values = topGoalies.map((p) => ((p.stats[stat] || 0)) / p.gamesPlayed);
+      goaliePoolStats[stat] = _meanStddev(values);
+    } else {
+      // Total mode: compare raw season totals directly
+      const values = topGoalies.map((p) => p.stats[stat] || 0);
       goaliePoolStats[stat] = _meanStddev(values);
     }
   }
@@ -518,16 +524,20 @@ function computePoolStats(
   return { skaterStats: skaterPoolStats, goalieStats: goaliePoolStats };
 }
 
-function _skaterZ(player: DbPlayer, stat: SkaterStatKey, ps: StatPoolStats): number {
+function _skaterZ(player: DbPlayer, stat: SkaterStatKey, ps: StatPoolStats, useRates: boolean): number {
   if (ps.stddev === 0) return 0;
   const raw = player.stats[stat] || 0;
-  const value = RATE_SKATER.has(stat) ? raw : raw / player.gamesPlayed;
+  const value = !useRates ? raw : (RATE_SKATER.has(stat) ? raw : raw / player.gamesPlayed);
   return (value - ps.mean) / ps.stddev;
 }
 
-function _goalieZ(player: DbPlayer, stat: GoalieStatKey, ps: StatPoolStats): number {
+function _goalieZ(player: DbPlayer, stat: GoalieStatKey, ps: StatPoolStats, useRates: boolean): number {
   if (ps.stddev === 0) return 0;
   const raw = player.stats[stat] || 0;
+  if (!useRates) {
+    // Total mode: compare raw season totals directly
+    return (raw - ps.mean) / ps.stddev;
+  }
   if (VOL_GOALIE.has(stat) && ps.avgVolume !== undefined && ps.avgVolume > 0) {
     const vol = stat === "SV%"
       ? (player.stats.SV || 0) / player.gamesPlayed
@@ -543,7 +553,8 @@ function zScoreValue(
   goalieCategories: Record<GoalieStatKey, CategoryConfig | null>,
   poolStats: PoolStats,
   skaterStats: SkaterStatKey[],
-  goalieStats: GoalieStatKey[]
+  goalieStats: GoalieStatKey[],
+  useRates: boolean
 ): number {
   if (player.gamesPlayed === 0) return 0;
   let total = 0;
@@ -551,14 +562,14 @@ function zScoreValue(
     for (const stat of goalieStats) {
       const cfg = goalieCategories[stat];
       if (!cfg || !poolStats.goalieStats[stat]) continue;
-      const z = _goalieZ(player, stat, poolStats.goalieStats[stat]);
+      const z = _goalieZ(player, stat, poolStats.goalieStats[stat], useRates);
       total += cfg.direction === "less" ? -z : z;
     }
   } else {
     for (const stat of skaterStats) {
       const cfg = skaterCategories[stat];
       if (!cfg || !poolStats.skaterStats[stat]) continue;
-      const z = _skaterZ(player, stat, poolStats.skaterStats[stat]);
+      const z = _skaterZ(player, stat, poolStats.skaterStats[stat], useRates);
       total += cfg.direction === "less" ? -z : z;
     }
   }
@@ -570,7 +581,7 @@ function zScoreValue(
 // ============================================================
 
 const SKATER_STATS: SkaterStatKey[] = [
-  "G", "A", "P", "PLUS", "MINUS", "PIM",
+  "G", "A", "P", "PM", "PIM",
   "PPG", "PPA", "PPP",
   "SHG", "SHA", "SHP",
   "GWG", "SOG", "HIT", "BLK", "FW", "FL",
@@ -644,12 +655,28 @@ export default function TradeAnalyzer() {
     const saved = loadCurrentLeague();
     if (!saved) return DEFAULT_LEAGUE;
     // Migration: fill in fields that didn't exist in older saved versions
+    const rawWeights = saved.skaterWeights as Record<string, number> | undefined;
+    const rawCategories = saved.skaterCategories as Record<string, CategoryConfig | null> | undefined;
+    // Migrate PLUS/MINUS → PM
+    const migratedWeights = { ...DEFAULT_LEAGUE.skaterWeights, ...rawWeights };
+    if (rawWeights && ("PLUS" in rawWeights || "MINUS" in rawWeights)) {
+      migratedWeights.PM = (rawWeights.PLUS ?? 0) + Math.abs(rawWeights.MINUS ?? 0);
+      delete (migratedWeights as Record<string, number>).PLUS;
+      delete (migratedWeights as Record<string, number>).MINUS;
+    }
+    const migratedCategories = { ...DEFAULT_LEAGUE.skaterCategories, ...rawCategories };
+    if (rawCategories && ("PLUS" in rawCategories || "MINUS" in rawCategories)) {
+      migratedCategories.PM = rawCategories.PLUS ?? rawCategories.MINUS ?? null;
+      delete (migratedCategories as Record<string, CategoryConfig | null>).PLUS;
+      delete (migratedCategories as Record<string, CategoryConfig | null>).MINUS;
+    }
     return {
       ...DEFAULT_LEAGUE,
       ...saved,
       scoringType: saved.scoringType ?? "points",
-      skaterCategories: saved.skaterCategories
-        ? { ...DEFAULT_LEAGUE.skaterCategories, ...saved.skaterCategories }
+      skaterWeights: migratedWeights,
+      skaterCategories: rawCategories
+        ? migratedCategories
         : emptySkaterCategories(),
       goalieCategories: saved.goalieCategories
         ? { ...DEFAULT_LEAGUE.goalieCategories, ...saved.goalieCategories }
@@ -801,8 +828,8 @@ export default function TradeAnalyzer() {
   // or league size/roster changes, not when categories are toggled.
   const poolStats = useMemo(() => {
     if (playerDb.length === 0) return null;
-    return computePoolStats(playerDb, league.teams, league.roster, SKATER_STATS, GOALIE_STATS);
-  }, [playerDb, league.teams, league.roster]);
+    return computePoolStats(playerDb, league.teams, league.roster, SKATER_STATS, GOALIE_STATS, useRates);
+  }, [playerDb, league.teams, league.roster, useRates]);
 
   // League-specific talent ranking — sorted projected values for every NHL player.
   // Branches on scoringType so pick valuation works in both modes.
@@ -817,10 +844,11 @@ export default function TradeAnalyzer() {
       league.goalieCategories,
       poolStats,
       SKATER_STATS,
-      GOALIE_STATS
+      GOALIE_STATS,
+      useRates
     );
   }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
-      league.skaterCategories, league.goalieCategories, poolStats]);
+      league.skaterCategories, league.goalieCategories, poolStats, useRates]);
 
   // League ranking: playerId → 1-based rank by projected points value.
   // Recomputes only when the DB or scoring weights change.
@@ -833,8 +861,8 @@ export default function TradeAnalyzer() {
     if (league.scoringType === "categories" && poolStats) {
       // Categories mode: rank by z-score value
       sorted = [...playerDb].sort((a, b) => {
-        const va = zScoreValue(a, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS);
-        const vb = zScoreValue(b, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS);
+        const va = zScoreValue(a, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
+        const vb = zScoreValue(b, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
         return vb - va || b.gamesPlayed - a.gamesPlayed;
       });
     } else {
@@ -858,7 +886,7 @@ export default function TradeAnalyzer() {
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
   }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
-      league.skaterCategories, league.goalieCategories, poolStats]);
+      league.skaterCategories, league.goalieCategories, poolStats, useRates]);
 
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
@@ -871,13 +899,14 @@ export default function TradeAnalyzer() {
   );
 
   const isCatMode = league.scoringType === "categories";
+  const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
 
   const sendValue = useMemo(() => {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       const base = isCatMode && poolStats
-        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS)
+        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
         : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
       return sum + base * mult;
@@ -888,14 +917,14 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode]);
+  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       const base = isCatMode && poolStats
-        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS)
+        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
         : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
       return sum + base * mult;
@@ -906,7 +935,7 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode]);
+  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates]);
 
   const totalRosterSize = useMemo(() => {
     return Object.values(league.roster).reduce((a, b) => a + b, 0);
@@ -1207,7 +1236,7 @@ export default function TradeAnalyzer() {
                 {SKATER_STATS.map((stat) => (
                   <div key={stat} className="flex items-center justify-between gap-2">
                     <label className="text-sm w-16">
-                      {stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat}
+                      {stat === "PM" ? "+/-" : stat}
                     </label>
                     <input
                       type="number"
@@ -1248,7 +1277,7 @@ export default function TradeAnalyzer() {
                   <div className="space-y-1">
                     {SKATER_STATS.map((stat) => {
                       const cfg = league.skaterCategories[stat];
-                      const label = stat === "PLUS" ? "+" : stat === "MINUS" ? "−" : stat;
+                      const label = stat === "PM" ? "+/-" : stat;
                       return (
                         <div key={stat} className="flex items-center gap-2 text-sm">
                           <input
