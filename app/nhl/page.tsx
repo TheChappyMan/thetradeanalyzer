@@ -824,6 +824,8 @@ export default function TradeAnalyzer() {
   const [sendPicks, setSendPicks] = useState("");
   const [recvPicks, setRecvPicks] = useState("");
 
+  const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
+
   // Pre-computed population stats for categories mode — recalculates when DB
   // or league size/roster changes, not when categories are toggled.
   const poolStats = useMemo(() => {
@@ -899,7 +901,6 @@ export default function TradeAnalyzer() {
   );
 
   const isCatMode = league.scoringType === "categories";
-  const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
 
   const sendValue = useMemo(() => {
     const playerTotal = sendPlayers.reduce((sum, p) => {
