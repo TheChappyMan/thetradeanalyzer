@@ -827,14 +827,38 @@ export default function TradeAnalyzer() {
   const rankMap = useMemo(() => {
     const map = new Map<number, number>();
     if (playerDb.length === 0) return map;
-    const sorted = [...playerDb].sort(
-      (a, b) =>
-        projectedSeasonValue(b, league.skaterWeights, league.goalieWeights) -
-        projectedSeasonValue(a, league.skaterWeights, league.goalieWeights)
-    );
+
+    let sorted: DbPlayer[];
+
+    if (league.scoringType === "categories" && poolStats) {
+      // Categories mode: rank by z-score value
+      sorted = [...playerDb].sort((a, b) => {
+        const va = zScoreValue(a, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS);
+        const vb = zScoreValue(b, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS);
+        return vb - va || b.gamesPlayed - a.gamesPlayed;
+      });
+    } else {
+      const allZero =
+        Object.values(league.skaterWeights).every((v) => v === 0) &&
+        Object.values(league.goalieWeights).every((v) => v === 0);
+
+      if (allZero) {
+        // No weights set: fall back to gamesPlayed descending
+        sorted = [...playerDb].sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+      } else {
+        // Points mode with weights: rank by projected value, gamesPlayed as tiebreaker
+        sorted = [...playerDb].sort((a, b) => {
+          const va = projectedSeasonValue(a, league.skaterWeights, league.goalieWeights);
+          const vb = projectedSeasonValue(b, league.skaterWeights, league.goalieWeights);
+          return vb - va || b.gamesPlayed - a.gamesPlayed;
+        });
+      }
+    }
+
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
-  }, [playerDb, league.skaterWeights, league.goalieWeights]);
+  }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
+      league.skaterCategories, league.goalieCategories, poolStats]);
 
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
