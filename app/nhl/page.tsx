@@ -140,6 +140,7 @@ type TradePlayer = {
   team: string;
   primaryPosition: string;
   positions: string[];
+  isKeeper: boolean;
 };
 
 type ParsedPick = {
@@ -443,9 +444,18 @@ function valueForPick(
   if (idx < 0) return 0;
   // If the pick exceeds the database, use the last available value as a floor
   if (idx >= talentRanking.length) {
-    return talentRanking[talentRanking.length - 1] || 0;
+    const fallback = talentRanking[talentRanking.length - 1] || 0;
+    return Math.min(fallback, fallback * 1.075);
   }
-  return talentRanking[idx] || 0;
+  // Cap: a pick is never worth more than 1.075× the player at that talent rank
+  const playerValue = talentRanking[idx] || 0;
+  return Math.min(playerValue, playerValue * 1.075);
+}
+
+/** Smooth keeper multiplier: rank 1 → ×1.32, rank 50 → ×1.00, rank 51+ → ×1.00 */
+function keeperMultiplier(rank: number | null): number {
+  if (rank === null || rank > 50) return 1.0;
+  return 1.32 - ((rank - 1) / 49) * 0.32;
 }
 
 // ============================================================
@@ -947,7 +957,8 @@ export default function TradeAnalyzer() {
         ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
         : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
-      return sum + base * mult;
+      const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
+      return sum + base * mult * kMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = sendPicksParsed.reduce(
@@ -955,7 +966,7 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates]);
+  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -965,7 +976,8 @@ export default function TradeAnalyzer() {
         ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
         : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights);
       const mult = positionMultiplier(p.positions, league.roster);
-      return sum + base * mult;
+      const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
+      return sum + base * mult * kMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = recvPicksParsed.reduce(
@@ -973,7 +985,7 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates]);
+  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap]);
 
   const totalRosterSize = useMemo(() => {
     return Object.values(league.roster).reduce((a, b) => a + b, 0);
@@ -1053,7 +1065,6 @@ export default function TradeAnalyzer() {
         score,
         verdict: fairnessDescription(score),
       };
-      console.log("Auto-save firing, currentLeagueId:", currentLeagueId);
       fetch("/api/trades", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1100,6 +1111,7 @@ export default function TradeAnalyzer() {
       team: dbEntry.team,
       primaryPosition: pos,
       positions: useW ? ["W"] : [pos],
+      isKeeper: false,
     };
     setter([...list, newEntry]);
   };
@@ -1122,6 +1134,11 @@ export default function TradeAnalyzer() {
         };
       })
     );
+  };
+
+  const toggleKeeper = (side: "send" | "recv", id: number) => {
+    const setter = side === "send" ? setSendPlayers : setRecvPlayers;
+    setter((prev) => prev.map((p) => p.id === id ? { ...p, isKeeper: !p.isKeeper } : p));
   };
 
   const saveToHistory = useCallback(() => {
@@ -1436,6 +1453,7 @@ export default function TradeAnalyzer() {
             onAdd={(p) => addPlayer("send", p)}
             onRemove={(id) => removePlayer("send", id)}
             onTogglePos={(id, pos) => togglePosition("send", id, pos)}
+            onToggleKeeper={(id) => toggleKeeper("send", id)}
           />
           <TradeSide
             label="You Get"
@@ -1455,6 +1473,7 @@ export default function TradeAnalyzer() {
             onAdd={(p) => addPlayer("recv", p)}
             onRemove={(id) => removePlayer("recv", id)}
             onTogglePos={(id, pos) => togglePosition("recv", id, pos)}
+            onToggleKeeper={(id) => toggleKeeper("recv", id)}
           />
         </div>
       </div>
@@ -1600,13 +1619,14 @@ type TradeSideProps = {
   onAdd: (p: DbPlayer) => void;
   onRemove: (id: number) => void;
   onTogglePos: (id: number, pos: string) => void;
+  onToggleKeeper: (id: number) => void;
 };
 
 function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
   roster, skaterWeights, goalieWeights, rankMap,
-  onAdd, onRemove, onTogglePos,
+  onAdd, onRemove, onTogglePos, onToggleKeeper,
 }: TradeSideProps) {
   return (
     <div>
@@ -1630,6 +1650,7 @@ function TradeSide({
             totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
             onTogglePos={(pos) => onTogglePos(p.id, pos)}
+            onToggleKeeper={() => onToggleKeeper(p.id)}
           />
         ))}
       </div>
@@ -1813,16 +1834,18 @@ type PlayerRowProps = {
   totalPlayers: number;
   onRemove: () => void;
   onTogglePos: (pos: string) => void;
+  onToggleKeeper: () => void;
 };
 
 function PlayerRow({
   player, dbEntry, roster, skaterWeights, goalieWeights, rank, totalPlayers,
-  onRemove, onTogglePos,
+  onRemove, onTogglePos, onToggleKeeper,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
   const mult = positionMultiplier(player.positions, roster);
   const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights);
-  const adjValue = baseValue * mult;
+  const kMult = player.isKeeper ? keeperMultiplier(rank) : 1.0;
+  const adjValue = baseValue * mult * kMult;
 
   const unusedFlagged = player.positions.filter((p) => {
     if (p === "G") return false;
@@ -1874,6 +1897,19 @@ function PlayerRow({
           Note: your league has no {unusedFlagged.join("/")} slots.
         </div>
       )}
+      <div className="mt-1 flex items-center gap-3">
+        <label className="flex items-center gap-1 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={player.isKeeper}
+            onChange={onToggleKeeper}
+          />
+          <span className="text-gray-600">Keeper</span>
+        </label>
+        {player.isKeeper && (
+          <span className="text-blue-600">×{kMult.toFixed(2)}</span>
+        )}
+      </div>
       <div className="mt-1 flex justify-between">
         <span className="text-gray-600">
           Base value: {baseValue.toFixed(1)}

@@ -27,6 +27,7 @@ type NflTradePlayer = {
   name: string;
   team: string;
   position: NflPlayerPosition;
+  isKeeper: boolean;
 };
 
 type ParsedPick = {
@@ -169,8 +170,19 @@ function valueForPick(
   const keeperOffset = teams * keepersPerTeam;
   const idx = keeperOffset + pick.overall - 1;
   if (idx < 0) return 0;
-  if (idx >= talentRanking.length) return talentRanking[talentRanking.length - 1] || 0;
-  return talentRanking[idx] || 0;
+  if (idx >= talentRanking.length) {
+    const fallback = talentRanking[talentRanking.length - 1] || 0;
+    return Math.min(fallback, fallback * 1.075);
+  }
+  // Cap: a pick is never worth more than 1.075× the player at that talent rank
+  const playerValue = talentRanking[idx] || 0;
+  return Math.min(playerValue, playerValue * 1.075);
+}
+
+/** Smooth keeper multiplier: rank 1 → ×1.32, rank 50 → ×1.00, rank 51+ → ×1.00 */
+function keeperMultiplier(rank: number | null): number {
+  if (rank === null || rank > 50) return 1.0;
+  return 1.32 - ((rank - 1) / 49) * 0.32;
 }
 
 // ============================================================
@@ -453,13 +465,14 @@ export default function NflTradeAnalyzer() {
       if (!db) return sum;
       const proj = projectedNflValue(db, league.scoringWeights);
       const repl = replacementLevels.get(p.position) ?? 0;
-      return sum + valueAboveReplacement(proj, repl);
+      const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
+      return sum + valueAboveReplacement(proj, repl) * kMult;
     }, 0);
     const pickTotal = sendPicksParsed.reduce(
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -467,13 +480,14 @@ export default function NflTradeAnalyzer() {
       if (!db) return sum;
       const proj = projectedNflValue(db, league.scoringWeights);
       const repl = replacementLevels.get(p.position) ?? 0;
-      return sum + valueAboveReplacement(proj, repl);
+      const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
+      return sum + valueAboveReplacement(proj, repl) * kMult;
     }, 0);
     const pickTotal = recvPicksParsed.reduce(
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -568,12 +582,18 @@ export default function NflTradeAnalyzer() {
       name: dbEntry.name,
       team: dbEntry.team,
       position: dbEntry.position,
+      isKeeper: false,
     }]);
   };
 
   const removePlayer = (side: "send" | "recv", id: number) => {
     const setter = side === "send" ? setSendPlayers : setRecvPlayers;
     setter((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const toggleKeeper = (side: "send" | "recv", id: number) => {
+    const setter = side === "send" ? setSendPlayers : setRecvPlayers;
+    setter((prev) => prev.map((p) => p.id === id ? { ...p, isKeeper: !p.isKeeper } : p));
   };
 
   const saveToHistory = useCallback(() => {
@@ -846,6 +866,7 @@ export default function NflTradeAnalyzer() {
               rankMap={rankMap}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
+              onToggleKeeper={(id) => toggleKeeper("send", id)}
             />
             <NflTradeSide
               label="You Get"
@@ -863,6 +884,7 @@ export default function NflTradeAnalyzer() {
               rankMap={rankMap}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
+              onToggleKeeper={(id) => toggleKeeper("recv", id)}
             />
           </div>
         </div>
@@ -990,11 +1012,12 @@ type NflTradeSideProps = {
   rankMap: Map<number, number>;
   onAdd: (p: NflDbPlayer) => void;
   onRemove: (id: number) => void;
+  onToggleKeeper: (id: number) => void;
 };
 
 function NflTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
-  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, onAdd, onRemove,
+  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, onAdd, onRemove, onToggleKeeper,
 }: NflTradeSideProps) {
   return (
     <div>
@@ -1016,6 +1039,7 @@ function NflTradeSide({
             rank={rankMap.get(p.id) ?? null}
             totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
+            onToggleKeeper={() => onToggleKeeper(p.id)}
           />
         ))}
       </div>
@@ -1053,15 +1077,17 @@ type NflPlayerRowProps = {
   rank: number | null;
   totalPlayers: number;
   onRemove: () => void;
+  onToggleKeeper: () => void;
 };
 
 function NflPlayerRow({
-  player, dbEntry, scoringWeights, replacementLevels, rank, totalPlayers, onRemove,
+  player, dbEntry, scoringWeights, replacementLevels, rank, totalPlayers, onRemove, onToggleKeeper,
 }: NflPlayerRowProps) {
   if (!dbEntry) return null;
   const projected = projectedNflValue(dbEntry, scoringWeights);
   const repl      = replacementLevels.get(player.position) ?? 0;
-  const varValue  = valueAboveReplacement(projected, repl);
+  const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
+  const varValue  = valueAboveReplacement(projected, repl) * kMult;
 
   return (
     <div className="border rounded-xl p-2 bg-gray-50 text-xs">
@@ -1088,6 +1114,19 @@ function NflPlayerRow({
           )}
         </span>
         <span className="font-semibold text-gray-800">VAR: {varValue.toFixed(1)}</span>
+      </div>
+      <div className="mt-1 flex items-center gap-2">
+        <label className="flex items-center gap-1 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={player.isKeeper}
+            onChange={onToggleKeeper}
+          />
+          <span className="text-gray-600">Keeper</span>
+        </label>
+        {player.isKeeper && (
+          <span className="text-blue-600">×{kMult.toFixed(2)}</span>
+        )}
       </div>
     </div>
   );
