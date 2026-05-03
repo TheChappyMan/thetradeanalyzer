@@ -361,6 +361,8 @@ export default function NflTradeAnalyzer() {
       : base;
   }, [dataMode, currentSeasonDb, priorSeasonDb]);
 
+  const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
+
   // ── Auto-save league settings to localStorage (free only) ─
   useEffect(() => {
     if (isPro) return;
@@ -421,34 +423,34 @@ export default function NflTradeAnalyzer() {
     for (const pos of NFL_POSITIONS) {
       map.set(pos, replacementLevelValue(
         pos, playerDb, league.scoringWeights,
-        league.roster as NflRoster, league.teams, league.qbFormat,
+        league.roster as NflRoster, league.teams, league.qbFormat, useRates,
       ));
     }
     return map;
-  }, [playerDb, league.scoringWeights, league.roster, league.teams, league.qbFormat]);
+  }, [playerDb, league.scoringWeights, league.roster, league.teams, league.qbFormat, useRates]);
 
   // ── Talent ranking (VAR desc) for pick valuation ──────────
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
     return playerDb
       .map((p) => {
-        const proj = projectedNflValue(p, league.scoringWeights);
+        const proj = projectedNflValue(p, league.scoringWeights, useRates);
         const repl = replacementLevels.get(p.position) ?? 0;
         return valueAboveReplacement(proj, repl);
       })
       .sort((a, b) => b - a);
-  }, [playerDb, league.scoringWeights, replacementLevels]);
+  }, [playerDb, league.scoringWeights, replacementLevels, useRates]);
 
   // ── League ranking (projected pts desc) for player display ─
   const rankMap = useMemo(() => {
     const map = new Map<number, number>();
     if (playerDb.length === 0) return map;
     const sorted = [...playerDb].sort(
-      (a, b) => projectedNflValue(b, league.scoringWeights) - projectedNflValue(a, league.scoringWeights)
+      (a, b) => projectedNflValue(b, league.scoringWeights, useRates) - projectedNflValue(a, league.scoringWeights, useRates)
     );
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
-  }, [playerDb, league.scoringWeights]);
+  }, [playerDb, league.scoringWeights, useRates]);
 
   // ── Parsed picks ───────────────────────────────────────────
   const sendPicksParsed = useMemo(
@@ -463,7 +465,7 @@ export default function NflTradeAnalyzer() {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const db = playerDb.find((x) => x.id === p.id);
       if (!db) return sum;
-      const proj = projectedNflValue(db, league.scoringWeights);
+      const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       return sum + valueAboveReplacement(proj, repl) * kMult;
@@ -472,13 +474,13 @@ export default function NflTradeAnalyzer() {
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, useRates]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
       const db = playerDb.find((x) => x.id === p.id);
       if (!db) return sum;
-      const proj = projectedNflValue(db, league.scoringWeights);
+      const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       return sum + valueAboveReplacement(proj, repl) * kMult;
@@ -487,7 +489,7 @@ export default function NflTradeAnalyzer() {
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, useRates]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -873,6 +875,7 @@ export default function NflTradeAnalyzer() {
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
               onToggleKeeper={(id) => toggleKeeper("send", id)}
+              useRates={useRates}
             />
             <NflTradeSide
               label="You Get"
@@ -891,6 +894,7 @@ export default function NflTradeAnalyzer() {
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
               onToggleKeeper={(id) => toggleKeeper("recv", id)}
+              useRates={useRates}
             />
           </div>
         </div>
@@ -1019,11 +1023,12 @@ type NflTradeSideProps = {
   onAdd: (p: NflDbPlayer) => void;
   onRemove: (id: number) => void;
   onToggleKeeper: (id: number) => void;
+  useRates: boolean;
 };
 
 function NflTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
-  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, onAdd, onRemove, onToggleKeeper,
+  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, onAdd, onRemove, onToggleKeeper, useRates,
 }: NflTradeSideProps) {
   return (
     <div>
@@ -1046,6 +1051,7 @@ function NflTradeSide({
             totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
             onToggleKeeper={() => onToggleKeeper(p.id)}
+            useRates={useRates}
           />
         ))}
       </div>
@@ -1084,13 +1090,14 @@ type NflPlayerRowProps = {
   totalPlayers: number;
   onRemove: () => void;
   onToggleKeeper: () => void;
+  useRates: boolean;
 };
 
 function NflPlayerRow({
-  player, dbEntry, scoringWeights, replacementLevels, rank, totalPlayers, onRemove, onToggleKeeper,
+  player, dbEntry, scoringWeights, replacementLevels, rank, totalPlayers, onRemove, onToggleKeeper, useRates,
 }: NflPlayerRowProps) {
   if (!dbEntry) return null;
-  const projected = projectedNflValue(dbEntry, scoringWeights);
+  const projected = projectedNflValue(dbEntry, scoringWeights, useRates);
   const repl      = replacementLevels.get(player.position) ?? 0;
   const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
   const varValue  = valueAboveReplacement(projected, repl) * kMult;

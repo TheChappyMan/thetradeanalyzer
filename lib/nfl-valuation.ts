@@ -10,58 +10,63 @@ import type {
 // ============================================================
 
 /**
- * Project full-season (17-game) fantasy value for a player using their
- * per-game rates and the provided scoring weights.
+ * Project full-season (17-game) fantasy value for a player.
  *
- * DST points-allowed scoring uses a step function: the player's average
- * points allowed per game determines which bracket fires each week.
+ * useRates=true  (Avg mode): divides raw stats by gamesPlayed then × 17.
+ * useRates=false (Total mode): uses raw season totals directly.
+ *
+ * DST points-allowed scoring always uses per-game average for bracket
+ * lookup, regardless of mode.
  */
 export function projectedNflValue(
   player: NflDbPlayer,
-  weights: NflScoringWeights
+  weights: NflScoringWeights,
+  useRates: boolean = true
 ): number {
   const gp = player.gamesPlayed
   if (gp === 0) return 0
   const s = player.stats
 
   if (player.position === 'K') {
-    const perGame =
-      ((s.fgMade0to39  ?? 0) / gp) * weights.fgMade0to39  +
-      ((s.fgMade40to49 ?? 0) / gp) * weights.fgMade40to49 +
-      ((s.fgMade50plus ?? 0) / gp) * weights.fgMade50plus +
-      ((s.fgMissed     ?? 0) / gp) * weights.fgMissed     +
-      ((s.patMade      ?? 0) / gp) * weights.patMade      +
-      ((s.patMissed    ?? 0) / gp) * weights.patMissed
-    return perGame * 17
+    const total =
+      (s.fgMade0to39  ?? 0) * weights.fgMade0to39  +
+      (s.fgMade40to49 ?? 0) * weights.fgMade40to49 +
+      (s.fgMade50plus ?? 0) * weights.fgMade50plus +
+      (s.fgMissed     ?? 0) * weights.fgMissed     +
+      (s.patMade      ?? 0) * weights.patMade      +
+      (s.patMissed    ?? 0) * weights.patMissed
+    return useRates ? (total / gp) * 17 : total
   }
 
   if (player.position === 'DST') {
-    const countingPerGame =
-      ((s.sacks   ?? 0) / gp) * weights.sacks  +
-      ((s.ints    ?? 0) / gp) * weights.ints   +
-      ((s.fumbRec ?? 0) / gp) * weights.fumbRec +
-      ((s.defTDs  ?? 0) / gp) * weights.defTDs
+    const countingTotal =
+      (s.sacks   ?? 0) * weights.sacks  +
+      (s.ints    ?? 0) * weights.ints   +
+      (s.fumbRec ?? 0) * weights.fumbRec +
+      (s.defTDs  ?? 0) * weights.defTDs
 
-    // Points-allowed step function applied per game
+    // Points-allowed step function: always uses per-game average for bracket lookup
     const avgPtsAllowed = (s.ptsAllowed ?? 0) / gp
-    const ptsAllowedPtsPerGame = dstPtsAllowedScore(avgPtsAllowed, weights)
+    const ptsAllowedPerGame = dstPtsAllowedScore(avgPtsAllowed, weights)
 
-    return (countingPerGame + ptsAllowedPtsPerGame) * 17
+    return useRates
+      ? (countingTotal / gp + ptsAllowedPerGame) * 17
+      : countingTotal + ptsAllowedPerGame * gp
   }
 
   // ── Skill positions (QB / RB / WR / TE) ───────────────────
-  const perGame =
-    ((s.passYds     ?? 0) / gp) * weights.passYds     +
-    ((s.passTDs     ?? 0) / gp) * weights.passTDs     +
-    ((s.passInt     ?? 0) / gp) * weights.passInt     +
-    ((s.rushYds     ?? 0) / gp) * weights.rushYds     +
-    ((s.rushTDs     ?? 0) / gp) * weights.rushTDs     +
-    ((s.rec         ?? 0) / gp) * weights.rec         +
-    ((s.recYds      ?? 0) / gp) * weights.recYds      +
-    ((s.recTDs      ?? 0) / gp) * weights.recTDs      +
-    ((s.fumblesLost ?? 0) / gp) * weights.fumblesLost
+  const skillTotal =
+    (s.passYds     ?? 0) * weights.passYds     +
+    (s.passTDs     ?? 0) * weights.passTDs     +
+    (s.passInt     ?? 0) * weights.passInt     +
+    (s.rushYds     ?? 0) * weights.rushYds     +
+    (s.rushTDs     ?? 0) * weights.rushTDs     +
+    (s.rec         ?? 0) * weights.rec         +
+    (s.recYds      ?? 0) * weights.recYds      +
+    (s.recTDs      ?? 0) * weights.recTDs      +
+    (s.fumblesLost ?? 0) * weights.fumblesLost
 
-  return perGame * 17
+  return useRates ? (skillTotal / gp) * 17 : skillTotal
 }
 
 /**
@@ -101,11 +106,12 @@ export function replacementLevelValue(
   weights: NflScoringWeights,
   roster: NflRoster,
   teams: number,
-  qbFormat: '1QB' | '2QB'
+  qbFormat: '1QB' | '2QB',
+  useRates: boolean = true
 ): number {
   const values = allPlayers
     .filter(p => p.position === position)
-    .map(p => projectedNflValue(p, weights))
+    .map(p => projectedNflValue(p, weights, useRates))
     .sort((a, b) => b - a)
 
   if (values.length === 0) return 0
