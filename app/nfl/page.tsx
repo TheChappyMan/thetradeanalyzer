@@ -506,6 +506,7 @@ export default function NflTradeAnalyzer() {
   const youWin = recvValue >= sendValue;
   const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
   const displayScore = youWin ? 50 + ratioDistance : 50 - ratioDistance;
+  const safeDisplayScore = isNaN(displayScore) ? 50 : displayScore;
 
   function tradeOutline(ds: number): string {
     if (ds <= 10.4) return "Horrific trade, don't do this.";
@@ -919,7 +920,7 @@ export default function NflTradeAnalyzer() {
             <div>
               <div className="text-xs text-gray-600">Trade Outline</div>
               {(sendValue > 0 || recvValue > 0) && (
-                <div className="text-sm font-medium text-gray-800">{tradeOutline(displayScore)}</div>
+                <div className="text-sm font-medium text-gray-800">{tradeOutline(safeDisplayScore)}</div>
               )}
             </div>
           </div>
@@ -943,7 +944,7 @@ export default function NflTradeAnalyzer() {
               <div style={{ width: "10.5%", background: "#000000" }} />
               <div
                 className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
-                style={{ left: `${displayScore}%` }}
+                style={{ left: `${safeDisplayScore}%` }}
               />
             </div>
           </div>

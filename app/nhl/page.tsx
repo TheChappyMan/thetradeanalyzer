@@ -1015,10 +1015,12 @@ export default function TradeAnalyzer() {
 
   // displayScore: ratio-based distance from center mapped to 0–100,
   // with direction (you win = right of center, opponent wins = left).
+  // Uses the same offset-adjusted values as tradeRating to handle negative z-scores.
   const ratio = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
   const youWin = recvValue >= sendValue;
   const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
   const displayScore = youWin ? 50 + ratioDistance : 50 - ratioDistance;
+  const safeDisplayScore = isNaN(displayScore) ? 50 : displayScore;
 
   function barColor(ds: number): string {
     if (ds <= 10.4) return "#000000";
@@ -1514,7 +1516,7 @@ export default function TradeAnalyzer() {
           <div>
             <div className="text-xs text-gray-600">Trade Outline</div>
             {(sendValue > 0 || recvValue > 0) && (
-              <div className="text-sm font-medium text-gray-800">{tradeOutline(displayScore)}</div>
+              <div className="text-sm font-medium text-gray-800">{tradeOutline(safeDisplayScore)}</div>
             )}
           </div>
         </div>
@@ -1541,7 +1543,7 @@ export default function TradeAnalyzer() {
             {/* Marker */}
             <div
               className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
-              style={{ left: `${displayScore}%` }}
+              style={{ left: `${safeDisplayScore}%` }}
             />
           </div>
         </div>
