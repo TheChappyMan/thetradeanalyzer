@@ -179,10 +179,10 @@ function valueForPick(
   return Math.min(playerValue, playerValue * 1.075);
 }
 
-/** Smooth keeper multiplier: rank 1 → ×1.32, rank 50 → ×1.00, rank 51+ → ×1.00 */
+/** Smooth keeper multiplier: rank 1 → ×1.32, rank 150 → ×1.00, rank 151+ → ×1.00 */
 function keeperMultiplier(rank: number | null): number {
-  if (rank === null || rank > 50) return 1.0;
-  return 1.32 - ((rank - 1) / 49) * 0.32;
+  if (rank === null || rank > 150) return 1.0;
+  return 1.32 - ((rank - 1) / 149) * 0.32;
 }
 
 // ============================================================
