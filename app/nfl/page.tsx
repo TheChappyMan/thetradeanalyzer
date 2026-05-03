@@ -491,11 +491,16 @@ export default function NflTradeAnalyzer() {
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
-  const minVal = Math.min(sendValue, recvValue);
-  const maxVal = Math.max(sendValue, recvValue);
+  // Shift both values so the minimum is 0 before computing ratios.
+  // This prevents negative values from inverting the ratio.
+  const offset = Math.min(0, sendValue, recvValue);
+  const adjustedSend = sendValue - offset;
+  const adjustedRecv = recvValue - offset;
+  const minVal = Math.min(adjustedSend, adjustedRecv);
+  const maxVal = Math.max(adjustedSend, adjustedRecv);
   const tradeRating = (minVal === 0 || maxVal === 0)
     ? 0
-    : Math.round(100 * Math.exp(-2.5 * (maxVal / minVal - 1)) * 10) / 10;
+    : Math.min(100, Math.round(100 * Math.exp(-2.5 * (maxVal / minVal - 1)) * 10) / 10);
 
   const ratio = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
   const youWin = recvValue >= sendValue;
