@@ -1515,7 +1515,7 @@ export default function TradeAnalyzer() {
           </div>
           <div>
             <div className="text-xs text-gray-600">Trade Outline</div>
-            {(sendValue > 0 || recvValue > 0) && (
+            {(sendValue !== 0 || recvValue !== 0) && (
               <div className="text-sm font-medium text-gray-800">{tradeOutline(safeDisplayScore)}</div>
             )}
           </div>
