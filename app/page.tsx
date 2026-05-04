@@ -133,7 +133,7 @@ export default function Dashboard() {
 
       ) : isPro ? (
         /* ── Tier 1 dashboard ──────────────────────────────────── */
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <DashCard
             href="/nhl"
             title="NHL League"
@@ -145,6 +145,11 @@ export default function Dashboard() {
             description="Analyze NFL trades using your league's scoring settings."
           />
           <DashCard
+            href="/mlb"
+            title="MLB League"
+            description="Analyze MLB trades using your league's scoring settings."
+          />
+          <DashCard
             href="/history"
             title="Trade History"
             description="Review and compare trades you've analyzed."
@@ -154,7 +159,7 @@ export default function Dashboard() {
       ) : (
         /* ── Free dashboard ─────────────────────────────────────── */
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <DashCard
               href="/nhl"
               title="NHL Trade Analyzer"
@@ -164,6 +169,11 @@ export default function Dashboard() {
               href="/nfl"
               title="NFL Trade Analyzer"
               description="Analyze NFL trades using your league's scoring settings."
+            />
+            <DashCard
+              href="/mlb"
+              title="MLB Trade Analyzer"
+              description="Analyze MLB trades using your league's scoring settings."
             />
           </div>
 

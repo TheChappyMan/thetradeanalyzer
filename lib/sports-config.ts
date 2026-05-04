@@ -14,5 +14,5 @@ export type SportConfig = {
 export const SPORTS_CONFIG: SportConfig[] = [
   { key: "nhl", label: "NHL", path: "/nhl", settingsTab: "NHL" },
   { key: "nfl", label: "NFL", path: "/nfl", settingsTab: "NFL" },
-  // Future sports added here
+  { key: "mlb", label: "MLB", path: "/mlb", settingsTab: "MLB" },
 ];
