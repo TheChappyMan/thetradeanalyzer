@@ -4,6 +4,25 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
+import {
+  type HitterStatKey,
+  type PitcherStatKey,
+  type HitterWeights,
+  type PitcherWeights,
+  type CategoryConfig,
+  type LeagueFormat,
+  type MlbRosterKey,
+  type MlbRoster,
+  type MlbLeague,
+  HITTER_STATS,
+  PITCHER_STATS,
+  emptyHitterWeights,
+  emptyPitcherWeights,
+  emptyHitterCategories,
+  emptyPitcherCategories,
+  presetForFormat,
+  DEFAULT_MLB_LEAGUE,
+} from "@/lib/mlb-types";
 
 /**
  * Fantasy MLB Trade Analyzer
@@ -16,43 +35,6 @@ import { useLeagueContext } from "@/lib/league-context";
  *  - Closer inflation warning badge
  *  - Data modes: This Year Total/Proj, Last Year Total/Proj
  */
-
-// ============================================================
-// TYPES
-// ============================================================
-
-type HitterStatKey =
-  | "G" | "R" | "HR" | "RBI" | "SB" | "AVG" | "OBP" | "SLG"
-  | "H" | "BB" | "K" | "XBH" | "TB" | "CS" | "AB";
-
-type PitcherStatKey =
-  | "W" | "L" | "SV" | "HLD" | "K" | "ERA" | "WHIP"
-  | "IP" | "QS" | "BB" | "HR9";
-
-type HitterWeights  = Record<HitterStatKey,  number>;
-type PitcherWeights = Record<PitcherStatKey, number>;
-
-type CategoryConfig = { direction: "more" | "less" };
-
-type LeagueFormat = "5x5" | "obp" | "points";
-
-type MlbRosterKey =
-  | "C" | "1B" | "2B" | "3B" | "SS" | "OF" | "UTIL"
-  | "SP" | "RP" | "P" | "BN" | "IL";
-type MlbRoster = Record<MlbRosterKey, number>;
-
-type MlbLeague = {
-  name: string;
-  teams: number;
-  leagueType: "redraft" | "keeper";
-  keepersPerTeam: number;
-  roster: MlbRoster;
-  format: LeagueFormat;
-  hitterWeights: HitterWeights;
-  pitcherWeights: PitcherWeights;
-  hitterCategories: Record<HitterStatKey,  CategoryConfig | null>;
-  pitcherCategories: Record<PitcherStatKey, CategoryConfig | null>;
-};
 
 // ============================================================
 // PERSISTENCE – localStorage helpers
@@ -668,77 +650,7 @@ function valueForPick(
   return Math.min(playerValue, playerValue * 1.075);
 }
 
-// ============================================================
-// CONSTANTS
-// ============================================================
-
-const HITTER_STATS: HitterStatKey[] = [
-  "G", "R", "HR", "RBI", "SB", "AVG", "OBP", "SLG",
-  "H", "BB", "K", "XBH", "TB", "CS", "AB",
-];
-
-const PITCHER_STATS: PitcherStatKey[] = [
-  "W", "L", "SV", "HLD", "K", "ERA", "WHIP", "IP", "QS", "BB", "HR9",
-];
-
-function emptyHitterWeights(): HitterWeights {
-  return HITTER_STATS.reduce((a, s) => ({ ...a, [s]: 0 }), {} as HitterWeights);
-}
-function emptyPitcherWeights(): PitcherWeights {
-  return PITCHER_STATS.reduce((a, s) => ({ ...a, [s]: 0 }), {} as PitcherWeights);
-}
-function emptyHitterCategories(): Record<HitterStatKey, CategoryConfig | null> {
-  return HITTER_STATS.reduce((a, s) => ({ ...a, [s]: null }), {} as Record<HitterStatKey, CategoryConfig | null>);
-}
-function emptyPitcherCategories(): Record<PitcherStatKey, CategoryConfig | null> {
-  return PITCHER_STATS.reduce((a, s) => ({ ...a, [s]: null }), {} as Record<PitcherStatKey, CategoryConfig | null>);
-}
-
-// ── Format presets ─────────────────────────────────────────────
-
-function presetForFormat(format: LeagueFormat): {
-  hitterCategories:  Record<HitterStatKey,  CategoryConfig | null>;
-  pitcherCategories: Record<PitcherStatKey, CategoryConfig | null>;
-  hitterWeights:     HitterWeights;
-  pitcherWeights:    PitcherWeights;
-} {
-  const hc = emptyHitterCategories();
-  const pc = emptyPitcherCategories();
-  const hw = emptyHitterWeights();
-  const pw = emptyPitcherWeights();
-
-  if (format === "5x5") {
-    hc.R = { direction: "more" }; hc.HR  = { direction: "more" };
-    hc.RBI = { direction: "more" }; hc.SB = { direction: "more" };
-    hc.AVG = { direction: "more" };
-    pc.W = { direction: "more" }; pc.SV   = { direction: "more" };
-    pc.K = { direction: "more" }; pc.ERA  = { direction: "less" };
-    pc.WHIP = { direction: "less" };
-  } else if (format === "obp") {
-    hc.R = { direction: "more" }; hc.HR  = { direction: "more" };
-    hc.RBI = { direction: "more" }; hc.SB = { direction: "more" };
-    hc.OBP = { direction: "more" };
-    pc.W = { direction: "more" }; pc.SV   = { direction: "more" };
-    pc.K = { direction: "more" }; pc.ERA  = { direction: "less" };
-    pc.WHIP = { direction: "less" };
-  } else {
-    // Points defaults
-    hw.R = 1; hw.H = 1; hw.HR = 4; hw.RBI = 1; hw.BB = 1; hw.SB = 2; hw.K = -1;
-    pw.W = 5; pw.L = -3; pw.SV = 5; pw.HLD = 3; pw.K = 1; pw.IP = 1; pw.QS = 3; pw.BB = -1;
-  }
-
-  return { hitterCategories: hc, pitcherCategories: pc, hitterWeights: hw, pitcherWeights: pw };
-}
-
-const DEFAULT_LEAGUE: MlbLeague = {
-  name: "",
-  teams: 12,
-  leagueType: "redraft",
-  keepersPerTeam: 0,
-  roster: { C: 1, "1B": 1, "2B": 1, "3B": 1, SS: 1, OF: 3, UTIL: 1, SP: 5, RP: 3, P: 0, BN: 5, IL: 2 },
-  format: "5x5",
-  ...presetForFormat("5x5"),
-};
+// DEFAULT_MLB_LEAGUE is imported as DEFAULT_MLB_LEAGUE from @/lib/mlb-types
 
 // ============================================================
 // MAIN COMPONENT
@@ -753,16 +665,16 @@ export default function MlbTradeAnalyzer() {
 
   const [league, setLeague] = useState<MlbLeague>(() => {
     const saved = loadCurrentLeague();
-    if (!saved) return DEFAULT_LEAGUE;
+    if (!saved) return DEFAULT_MLB_LEAGUE;
     return {
-      ...DEFAULT_LEAGUE,
+      ...DEFAULT_MLB_LEAGUE,
       ...saved,
       format: saved.format ?? "5x5",
       hitterCategories:  saved.hitterCategories
-        ? { ...DEFAULT_LEAGUE.hitterCategories,  ...saved.hitterCategories  }
+        ? { ...DEFAULT_MLB_LEAGUE.hitterCategories,  ...saved.hitterCategories  }
         : emptyHitterCategories(),
       pitcherCategories: saved.pitcherCategories
-        ? { ...DEFAULT_LEAGUE.pitcherCategories, ...saved.pitcherCategories }
+        ? { ...DEFAULT_MLB_LEAGUE.pitcherCategories, ...saved.pitcherCategories }
         : emptyPitcherCategories(),
     };
   });
@@ -851,14 +763,14 @@ export default function MlbTradeAnalyzer() {
 
   const applyLeagueSettings = useCallback((settings: MlbLeague) => {
     setLeague({
-      ...DEFAULT_LEAGUE,
+      ...DEFAULT_MLB_LEAGUE,
       ...settings,
       format: settings.format ?? "5x5",
       hitterCategories:  settings.hitterCategories
-        ? { ...DEFAULT_LEAGUE.hitterCategories,  ...settings.hitterCategories  }
+        ? { ...DEFAULT_MLB_LEAGUE.hitterCategories,  ...settings.hitterCategories  }
         : emptyHitterCategories(),
       pitcherCategories: settings.pitcherCategories
-        ? { ...DEFAULT_LEAGUE.pitcherCategories, ...settings.pitcherCategories }
+        ? { ...DEFAULT_MLB_LEAGUE.pitcherCategories, ...settings.pitcherCategories }
         : emptyPitcherCategories(),
     });
   }, []);

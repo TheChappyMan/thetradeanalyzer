@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { saveLeagueSettings, saveNflLeagueSettings } from "./actions";
+import { saveLeagueSettings, saveNflLeagueSettings, saveMlbLeagueSettings } from "./actions";
 import {
   DEFAULT_LEAGUE,
   GOALIE_STATS,
@@ -21,6 +21,17 @@ import {
   type NflScoringWeights,
   type NflRoster,
 } from "@/lib/nfl-types";
+import {
+  DEFAULT_MLB_LEAGUE,
+  HITTER_STATS,
+  PITCHER_STATS,
+  presetForFormat,
+  type HitterStatKey,
+  type MlbLeague,
+  type MlbRosterKey,
+  type LeagueFormat,
+  type PitcherStatKey,
+} from "@/lib/mlb-types";
 
 // ============================================================
 // NFL scoring weight helpers
@@ -95,6 +106,18 @@ function mergeNflLeague(saved: NflLeague): NflLeague {
   };
 }
 
+function mergeMlbLeague(saved: MlbLeague): MlbLeague {
+  return {
+    ...DEFAULT_MLB_LEAGUE,
+    ...saved,
+    roster:            { ...DEFAULT_MLB_LEAGUE.roster,            ...saved.roster },
+    hitterWeights:     { ...DEFAULT_MLB_LEAGUE.hitterWeights,     ...saved.hitterWeights },
+    pitcherWeights:    { ...DEFAULT_MLB_LEAGUE.pitcherWeights,    ...saved.pitcherWeights },
+    hitterCategories:  { ...DEFAULT_MLB_LEAGUE.hitterCategories,  ...saved.hitterCategories },
+    pitcherCategories: { ...DEFAULT_MLB_LEAGUE.pitcherCategories, ...saved.pitcherCategories },
+  };
+}
+
 // ============================================================
 // Props and types
 // ============================================================
@@ -102,12 +125,14 @@ function mergeNflLeague(saved: NflLeague): NflLeague {
 type Props = {
   initialLeague:    League    | null;
   initialNflLeague: NflLeague | null;
+  initialMlbLeague: MlbLeague | null;
   tier:             string;
   allNhlLeagues:    LeagueRow[];
   allNflLeagues:    LeagueRow[];
+  allMlbLeagues:    LeagueRow[];
 };
 
-type Tab        = "nhl" | "nfl";
+type Tab        = "nhl" | "nfl" | "mlb";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 // ============================================================
@@ -117,9 +142,11 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 export default function NhlSettingsForm({
   initialLeague,
   initialNflLeague,
+  initialMlbLeague,
   tier,
   allNhlLeagues: initialNhlLeagues,
   allNflLeagues: initialNflLeagues,
+  allMlbLeagues: initialMlbLeagues,
 }: Props) {
   const isTier2 = tier === "tier2";
 
@@ -128,14 +155,19 @@ export default function NhlSettingsForm({
   // ── Tier 2 league lists ───────────────────────────────────
   const [nhlLeagues, setNhlLeagues] = useState<LeagueRow[]>(initialNhlLeagues);
   const [nflLeagues, setNflLeagues] = useState<LeagueRow[]>(initialNflLeagues);
+  const [mlbLeagues, setMlbLeagues] = useState<LeagueRow[]>(initialMlbLeagues);
   const [selectedNhlId, setSelectedNhlId] = useState<string | null>(
     initialNhlLeagues[0]?.id ?? null
   );
   const [selectedNflId, setSelectedNflId] = useState<string | null>(
     initialNflLeagues[0]?.id ?? null
   );
+  const [selectedMlbId, setSelectedMlbId] = useState<string | null>(
+    initialMlbLeagues[0]?.id ?? null
+  );
   const [creatingNhl, setCreatingNhl] = useState(false);
   const [creatingNfl, setCreatingNfl] = useState(false);
+  const [creatingMlb, setCreatingMlb] = useState(false);
 
   // ── NHL state ─────────────────────────────────────────────
   const [league, setLeague] = useState<League>(() =>
@@ -153,8 +185,30 @@ export default function NhlSettingsForm({
   const [nflStatus,    setNflStatus]    = useState<SaveStatus>("idle");
   const [nflSaveError, setNflSaveError] = useState<string | null>(null);
 
+  // ── MLB state ─────────────────────────────────────────────
+  const [mlbLeague, setMlbLeague] = useState<MlbLeague>(() =>
+    initialMlbLeague ? mergeMlbLeague(initialMlbLeague) : DEFAULT_MLB_LEAGUE
+  );
+  const [mlbIsNew,     setMlbIsNew]     = useState(initialMlbLeague === null);
+  const [mlbStatus,    setMlbStatus]    = useState<SaveStatus>("idle");
+  const [mlbSaveError, setMlbSaveError] = useState<string | null>(null);
+
+  // ── MLB updaters ──────────────────────────────────────────
+  const updateMlbLeague = (patch: Partial<MlbLeague>) => setMlbLeague((p) => ({ ...p, ...patch }));
+  const updateMlbRoster = (pos: MlbRosterKey, val: number) =>
+    setMlbLeague((p) => ({ ...p, roster: { ...p.roster, [pos]: val } }));
+  const updateMlbHitterWeight = (stat: HitterStatKey, val: number) =>
+    setMlbLeague((p) => ({ ...p, hitterWeights: { ...p.hitterWeights, [stat]: val } }));
+  const updateMlbPitcherWeight = (stat: PitcherStatKey, val: number) =>
+    setMlbLeague((p) => ({ ...p, pitcherWeights: { ...p.pitcherWeights, [stat]: val } }));
+  const updateMlbHitterCategory = (stat: HitterStatKey, cfg: CategoryConfig | null) =>
+    setMlbLeague((p) => ({ ...p, hitterCategories: { ...p.hitterCategories, [stat]: cfg } }));
+  const updateMlbPitcherCategory = (stat: PitcherStatKey, cfg: CategoryConfig | null) =>
+    setMlbLeague((p) => ({ ...p, pitcherCategories: { ...p.pitcherCategories, [stat]: cfg } }));
+
   // ── Derived ───────────────────────────────────────────────
-  const isCatMode = league.scoringType === "categories";
+  const isCatMode    = league.scoringType === "categories";
+  const isMlbCatMode = mlbLeague.format !== "points";
 
   const totalNhlRosterSize = useMemo(
     () => Object.values(league.roster).reduce((a, b) => a + b, 0),
@@ -163,6 +217,10 @@ export default function NhlSettingsForm({
   const totalNflRosterSize = useMemo(
     () => Object.values(nflLeague.roster).reduce((a, b) => a + b, 0),
     [nflLeague.roster]
+  );
+  const totalMlbRosterSize = useMemo(
+    () => Object.values(mlbLeague.roster).reduce((a, b) => a + b, 0),
+    [mlbLeague.roster]
   );
 
   // ── NHL updaters ──────────────────────────────────────────
@@ -205,6 +263,14 @@ export default function NhlSettingsForm({
     else setNflLeague(DEFAULT_NFL_LEAGUE);
   }
 
+  // ── Tier 2: switch MLB league ─────────────────────────────
+  function handleMlbLeagueChange(id: string) {
+    setSelectedMlbId(id);
+    const row = mlbLeagues.find((r) => r.id === id);
+    if (row?.settings) setMlbLeague(mergeMlbLeague(row.settings as MlbLeague));
+    else setMlbLeague(DEFAULT_MLB_LEAGUE);
+  }
+
   // ── Tier 2: create new NHL league ────────────────────────
   async function handleCreateNhlLeague() {
     setCreatingNhl(true);
@@ -241,6 +307,25 @@ export default function NhlSettingsForm({
       setNflIsNew(false);
     }
     setCreatingNfl(false);
+  }
+
+  // ── Tier 2: create new MLB league ────────────────────────
+  async function handleCreateMlbLeague() {
+    setCreatingMlb(true);
+    const res = await fetch("/api/leagues", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sport: "mlb", name: "New League", settings: DEFAULT_MLB_LEAGUE }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const newRow = json.data as LeagueRow;
+      setMlbLeagues((prev) => [newRow, ...prev]);
+      setSelectedMlbId(newRow.id);
+      setMlbLeague(DEFAULT_MLB_LEAGUE);
+      setMlbIsNew(false);
+    }
+    setCreatingMlb(false);
   }
 
   // ── Save handlers ─────────────────────────────────────────
@@ -285,6 +370,47 @@ export default function NhlSettingsForm({
     } else {
       setNhlStatus("error");
       setNhlSaveError(result.error ?? "Unknown error");
+    }
+  }
+
+  async function handleMlbSave() {
+    setMlbStatus("saving");
+    setMlbSaveError(null);
+
+    if (isTier2 && selectedMlbId) {
+      const res = await fetch("/api/leagues", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedMlbId,
+          name: mlbLeague.name || "My MLB League",
+          settings: mlbLeague,
+        }),
+      });
+      if (res.ok) {
+        setMlbIsNew(false);
+        setMlbStatus("saved");
+        setMlbLeagues((prev) =>
+          prev.map((l) =>
+            l.id === selectedMlbId ? { ...l, name: mlbLeague.name || "My MLB League" } : l
+          )
+        );
+        setTimeout(() => setMlbStatus("idle"), 2000);
+      } else {
+        setMlbStatus("error");
+        setMlbSaveError("Save failed");
+      }
+      return;
+    }
+
+    const result = await saveMlbLeagueSettings(mlbLeague);
+    if (result.success) {
+      setMlbIsNew(false);
+      setMlbStatus("saved");
+      setTimeout(() => setMlbStatus("idle"), 2000);
+    } else {
+      setMlbStatus("error");
+      setMlbSaveError(result.error ?? "Unknown error");
     }
   }
 
@@ -368,11 +494,25 @@ export default function NhlSettingsForm({
             </button>
           </div>
         )}
+
+        {activeTab === "mlb" && (
+          <div className="flex items-center gap-3">
+            {mlbStatus === "saved" && <span className="text-xs text-green-600">✓ Saved!</span>}
+            {mlbStatus === "error" && <span className="text-xs text-red-600">{mlbSaveError}</span>}
+            <button
+              className="text-sm bg-blue-600 text-white rounded-lg px-4 py-1.5 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleMlbSave}
+              disabled={mlbStatus === "saving"}
+            >
+              {mlbStatus === "saving" ? "Saving…" : mlbIsNew ? "Create League" : "Save Settings"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Tabs ────────────────────────────────────────────── */}
       <div className="flex gap-1 mb-6 border-b">
-        {(["nhl", "nfl"] as Tab[]).map((tab) => (
+        {(["nhl", "nfl", "mlb"] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${
@@ -760,6 +900,239 @@ export default function NhlSettingsForm({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── MLB tab ─────────────────────────────────────────── */}
+      {activeTab === "mlb" && (
+        <>
+          {/* Tier 2: league selector */}
+          {isTier2 && (
+            <div className="flex items-center gap-3 mb-5 p-3 bg-gray-50 rounded-xl border">
+              <label className="text-sm text-gray-600 shrink-0">League:</label>
+              {mlbLeagues.length > 0 ? (
+                <select
+                  className="border rounded-xl px-3 py-1.5 text-sm flex-1 max-w-xs"
+                  value={selectedMlbId ?? ""}
+                  onChange={(e) => handleMlbLeagueChange(e.target.value)}
+                >
+                  {mlbLeagues.map((l) => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-sm text-gray-400 italic">No leagues yet</span>
+              )}
+              <button
+                onClick={handleCreateMlbLeague}
+                disabled={creatingMlb}
+                className="text-xs text-blue-600 hover:underline disabled:opacity-50 whitespace-nowrap"
+              >
+                {creatingMlb ? "Creating…" : "+ New League"}
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* MLB League Settings */}
+            <div className="border rounded-2xl p-4">
+              <h2 className="font-medium mb-2">League Settings</h2>
+
+              <label className="text-sm">League Name (optional)</label>
+              <input
+                type="text"
+                className="border rounded-xl p-2 w-full mb-2"
+                value={mlbLeague.name}
+                onChange={(e) => updateMlbLeague({ name: e.target.value })}
+              />
+
+              <label className="text-sm">Number of Teams</label>
+              <input
+                type="number" min={2}
+                className="border rounded-xl p-2 w-full mb-2"
+                value={mlbLeague.teams}
+                onChange={(e) => updateMlbLeague({ teams: parseInt(e.target.value || "12", 10) })}
+              />
+
+              <label className="text-sm">League Type</label>
+              <select
+                className="border rounded-xl p-2 w-full mb-2"
+                value={mlbLeague.leagueType}
+                onChange={(e) => updateMlbLeague({ leagueType: e.target.value as "redraft" | "keeper" })}
+              >
+                <option value="redraft">Redraft</option>
+                <option value="keeper">Keeper</option>
+              </select>
+
+              {mlbLeague.leagueType === "keeper" && (
+                <>
+                  <label className="text-sm">Keepers per Team</label>
+                  <input
+                    type="number" min={0}
+                    className="border rounded-xl p-2 w-full mb-2"
+                    value={mlbLeague.keepersPerTeam}
+                    onChange={(e) => updateMlbLeague({ keepersPerTeam: parseInt(e.target.value || "0", 10) })}
+                  />
+                </>
+              )}
+
+              <label className="text-sm">League Format</label>
+              <div className="flex rounded-xl border overflow-hidden mb-3">
+                {(["5x5", "obp", "points"] as LeagueFormat[]).map((fmt) => (
+                  <button
+                    key={fmt}
+                    className={`flex-1 text-sm py-1.5 transition-colors ${
+                      mlbLeague.format === fmt
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                    onClick={() => {
+                      const preset = presetForFormat(fmt);
+                      updateMlbLeague({ format: fmt, ...preset });
+                    }}
+                  >
+                    {fmt === "5x5" ? "5×5 Roto" : fmt === "obp" ? "OBP Roto" : "Points"}
+                  </button>
+                ))}
+              </div>
+
+              <h3 className="text-sm font-semibold mt-3 mb-2">Roster Slots</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {(Object.keys(mlbLeague.roster) as MlbRosterKey[]).map((pos) => (
+                  <label key={pos} className="text-xs flex items-center gap-2">
+                    <span className="w-12">{pos}</span>
+                    <input
+                      type="number" min={0}
+                      className="border rounded-xl p-1 w-full"
+                      value={mlbLeague.roster[pos]}
+                      onChange={(e) => updateMlbRoster(pos, parseInt(e.target.value || "0", 10))}
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="text-xs text-gray-600 mt-2">
+                Total roster size: <span className="font-semibold">{totalMlbRosterSize}</span>
+              </div>
+            </div>
+
+            {/* MLB Scoring */}
+            <div className="border rounded-2xl p-4">
+              <h2 className="font-medium mb-2">Scoring</h2>
+
+              {isMlbCatMode ? (
+                <>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Check each category your league uses. Set direction to &ldquo;less&rdquo; for
+                    stats where lower is better (ERA, WHIP, L).
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">Hitters</h3>
+                      <div className="space-y-1">
+                        {HITTER_STATS.map((stat) => {
+                          const cfg = mlbLeague.hitterCategories[stat];
+                          return (
+                            <div key={stat} className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                id={`hcat-${stat}`}
+                                checked={cfg !== null}
+                                onChange={(e) =>
+                                  updateMlbHitterCategory(stat, e.target.checked ? { direction: "more" } : null)
+                                }
+                              />
+                              <label htmlFor={`hcat-${stat}`} className="w-10 cursor-pointer">{stat}</label>
+                              {cfg && (
+                                <div className="flex rounded-lg border overflow-hidden text-xs">
+                                  <button
+                                    className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    onClick={() => updateMlbHitterCategory(stat, { direction: "more" })}
+                                  >+</button>
+                                  <button
+                                    className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    onClick={() => updateMlbHitterCategory(stat, { direction: "less" })}
+                                  >−</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">Pitchers</h3>
+                      <div className="space-y-1">
+                        {PITCHER_STATS.map((stat) => {
+                          const cfg = mlbLeague.pitcherCategories[stat];
+                          return (
+                            <div key={stat} className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                id={`pcat-${stat}`}
+                                checked={cfg !== null}
+                                onChange={(e) =>
+                                  updateMlbPitcherCategory(stat, e.target.checked ? { direction: "more" } : null)
+                                }
+                              />
+                              <label htmlFor={`pcat-${stat}`} className="w-10 cursor-pointer">{stat}</label>
+                              {cfg && (
+                                <div className="flex rounded-lg border overflow-hidden text-xs">
+                                  <button
+                                    className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    onClick={() => updateMlbPitcherCategory(stat, { direction: "more" })}
+                                  >+</button>
+                                  <button
+                                    className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    onClick={() => updateMlbPitcherCategory(stat, { direction: "less" })}
+                                  >−</button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Set each stat&apos;s point value to match your league exactly.
+                    Use negative values for stats like L, BB (pitchers), and HR9.
+                  </p>
+                  <h3 className="text-sm font-semibold mt-1 mb-1">Hitters</h3>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
+                    {HITTER_STATS.map((stat) => (
+                      <div key={stat} className="flex items-center justify-between gap-2">
+                        <label className="text-sm w-12">{stat}</label>
+                        <input
+                          type="number" step="0.1"
+                          className="border rounded-xl p-1 w-full"
+                          value={mlbLeague.hitterWeights[stat]}
+                          onChange={(e) => updateMlbHitterWeight(stat, parseFloat(e.target.value || "0"))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <h3 className="text-sm font-semibold mt-2 mb-1">Pitchers</h3>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {PITCHER_STATS.map((stat) => (
+                      <div key={stat} className="flex items-center justify-between gap-2">
+                        <label className="text-sm w-12">{stat}</label>
+                        <input
+                          type="number" step="0.1"
+                          className="border rounded-xl p-1 w-full"
+                          value={mlbLeague.pitcherWeights[stat]}
+                          onChange={(e) => updateMlbPitcherWeight(stat, parseFloat(e.target.value || "0"))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </>
