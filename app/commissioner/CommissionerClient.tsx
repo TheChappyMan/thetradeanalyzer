@@ -368,28 +368,46 @@ export function CommissionerTradeHistory() {
 
           return (
             <div key={row.id} className={`border rounded-xl text-xs ${scoreBg}`}>
+              {/*
+                Three-column grid:
+                  col-1 (meta)    — fixed max-width, clips long emails/league names
+                  col-2 (summary) — takes remaining space, truncates trade text
+                  col-3 (score)   — auto-sized, never compressed
+              */}
               <div
-                className="flex items-center justify-between px-3 py-2 cursor-pointer select-none"
+                className="grid items-center gap-x-3 px-3 py-2 cursor-pointer select-none overflow-hidden"
+                style={{ gridTemplateColumns: "minmax(0,220px) minmax(0,1fr) auto" }}
                 onClick={() => toggleExpanded(row.id)}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-gray-400 shrink-0">{dateStr} {timeStr}</span>
-                  <span className="text-gray-500 shrink-0 font-medium text-[10px] uppercase tracking-wide">
-                    {row.memberEmail}
-                  </span>
-                  {td?.sport && (
-                    <span className="text-gray-400 shrink-0 uppercase">{td.sport}</span>
-                  )}
+                {/* Col 1 — date · member email · sport badge · league name */}
+                <div className="min-w-0">
+                  <div className="text-gray-400 whitespace-nowrap leading-tight">
+                    {dateStr} {timeStr}
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5 min-w-0">
+                    <span className="font-medium text-[10px] uppercase tracking-wide text-gray-600 truncate">
+                      {row.memberEmail}
+                    </span>
+                    {td?.sport && (
+                      <span className="shrink-0 text-[9px] uppercase bg-gray-100 text-gray-500 rounded px-1">
+                        {td.sport}
+                      </span>
+                    )}
+                  </div>
                   {td?.leagueName && (
-                    <span className="text-gray-500 shrink-0">{td.leagueName}</span>
+                    <div className="text-gray-400 leading-tight truncate">{td.leagueName}</div>
                   )}
-                  <span className="text-gray-600 truncate hidden sm:block">
-                    {sendSummary} → {recvSummary}
-                  </span>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 ml-2">
-                  <span className="font-semibold">{score.toFixed(1)} / 100</span>
-                  <span className="text-gray-400">{isExp ? "▲" : "▼"}</span>
+
+                {/* Col 2 — trade summary (give → get), truncates with ellipsis */}
+                <div className="min-w-0 text-gray-600 truncate hidden sm:block">
+                  {sendSummary} → {recvSummary}
+                </div>
+
+                {/* Col 3 — score badge + chevron, always fully visible */}
+                <div className="flex items-center gap-2 justify-end">
+                  <span className="font-semibold whitespace-nowrap">{score.toFixed(1)} / 100</span>
+                  <span className="text-gray-400 shrink-0">{isExp ? "▲" : "▼"}</span>
                 </div>
               </div>
 
