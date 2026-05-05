@@ -659,8 +659,8 @@ function valueForPick(
 export default function MlbTradeAnalyzer() {
   const { user, isLoaded: clerkLoaded } = useUser();
   const tier    = (user?.publicMetadata?.tier as string) ?? "free";
-  const isPro   = tier === "tier1" || tier === "tier2";
-  const isTier2 = tier === "tier2";
+  const isPro   = tier === "tier1" || tier === "tier2" || tier === "tier3";
+  const isTier2 = tier === "tier2" || tier === "tier3";
   const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
   const [league, setLeague] = useState<MlbLeague>(() => {
@@ -1847,12 +1847,15 @@ function MlbHistoryRow({ entry, onDelete }: { entry: HistoryEntry; onDelete: (id
 // ============================================================
 
 function ProNav() {
+  const { user } = useUser();
+  const tier = (user?.publicMetadata?.tier as string) ?? "free";
   const links = [
-    { href: "/settings", label: "Settings" },
-    { href: "/history",  label: "History"  },
-    { href: "/nhl",      label: "NHL"      },
-    { href: "/nfl",      label: "NFL"      },
-    { href: "/mlb",      label: "MLB"      },
+    { href: "/settings",     label: "Settings"     },
+    { href: "/history",      label: "History"      },
+    { href: "/nhl",          label: "NHL"          },
+    { href: "/nfl",          label: "NFL"          },
+    { href: "/mlb",          label: "MLB"          },
+    ...(tier === "tier3" ? [{ href: "/commissioner", label: "Commissioner" }] : []),
   ];
   return (
     <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">

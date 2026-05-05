@@ -17,7 +17,7 @@ export default async function HistoryPage() {
   const user = await currentUser()
   const tier = (user?.publicMetadata?.tier as string | undefined) ?? 'free'
 
-  if (tier !== 'tier1' && tier !== 'tier2') {
+  if (tier !== 'tier1' && tier !== 'tier2' && tier !== 'tier3') {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-semibold mb-3">Trade History</h1>
@@ -28,11 +28,11 @@ export default async function HistoryPage() {
     )
   }
 
-  // ── Tier 2: fully client-side (sport tabs + league filter + delete) ───
-  if (tier === 'tier2') {
+  // ── Tier 2 / Tier 3: fully client-side (sport tabs + league filter + delete) ───
+  if (tier === 'tier2' || tier === 'tier3') {
     return (
       <>
-        <ProNav />
+        <ProNav tier={tier} />
         <div className="p-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold">Trade History</h1>
@@ -53,7 +53,7 @@ export default async function HistoryPage() {
   if (error) {
     return (
       <>
-        <ProNav />
+        <ProNav tier={tier} />
         <div className="p-6 max-w-6xl mx-auto">
           <h1 className="text-2xl font-semibold mb-4">Trade History</h1>
           <div className="border rounded-2xl p-6 text-center text-red-600 text-sm">
@@ -84,7 +84,7 @@ export default async function HistoryPage() {
 
   return (
     <>
-      <ProNav />
+      <ProNav tier={tier} />
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-semibold">Trade History</h1>
@@ -100,12 +100,14 @@ export default async function HistoryPage() {
 
 // ── ProNav ───────────────────────────────────────────────────────────────────
 
-function ProNav() {
+function ProNav({ tier }: { tier: string }) {
   const links = [
     { href: '/settings', label: 'Settings' },
     { href: '/history',  label: 'History'  },
     { href: '/nhl',      label: 'NHL'      },
     { href: '/nfl',      label: 'NFL'      },
+    { href: '/mlb',      label: 'MLB'      },
+    ...(tier === 'tier3' ? [{ href: '/commissioner', label: 'Commissioner' }] : []),
   ]
   return (
     <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">

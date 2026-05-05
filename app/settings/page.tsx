@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const user = await currentUser()
   const tier = (user?.publicMetadata?.tier as string | undefined) ?? 'free'
 
-  if (tier !== 'tier1' && tier !== 'tier2') {
+  if (tier !== 'tier1' && tier !== 'tier2' && tier !== 'tier3') {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-semibold mb-3">Settings</h1>
@@ -26,7 +26,7 @@ export default async function SettingsPage() {
     )
   }
 
-  if (tier === 'tier2') {
+  if (tier === 'tier2' || tier === 'tier3') {
     // ── Tier 2: fetch ALL leagues for each sport ──────────────
     const [nhlResult, nflResult, mlbResult] = await Promise.all([
       supabase

@@ -18,10 +18,11 @@ export default function Dashboard() {
   const router = useRouter();
   const { setSelectedLeague } = useLeagueContext();
 
-  const tier      = (user?.publicMetadata?.tier as string) ?? "free";
-  const isPro     = tier === "tier1" || tier === "tier2";
-  const isTier2   = tier === "tier2";
-  const isSignedIn = !!user;
+  const tier           = (user?.publicMetadata?.tier as string) ?? "free";
+  const isPro          = tier === "tier1" || tier === "tier2" || tier === "tier3";
+  const isTier2        = tier === "tier2" || tier === "tier3";
+  const isCommissioner = tier === "tier3";
+  const isSignedIn     = !!user;
 
   const [leaguesBySport, setLeaguesBySport] = useState<Record<string, LeagueRow[]>>({});
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -128,6 +129,13 @@ export default function Dashboard() {
               title="Settings"
               description="Configure scoring weights and roster settings."
             />
+            {isCommissioner && (
+              <DashCard
+                href="/commissioner"
+                title="Commissioner Dashboard"
+                description="Manage seats and view league-wide trade history for your group."
+              />
+            )}
           </div>
         </div>
 
