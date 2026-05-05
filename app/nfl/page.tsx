@@ -16,6 +16,8 @@ import {
   projectedNflValue,
   replacementLevelValue,
   valueAboveReplacement,
+  rbScarcityMultiplier,
+  rbScarcityTier,
 } from "@/lib/nfl-valuation";
 
 // ============================================================
@@ -429,6 +431,23 @@ export default function NflTradeAnalyzer() {
     return map;
   }, [playerDb, league.scoringWeights, league.roster, league.teams, league.qbFormat, useRates]);
 
+  // ── RB scarcity rank map (VAR desc among RBs only) ────────
+  // Maps player id → 1-based RB rank, used by rbScarcityMultiplier.
+  const rbRankMap = useMemo(() => {
+    const map = new Map<number, number>();
+    if (playerDb.length === 0) return map;
+    const repl = replacementLevels.get("RB") ?? 0;
+    const rbs = playerDb
+      .filter((p) => p.position === "RB")
+      .map((p) => ({
+        id: p.id,
+        var: valueAboveReplacement(projectedNflValue(p, league.scoringWeights, useRates), repl),
+      }))
+      .sort((a, b) => b.var - a.var);
+    rbs.forEach((rb, i) => map.set(rb.id, i + 1));
+    return map;
+  }, [playerDb, league.scoringWeights, replacementLevels, useRates]);
+
   // ── Talent ranking (VAR desc) for pick valuation ──────────
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
@@ -467,14 +486,18 @@ export default function NflTradeAnalyzer() {
       if (!db) return sum;
       const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
+      const baseVar = valueAboveReplacement(proj, repl);
+      const scarcityMult = p.position === "RB"
+        ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999)
+        : 1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      return sum + valueAboveReplacement(proj, repl) * kMult;
+      return sum + baseVar * scarcityMult * kMult;
     }, 0);
     const pickTotal = sendPicksParsed.reduce(
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, useRates]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, useRates]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -482,14 +505,18 @@ export default function NflTradeAnalyzer() {
       if (!db) return sum;
       const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
+      const baseVar = valueAboveReplacement(proj, repl);
+      const scarcityMult = p.position === "RB"
+        ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999)
+        : 1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      return sum + valueAboveReplacement(proj, repl) * kMult;
+      return sum + baseVar * scarcityMult * kMult;
     }, 0);
     const pickTotal = recvPicksParsed.reduce(
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, useRates]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, useRates]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -872,6 +899,7 @@ export default function NflTradeAnalyzer() {
               scoringWeights={league.scoringWeights}
               replacementLevels={replacementLevels}
               rankMap={rankMap}
+              rbRankMap={rbRankMap}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
               onToggleKeeper={(id) => toggleKeeper("send", id)}
@@ -891,6 +919,7 @@ export default function NflTradeAnalyzer() {
               scoringWeights={league.scoringWeights}
               replacementLevels={replacementLevels}
               rankMap={rankMap}
+              rbRankMap={rbRankMap}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
               onToggleKeeper={(id) => toggleKeeper("recv", id)}
@@ -1020,6 +1049,7 @@ type NflTradeSideProps = {
   scoringWeights: NflScoringWeights;
   replacementLevels: Map<NflPlayerPosition, number>;
   rankMap: Map<number, number>;
+  rbRankMap: Map<number, number>;
   onAdd: (p: NflDbPlayer) => void;
   onRemove: (id: number) => void;
   onToggleKeeper: (id: number) => void;
@@ -1028,7 +1058,7 @@ type NflTradeSideProps = {
 
 function NflTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
-  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, onAdd, onRemove, onToggleKeeper, useRates,
+  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, rbRankMap, onAdd, onRemove, onToggleKeeper, useRates,
 }: NflTradeSideProps) {
   return (
     <div>
@@ -1048,6 +1078,7 @@ function NflTradeSide({
             scoringWeights={scoringWeights}
             replacementLevels={replacementLevels}
             rank={rankMap.get(p.id) ?? null}
+            rbRank={p.position === "RB" ? (rbRankMap.get(p.id) ?? 999) : null}
             totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
             onToggleKeeper={() => onToggleKeeper(p.id)}
@@ -1087,6 +1118,8 @@ type NflPlayerRowProps = {
   scoringWeights: NflScoringWeights;
   replacementLevels: Map<NflPlayerPosition, number>;
   rank: number | null;
+  /** 1-based rank among all RBs by base VAR; null for non-RBs. */
+  rbRank: number | null;
   totalPlayers: number;
   onRemove: () => void;
   onToggleKeeper: () => void;
@@ -1094,25 +1127,38 @@ type NflPlayerRowProps = {
 };
 
 function NflPlayerRow({
-  player, dbEntry, scoringWeights, replacementLevels, rank, totalPlayers, onRemove, onToggleKeeper, useRates,
+  player, dbEntry, scoringWeights, replacementLevels, rank, rbRank, totalPlayers, onRemove, onToggleKeeper, useRates,
 }: NflPlayerRowProps) {
   if (!dbEntry) return null;
-  const projected = projectedNflValue(dbEntry, scoringWeights, useRates);
-  const repl      = replacementLevels.get(player.position) ?? 0;
-  const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
-  const varValue  = valueAboveReplacement(projected, repl) * kMult;
+  const projected      = projectedNflValue(dbEntry, scoringWeights, useRates);
+  const repl           = replacementLevels.get(player.position) ?? 0;
+  const baseVar        = valueAboveReplacement(projected, repl);
+  const scarcityMult   = rbRank !== null ? rbScarcityMultiplier(rbRank) : 1.0;
+  const kMult          = player.isKeeper ? keeperMultiplier(rank) : 1.0;
+  const varValue       = baseVar * scarcityMult * kMult;
+  const scarcityTier   = rbRank !== null ? rbScarcityTier(rbRank) : null;
 
   return (
     <div className="border rounded-xl p-2 bg-gray-50 text-xs">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 min-w-0">
           <span className="font-semibold">{player.name}</span>
-          <span className="text-gray-500 ml-2">
+          {scarcityTier === "elite" && (
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200">
+              Elite RB
+            </span>
+          )}
+          {scarcityTier === "scarce" && (
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-200">
+              Scarce RB
+            </span>
+          )}
+          <span className="text-gray-500">
             {dbEntry.team} · {player.position} · {dbEntry.gamesPlayed} GP
           </span>
         </div>
         <button
-          className="text-red-600 hover:text-red-800 px-2"
+          className="text-red-600 hover:text-red-800 px-2 shrink-0"
           onClick={onRemove}
           title="Remove player"
         >

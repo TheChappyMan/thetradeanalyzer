@@ -160,3 +160,35 @@ export function valueAboveReplacement(
 ): number {
   return Math.max(0, projectedValue - replacementLevel)
 }
+
+// ============================================================
+// RB POSITIONAL SCARCITY
+// ============================================================
+
+/**
+ * Running backs have a steep value cliff: elite RBs are
+ * disproportionately scarce relative to every other position.
+ * This multiplier amplifies the gap between the top of the RB
+ * pool and the rest.  Applied after base VAR, before the
+ * fairness comparison.  Keeper multiplier stacks on top.
+ *
+ * @param rbRank  1-based rank of this RB among all RBs, sorted
+ *                by descending base VAR.
+ */
+export function rbScarcityMultiplier(rbRank: number): number {
+  if (rbRank <= 5)  return 1.30
+  if (rbRank <= 10) return 1.20
+  if (rbRank <= 15) return 1.10
+  if (rbRank <= 24) return 1.00
+  return 0.90
+}
+
+/**
+ * UI tier label for RB player cards.
+ * Returns null for ranks 16+ (no badge shown).
+ */
+export function rbScarcityTier(rbRank: number): 'elite' | 'scarce' | null {
+  if (rbRank <= 5)  return 'elite'
+  if (rbRank <= 15) return 'scarce'
+  return null
+}
