@@ -18,6 +18,8 @@ import {
   valueAboveReplacement,
   rbScarcityMultiplier,
   rbScarcityTier,
+  teScarcityMultiplier,
+  teScarcityTier,
 } from "@/lib/nfl-valuation";
 
 // ============================================================
@@ -448,6 +450,23 @@ export default function NflTradeAnalyzer() {
     return map;
   }, [playerDb, league.scoringWeights, replacementLevels, useRates]);
 
+  // ── TE scarcity rank map (VAR desc among TEs only) ────────
+  // Maps player id → 1-based TE rank, used by teScarcityMultiplier.
+  const teRankMap = useMemo(() => {
+    const map = new Map<number, number>();
+    if (playerDb.length === 0) return map;
+    const repl = replacementLevels.get("TE") ?? 0;
+    const tes = playerDb
+      .filter((p) => p.position === "TE")
+      .map((p) => ({
+        id: p.id,
+        var: valueAboveReplacement(projectedNflValue(p, league.scoringWeights, useRates), repl),
+      }))
+      .sort((a, b) => b.var - a.var);
+    tes.forEach((te, i) => map.set(te.id, i + 1));
+    return map;
+  }, [playerDb, league.scoringWeights, replacementLevels, useRates]);
+
   // ── Talent ranking (VAR desc) for pick valuation ──────────
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
@@ -487,9 +506,10 @@ export default function NflTradeAnalyzer() {
       const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
       const baseVar = valueAboveReplacement(proj, repl);
-      const scarcityMult = p.position === "RB"
-        ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999)
-        : 1.0;
+      const scarcityMult =
+        p.position === "RB" ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999) :
+        p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
+        1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       return sum + baseVar * scarcityMult * kMult;
     }, 0);
@@ -497,7 +517,7 @@ export default function NflTradeAnalyzer() {
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, useRates]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap, useRates]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -506,9 +526,10 @@ export default function NflTradeAnalyzer() {
       const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
       const baseVar = valueAboveReplacement(proj, repl);
-      const scarcityMult = p.position === "RB"
-        ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999)
-        : 1.0;
+      const scarcityMult =
+        p.position === "RB" ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999) :
+        p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
+        1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       return sum + baseVar * scarcityMult * kMult;
     }, 0);
@@ -516,7 +537,7 @@ export default function NflTradeAnalyzer() {
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, useRates]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap, useRates]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -900,6 +921,7 @@ export default function NflTradeAnalyzer() {
               replacementLevels={replacementLevels}
               rankMap={rankMap}
               rbRankMap={rbRankMap}
+              teRankMap={teRankMap}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
               onToggleKeeper={(id) => toggleKeeper("send", id)}
@@ -920,6 +942,7 @@ export default function NflTradeAnalyzer() {
               replacementLevels={replacementLevels}
               rankMap={rankMap}
               rbRankMap={rbRankMap}
+              teRankMap={teRankMap}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
               onToggleKeeper={(id) => toggleKeeper("recv", id)}
@@ -1050,6 +1073,7 @@ type NflTradeSideProps = {
   replacementLevels: Map<NflPlayerPosition, number>;
   rankMap: Map<number, number>;
   rbRankMap: Map<number, number>;
+  teRankMap: Map<number, number>;
   onAdd: (p: NflDbPlayer) => void;
   onRemove: (id: number) => void;
   onToggleKeeper: (id: number) => void;
@@ -1058,7 +1082,7 @@ type NflTradeSideProps = {
 
 function NflTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
-  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, rbRankMap, onAdd, onRemove, onToggleKeeper, useRates,
+  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, rbRankMap, teRankMap, onAdd, onRemove, onToggleKeeper, useRates,
 }: NflTradeSideProps) {
   return (
     <div>
@@ -1079,6 +1103,7 @@ function NflTradeSide({
             replacementLevels={replacementLevels}
             rank={rankMap.get(p.id) ?? null}
             rbRank={p.position === "RB" ? (rbRankMap.get(p.id) ?? 999) : null}
+            teRank={p.position === "TE" ? (teRankMap.get(p.id) ?? 999) : null}
             totalPlayers={playerDb.length}
             onRemove={() => onRemove(p.id)}
             onToggleKeeper={() => onToggleKeeper(p.id)}
@@ -1120,6 +1145,8 @@ type NflPlayerRowProps = {
   rank: number | null;
   /** 1-based rank among all RBs by base VAR; null for non-RBs. */
   rbRank: number | null;
+  /** 1-based rank among all TEs by base VAR; null for non-TEs. */
+  teRank: number | null;
   totalPlayers: number;
   onRemove: () => void;
   onToggleKeeper: () => void;
@@ -1127,30 +1154,44 @@ type NflPlayerRowProps = {
 };
 
 function NflPlayerRow({
-  player, dbEntry, scoringWeights, replacementLevels, rank, rbRank, totalPlayers, onRemove, onToggleKeeper, useRates,
+  player, dbEntry, scoringWeights, replacementLevels, rank, rbRank, teRank, totalPlayers, onRemove, onToggleKeeper, useRates,
 }: NflPlayerRowProps) {
   if (!dbEntry) return null;
   const projected      = projectedNflValue(dbEntry, scoringWeights, useRates);
   const repl           = replacementLevels.get(player.position) ?? 0;
   const baseVar        = valueAboveReplacement(projected, repl);
-  const scarcityMult   = rbRank !== null ? rbScarcityMultiplier(rbRank) : 1.0;
+  const scarcityMult   =
+    rbRank !== null ? rbScarcityMultiplier(rbRank) :
+    teRank !== null ? teScarcityMultiplier(teRank) :
+    1.0;
   const kMult          = player.isKeeper ? keeperMultiplier(rank) : 1.0;
   const varValue       = baseVar * scarcityMult * kMult;
-  const scarcityTier   = rbRank !== null ? rbScarcityTier(rbRank) : null;
+  const rbTier         = rbRank !== null ? rbScarcityTier(rbRank) : null;
+  const teTier         = teRank !== null ? teScarcityTier(teRank) : null;
 
   return (
     <div className="border rounded-xl p-2 bg-gray-50 text-xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 min-w-0">
           <span className="font-semibold">{player.name}</span>
-          {scarcityTier === "elite" && (
+          {rbTier === "elite" && (
             <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200">
               Elite RB
             </span>
           )}
-          {scarcityTier === "scarce" && (
+          {rbTier === "scarce" && (
             <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-200">
               Scarce RB
+            </span>
+          )}
+          {teTier === "elite" && (
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
+              Elite TE
+            </span>
+          )}
+          {teTier === "scarce" && (
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-200">
+              Scarce TE
             </span>
           )}
           <span className="text-gray-500">

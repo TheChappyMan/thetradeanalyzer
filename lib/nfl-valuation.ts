@@ -192,3 +192,35 @@ export function rbScarcityTier(rbRank: number): 'elite' | 'scarce' | null {
   if (rbRank <= 15) return 'scarce'
   return null
 }
+
+// ============================================================
+// TE POSITIONAL SCARCITY
+// ============================================================
+
+/**
+ * Tight end scarcity is as severe as RB, possibly worse.  Most
+ * leagues start only one TE, so the gap between a top-3 TE and
+ * TE12 is enormous.  An elite TE functions like a cheat code.
+ * Applied after base VAR, before the fairness comparison.
+ * Keeper multiplier stacks on top.
+ *
+ * @param teRank  1-based rank of this TE among all TEs, sorted
+ *                by descending base VAR.
+ */
+export function teScarcityMultiplier(teRank: number): number {
+  if (teRank <= 3)  return 1.40
+  if (teRank <= 6)  return 1.25
+  if (teRank <= 12) return 1.10
+  if (teRank <= 20) return 1.00
+  return 0.85
+}
+
+/**
+ * UI tier label for TE player cards.
+ * Returns null for ranks 13+ (no badge shown).
+ */
+export function teScarcityTier(teRank: number): 'elite' | 'scarce' | null {
+  if (teRank <= 3)  return 'elite'
+  if (teRank <= 12) return 'scarce'
+  return null
+}
