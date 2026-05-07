@@ -18,8 +18,8 @@ export default async function SettingsPage() {
   if (tier !== 'tier1' && tier !== 'tier2' && tier !== 'tier3') {
     return (
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-3">Settings</h1>
-        <div className="border rounded-2xl p-6 text-center text-gray-600">
+        <h1 className="text-2xl font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Settings</h1>
+        <div className="card text-center" style={{ color: 'var(--color-muted)' }}>
           <p className="text-sm">This feature requires a Pro subscription.</p>
         </div>
       </div>

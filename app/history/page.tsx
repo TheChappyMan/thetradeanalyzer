@@ -20,8 +20,16 @@ export default async function HistoryPage() {
   if (tier !== 'tier1' && tier !== 'tier2' && tier !== 'tier3') {
     return (
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-3">Trade History</h1>
-        <div className="border rounded-2xl p-6 text-center text-gray-600">
+        <h1
+          className="text-2xl font-semibold mb-3 tracking-tight"
+          style={{ color: 'var(--color-text)' }}
+        >
+          Trade History
+        </h1>
+        <div
+          className="card text-center"
+          style={{ color: 'var(--color-muted)' }}
+        >
           <p className="text-sm">Trade history requires a Pro subscription.</p>
         </div>
       </div>
@@ -35,7 +43,12 @@ export default async function HistoryPage() {
         <ProNav tier={tier} />
         <div className="p-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold">Trade History</h1>
+            <h1
+              className="text-2xl font-semibold tracking-tight"
+              style={{ color: 'var(--color-text)' }}
+            >
+              Trade History
+            </h1>
           </div>
           <HistoryClientPage />
         </div>
@@ -55,8 +68,16 @@ export default async function HistoryPage() {
       <>
         <ProNav tier={tier} />
         <div className="p-6 max-w-6xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-4">Trade History</h1>
-          <div className="border rounded-2xl p-6 text-center text-red-600 text-sm">
+          <h1
+            className="text-2xl font-semibold mb-4 tracking-tight"
+            style={{ color: 'var(--color-text)' }}
+          >
+            Trade History
+          </h1>
+          <div
+            className="card text-center text-sm"
+            style={{ color: 'var(--color-danger)' }}
+          >
             Failed to load trade history: {error.message}
           </div>
         </div>
@@ -87,8 +108,13 @@ export default async function HistoryPage() {
       <ProNav tier={tier} />
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold">Trade History</h1>
-          <span className="text-xs text-gray-500">
+          <h1
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: 'var(--color-text)' }}
+          >
+            Trade History
+          </h1>
+          <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
             {entries.length} trade{entries.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -110,12 +136,12 @@ function ProNav({ tier }: { tier: string }) {
     ...(tier === 'tier3' ? [{ href: '/commissioner', label: 'Commissioner' }] : []),
   ]
   return (
-    <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">
-      <span className="font-semibold text-gray-400 text-xs tracking-widest uppercase mr-2">
-        Trade Analyzer
-      </span>
+    <nav className="nav-bar">
+      <Link href="/" className="nav-wordmark">
+        thetradeanalyzer
+      </Link>
       {links.map(({ href, label }) => (
-        <Link key={href} href={href} className="text-gray-200 hover:text-white transition-colors">
+        <Link key={href} href={href} className="nav-link">
           {label}
         </Link>
       ))}

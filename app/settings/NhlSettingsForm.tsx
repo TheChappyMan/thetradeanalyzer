@@ -461,18 +461,27 @@ export default function NhlSettingsForm({
       {/* ── Page header ─────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <a href="/" className="text-xs text-blue-600 hover:underline">
+          <h1
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: "var(--color-text)" }}
+          >
+            Settings
+          </h1>
+          <a href="/" className="link-primary text-xs">
             ← Back to Dashboard
           </a>
         </div>
 
         {activeTab === "nhl" && (
           <div className="flex items-center gap-3">
-            {nhlStatus === "saved" && <span className="text-xs text-green-600">✓ Saved!</span>}
-            {nhlStatus === "error" && <span className="text-xs text-red-600">{nhlSaveError}</span>}
+            {nhlStatus === "saved" && (
+              <span className="text-xs" style={{ color: "var(--color-success)" }}>✓ Saved!</span>
+            )}
+            {nhlStatus === "error" && (
+              <span className="text-xs" style={{ color: "var(--color-danger)" }}>{nhlSaveError}</span>
+            )}
             <button
-              className="text-sm bg-blue-600 text-white rounded-lg px-4 py-1.5 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-accent"
               onClick={handleNhlSave}
               disabled={nhlStatus === "saving"}
             >
@@ -483,10 +492,14 @@ export default function NhlSettingsForm({
 
         {activeTab === "nfl" && (
           <div className="flex items-center gap-3">
-            {nflStatus === "saved" && <span className="text-xs text-green-600">✓ Saved!</span>}
-            {nflStatus === "error" && <span className="text-xs text-red-600">{nflSaveError}</span>}
+            {nflStatus === "saved" && (
+              <span className="text-xs" style={{ color: "var(--color-success)" }}>✓ Saved!</span>
+            )}
+            {nflStatus === "error" && (
+              <span className="text-xs" style={{ color: "var(--color-danger)" }}>{nflSaveError}</span>
+            )}
             <button
-              className="text-sm bg-blue-600 text-white rounded-lg px-4 py-1.5 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-accent"
               onClick={handleNflSave}
               disabled={nflStatus === "saving"}
             >
@@ -511,15 +524,14 @@ export default function NhlSettingsForm({
       </div>
 
       {/* ── Tabs ────────────────────────────────────────────── */}
-      <div className="flex gap-1 mb-6 border-b">
+      <div
+        className="flex gap-1 mb-6 border-b"
+        style={{ borderColor: "var(--color-border)" }}
+      >
         {(["nhl", "nfl", "mlb"] as Tab[]).map((tab) => (
           <button
             key={tab}
-            className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${
-              activeTab === tab
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+            className={`tab-btn ${activeTab === tab ? "tab-btn-active" : ""}`}
             onClick={() => setActiveTab(tab)}
           >
             {tab.toUpperCase()}
@@ -532,11 +544,19 @@ export default function NhlSettingsForm({
         <>
           {/* Tier 2: league selector */}
           {isTier2 && (
-            <div className="flex items-center gap-3 mb-5 p-3 bg-gray-50 rounded-xl border">
-              <label className="text-sm text-gray-600 shrink-0">League:</label>
+            <div
+              className="flex items-center gap-3 mb-5 p-3 rounded-xl border"
+              style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
+            >
+              <label
+                className="text-sm shrink-0"
+                style={{ color: "var(--color-muted)" }}
+              >
+                League:
+              </label>
               {nhlLeagues.length > 0 ? (
                 <select
-                  className="border rounded-xl px-3 py-1.5 text-sm flex-1 max-w-xs"
+                  className="form-input flex-1 max-w-xs"
                   value={selectedNhlId ?? ""}
                   onChange={(e) => handleNhlLeagueChange(e.target.value)}
                 >
@@ -545,12 +565,14 @@ export default function NhlSettingsForm({
                   ))}
                 </select>
               ) : (
-                <span className="text-sm text-gray-400 italic">No leagues yet</span>
+                <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>
+                  No leagues yet
+                </span>
               )}
               <button
                 onClick={handleCreateNhlLeague}
                 disabled={creatingNhl}
-                className="text-xs text-blue-600 hover:underline disabled:opacity-50 whitespace-nowrap"
+                className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
               >
                 {creatingNhl ? "Creating…" : "+ New League"}
               </button>
@@ -560,28 +582,36 @@ export default function NhlSettingsForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* League Settings */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">League Settings</h2>
+            <div className="card">
+              <h2 className="font-medium mb-3" style={{ color: "var(--color-text)" }}>
+                League Settings
+              </h2>
 
-              <label className="text-sm">League Name (optional)</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                League Name (optional)
+              </label>
               <input
                 type="text"
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={league.name}
                 onChange={(e) => updateLeague({ name: e.target.value })}
               />
 
-              <label className="text-sm">Number of Teams</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                Number of Teams
+              </label>
               <input
                 type="number" min={2}
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={league.teams}
                 onChange={(e) => updateLeague({ teams: parseInt(e.target.value || "12", 10) })}
               />
 
-              <label className="text-sm">League Type</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                League Type
+              </label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={league.leagueType}
                 onChange={(e) => updateLeague({ leagueType: e.target.value as "redraft" | "keeper" })}
               >
@@ -591,45 +621,60 @@ export default function NhlSettingsForm({
 
               {league.leagueType === "keeper" && (
                 <>
-                  <label className="text-sm">Keepers per Team</label>
+                  <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                    Keepers per Team
+                  </label>
                   <input
                     type="number" min={0}
-                    className="border rounded-xl p-2 w-full mb-2"
+                    className="form-input mb-3"
                     value={league.keepersPerTeam}
                     onChange={(e) => updateLeague({ keepersPerTeam: parseInt(e.target.value || "0", 10) })}
                   />
                 </>
               )}
 
-              <h3 className="text-sm font-semibold mt-3 mb-2">Roster Slots</h3>
-              <p className="text-xs text-gray-600 mb-2">
+              <h3 className="text-sm font-semibold mt-3 mb-1" style={{ color: "var(--color-text)" }}>
+                Roster Slots
+              </h3>
+              <p className="text-xs mb-2" style={{ color: "var(--color-muted)" }}>
                 Use whichever forward slots your league has; set unused to 0.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(league.roster) as RosterKey[]).map((pos) => (
-                  <label key={pos} className="text-xs flex items-center gap-2">
+                  <label
+                    key={pos}
+                    className="text-xs flex items-center gap-2"
+                    style={{ color: "var(--color-text)" }}
+                  >
                     <span className="w-12">{pos === "IRplus" ? "IR+" : pos}</span>
                     <input
                       type="number" min={0}
-                      className="border rounded-xl p-1 w-full"
+                      className="form-input p-1"
                       value={league.roster[pos]}
                       onChange={(e) => updateRoster(pos, parseInt(e.target.value || "0", 10))}
                     />
                   </label>
                 ))}
               </div>
-              <div className="text-xs text-gray-600 mt-2">
-                Total roster size: <span className="font-semibold">{totalNhlRosterSize}</span>
+              <div className="text-xs mt-2" style={{ color: "var(--color-muted)" }}>
+                Total roster size:{" "}
+                <span className="font-semibold" style={{ color: "var(--color-text)" }}>
+                  {totalNhlRosterSize}
+                </span>
               </div>
             </div>
 
             {/* Scoring */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">Scoring</h2>
+            <div className="card">
+              <h2 className="font-medium mb-3" style={{ color: "var(--color-text)" }}>
+                Scoring
+              </h2>
 
-              <label className="text-sm">Scoring Type</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                Scoring Type
+              </label>
               <select
-                className="border rounded-xl p-2 w-full mb-3"
+                className="form-input mb-3"
                 value={league.scoringType}
                 onChange={(e) => updateLeague({ scoringType: e.target.value as "points" | "categories" })}
               >
@@ -639,34 +684,40 @@ export default function NhlSettingsForm({
 
               {!isCatMode ? (
                 <>
-                  <p className="text-xs text-gray-600 mb-2">
+                  <p className="text-xs mb-2" style={{ color: "var(--color-muted)" }}>
                     If your league scores both G+A and P, you&apos;re counting goals twice. Set G/A to 0
                     if you only score P, or leave P at 0 if you score G and A separately.
                   </p>
-                  <h3 className="text-sm font-semibold mt-1 mb-1">Skaters</h3>
+                  <h3 className="text-sm font-semibold mt-1 mb-1" style={{ color: "var(--color-text)" }}>
+                    Skaters
+                  </h3>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
                     {SKATER_STATS.map((stat) => (
                       <div key={stat} className="flex items-center justify-between gap-2">
-                        <label className="text-sm w-16">
+                        <label className="text-sm w-16" style={{ color: "var(--color-text)" }}>
                           {stat === "PM" ? "+/-" : stat}
                         </label>
                         <input
                           type="number" step="0.1"
-                          className="border rounded-xl p-1 w-full"
+                          className="form-input p-1"
                           value={league.skaterWeights[stat]}
                           onChange={(e) => updateSkaterWeight(stat, parseFloat(e.target.value || "0"))}
                         />
                       </div>
                     ))}
                   </div>
-                  <h3 className="text-sm font-semibold mt-2 mb-1">Goalies</h3>
+                  <h3 className="text-sm font-semibold mt-2 mb-1" style={{ color: "var(--color-text)" }}>
+                    Goalies
+                  </h3>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {GOALIE_STATS.map((stat) => (
                       <div key={stat} className="flex items-center justify-between gap-2">
-                        <label className="text-sm w-16">{stat}</label>
+                        <label className="text-sm w-16" style={{ color: "var(--color-text)" }}>
+                          {stat}
+                        </label>
                         <input
                           type="number" step="0.1"
-                          className="border rounded-xl p-1 w-full"
+                          className="form-input p-1"
                           value={league.goalieWeights[stat]}
                           onChange={(e) => updateGoalieWeight(stat, parseFloat(e.target.value || "0"))}
                         />
@@ -676,13 +727,15 @@ export default function NhlSettingsForm({
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-600 mb-3">
+                  <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
                     Check each category your league uses. Set direction to &ldquo;less&rdquo; for
                     stats where lower is better (PIM, GAA, L, GA).
                   </p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Skaters</h3>
+                      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>
+                        Skaters
+                      </h3>
                       <div className="space-y-1">
                         {SKATER_STATS.map((stat) => {
                           const cfg = league.skaterCategories[stat];
@@ -697,15 +750,32 @@ export default function NhlSettingsForm({
                                   updateSkaterCategory(stat, e.target.checked ? { direction: "more" } : null)
                                 }
                               />
-                              <label htmlFor={`scat-${stat}`} className="w-10 cursor-pointer">{label}</label>
+                              <label
+                                htmlFor={`scat-${stat}`}
+                                className="w-10 cursor-pointer"
+                                style={{ color: "var(--color-text)" }}
+                              >
+                                {label}
+                              </label>
                               {cfg && (
-                                <div className="flex rounded-lg border overflow-hidden text-xs">
+                                <div
+                                  className="flex rounded-lg border overflow-hidden text-xs"
+                                  style={{ borderColor: "var(--color-border)" }}
+                                >
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    style={cfg.direction === "more"
+                                      ? { background: "var(--color-primary)", color: "#fff" }
+                                      : { color: "var(--color-muted)" }
+                                    }
+                                    className="px-1.5 py-0.5 transition-colors"
                                     onClick={() => updateSkaterCategory(stat, { direction: "more" })}
                                   >+</button>
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    style={cfg.direction === "less"
+                                      ? { background: "var(--color-primary)", color: "#fff" }
+                                      : { color: "var(--color-muted)" }
+                                    }
+                                    className="px-1.5 py-0.5 transition-colors"
                                     onClick={() => updateSkaterCategory(stat, { direction: "less" })}
                                   >−</button>
                                 </div>
@@ -716,7 +786,9 @@ export default function NhlSettingsForm({
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Goalies</h3>
+                      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>
+                        Goalies
+                      </h3>
                       <div className="space-y-1">
                         {GOALIE_STATS.map((stat) => {
                           const cfg = league.goalieCategories[stat];
@@ -730,15 +802,32 @@ export default function NhlSettingsForm({
                                   updateGoalieCategory(stat, e.target.checked ? { direction: "more" } : null)
                                 }
                               />
-                              <label htmlFor={`gcat-${stat}`} className="w-10 cursor-pointer">{stat}</label>
+                              <label
+                                htmlFor={`gcat-${stat}`}
+                                className="w-10 cursor-pointer"
+                                style={{ color: "var(--color-text)" }}
+                              >
+                                {stat}
+                              </label>
                               {cfg && (
-                                <div className="flex rounded-lg border overflow-hidden text-xs">
+                                <div
+                                  className="flex rounded-lg border overflow-hidden text-xs"
+                                  style={{ borderColor: "var(--color-border)" }}
+                                >
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    style={cfg.direction === "more"
+                                      ? { background: "var(--color-primary)", color: "#fff" }
+                                      : { color: "var(--color-muted)" }
+                                    }
+                                    className="px-1.5 py-0.5 transition-colors"
                                     onClick={() => updateGoalieCategory(stat, { direction: "more" })}
                                   >+</button>
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    style={cfg.direction === "less"
+                                      ? { background: "var(--color-primary)", color: "#fff" }
+                                      : { color: "var(--color-muted)" }
+                                    }
+                                    className="px-1.5 py-0.5 transition-colors"
                                     onClick={() => updateGoalieCategory(stat, { direction: "less" })}
                                   >−</button>
                                 </div>
@@ -761,11 +850,19 @@ export default function NhlSettingsForm({
         <>
           {/* Tier 2: league selector */}
           {isTier2 && (
-            <div className="flex items-center gap-3 mb-5 p-3 bg-gray-50 rounded-xl border">
-              <label className="text-sm text-gray-600 shrink-0">League:</label>
+            <div
+              className="flex items-center gap-3 mb-5 p-3 rounded-xl border"
+              style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
+            >
+              <label
+                className="text-sm shrink-0"
+                style={{ color: "var(--color-muted)" }}
+              >
+                League:
+              </label>
               {nflLeagues.length > 0 ? (
                 <select
-                  className="border rounded-xl px-3 py-1.5 text-sm flex-1 max-w-xs"
+                  className="form-input flex-1 max-w-xs"
                   value={selectedNflId ?? ""}
                   onChange={(e) => handleNflLeagueChange(e.target.value)}
                 >
@@ -774,12 +871,14 @@ export default function NhlSettingsForm({
                   ))}
                 </select>
               ) : (
-                <span className="text-sm text-gray-400 italic">No leagues yet</span>
+                <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>
+                  No leagues yet
+                </span>
               )}
               <button
                 onClick={handleCreateNflLeague}
                 disabled={creatingNfl}
-                className="text-xs text-blue-600 hover:underline disabled:opacity-50 whitespace-nowrap"
+                className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
               >
                 {creatingNfl ? "Creating…" : "+ New League"}
               </button>
@@ -789,28 +888,36 @@ export default function NhlSettingsForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* NFL League Settings */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">League Settings</h2>
+            <div className="card">
+              <h2 className="font-medium mb-3" style={{ color: "var(--color-text)" }}>
+                League Settings
+              </h2>
 
-              <label className="text-sm">League Name (optional)</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                League Name (optional)
+              </label>
               <input
                 type="text"
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={nflLeague.name}
                 onChange={(e) => updateNflLeague({ name: e.target.value })}
               />
 
-              <label className="text-sm">Number of Teams</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                Number of Teams
+              </label>
               <input
                 type="number" min={2}
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={nflLeague.teams}
                 onChange={(e) => updateNflLeague({ teams: parseInt(e.target.value || "12", 10) })}
               />
 
-              <label className="text-sm">League Type</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                League Type
+              </label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={nflLeague.leagueType}
                 onChange={(e) => updateNflLeague({ leagueType: e.target.value as "redraft" | "keeper" })}
               >
@@ -820,19 +927,23 @@ export default function NhlSettingsForm({
 
               {nflLeague.leagueType === "keeper" && (
                 <>
-                  <label className="text-sm">Keepers per Team</label>
+                  <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                    Keepers per Team
+                  </label>
                   <input
                     type="number" min={0}
-                    className="border rounded-xl p-2 w-full mb-2"
+                    className="form-input mb-3"
                     value={nflLeague.keepersPerTeam}
                     onChange={(e) => updateNflLeague({ keepersPerTeam: parseInt(e.target.value || "0", 10) })}
                   />
                 </>
               )}
 
-              <label className="text-sm">QB Format</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                QB Format
+              </label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={nflLeague.qbFormat}
                 onChange={(e) => updateNflLeague({ qbFormat: e.target.value as "1QB" | "2QB" })}
               >
@@ -840,9 +951,11 @@ export default function NhlSettingsForm({
                 <option value="2QB">2QB / Superflex</option>
               </select>
 
-              <label className="text-sm">PPR Format</label>
+              <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                PPR Format
+              </label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-3"
                 value={nflLeague.pprFormat}
                 onChange={(e) => updateNflPprFormat(e.target.value as "standard" | "half" | "full")}
               >
@@ -851,47 +964,61 @@ export default function NhlSettingsForm({
                 <option value="full">Full PPR (1.0)</option>
               </select>
 
-              <h3 className="text-sm font-semibold mt-3 mb-2">Roster Slots</h3>
+              <h3 className="text-sm font-semibold mt-3 mb-2" style={{ color: "var(--color-text)" }}>
+                Roster Slots
+              </h3>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(nflLeague.roster) as (keyof NflRoster)[]).map((pos) => (
-                  <label key={pos} className="text-xs flex items-center gap-2">
+                  <label
+                    key={pos}
+                    className="text-xs flex items-center gap-2"
+                    style={{ color: "var(--color-text)" }}
+                  >
                     <span className="w-12">{pos}</span>
                     <input
                       type="number" min={0}
-                      className="border rounded-xl p-1 w-full"
+                      className="form-input p-1"
                       value={nflLeague.roster[pos]}
                       onChange={(e) => updateNflRoster(pos, parseInt(e.target.value || "0", 10))}
                     />
                   </label>
                 ))}
               </div>
-              <div className="text-xs text-gray-600 mt-2">
-                Total roster size: <span className="font-semibold">{totalNflRosterSize}</span>
+              <div className="text-xs mt-2" style={{ color: "var(--color-muted)" }}>
+                Total roster size:{" "}
+                <span className="font-semibold" style={{ color: "var(--color-text)" }}>
+                  {totalNflRosterSize}
+                </span>
               </div>
             </div>
 
             {/* NFL Scoring Weights */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">Scoring Weights</h2>
-              <p className="text-xs text-gray-600 mb-3">
+            <div className="card">
+              <h2 className="font-medium mb-3" style={{ color: "var(--color-text)" }}>
+                Scoring Weights
+              </h2>
+              <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
                 Changing PPR Format above auto-updates the Reception weight.
                 Adjust any weight to match your league exactly.
               </p>
               {NFL_WEIGHT_GROUPS.map(({ heading, keys }) => (
                 <div key={heading} className="mb-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                  <h3
+                    className="text-xs font-semibold uppercase tracking-wide mb-1"
+                    style={{ color: "var(--color-muted)" }}
+                  >
                     {heading}
                   </h3>
                   <div className="grid grid-cols-1 gap-y-1">
                     {keys.map((key) => (
                       <div key={key} className="flex items-center justify-between gap-2">
-                        <label className="text-xs text-gray-700 flex-1">
+                        <label className="text-xs flex-1" style={{ color: "var(--color-text)" }}>
                           {NFL_WEIGHT_LABELS[key]}
                         </label>
                         <input
                           type="number"
                           step="0.01"
-                          className="border rounded-xl p-1 w-20 text-sm"
+                          className="form-input w-20 p-1 text-sm"
                           value={nflLeague.scoringWeights[key]}
                           onChange={(e) => updateNflWeight(key, parseFloat(e.target.value || "0"))}
                         />

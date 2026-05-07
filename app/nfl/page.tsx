@@ -707,13 +707,13 @@ export default function NflTradeAnalyzer() {
     <>
       {isPro && <ProNav />}
       {!isPro && (
-        <div style={{ background: "#f3f4f6", padding: "0.5rem 1rem", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
-          💡 Save your settings and trade history — upgrade to Pro
+        <div className="upgrade-banner rounded-none px-6 py-2 text-xs mb-0">
+          💡 Save your settings and track trade history — upgrade to Pro
         </div>
       )}
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold">NFL Trade Analyzer</h1>
+          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>NFL Trade Analyzer</h1>
           <NflApiStatus
             status={dbStatus}
             playerCount={playerDb.length}
@@ -727,10 +727,11 @@ export default function NflTradeAnalyzer() {
         {/* ── Tier 2 league selector ────────────────────────── */}
         {isTier2 && (
           <div className="flex items-center gap-3 mb-4">
-            <label className="text-sm text-gray-600 shrink-0">League:</label>
+            <label className="text-sm shrink-0" style={{ color: "var(--color-muted)" }}>League:</label>
             {t2Leagues.length > 0 ? (
               <select
-                className="border rounded-xl px-3 py-1.5 text-sm"
+                className="form-input"
+                style={{ fontSize: "0.875rem" }}
                 value={activeLeagueId ?? ""}
                 onChange={(e) => setActiveLeagueId(e.target.value || null)}
               >
@@ -739,9 +740,9 @@ export default function NflTradeAnalyzer() {
                 ))}
               </select>
             ) : (
-              <span className="text-sm text-gray-400 italic">No leagues yet</span>
+              <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>No leagues yet</span>
             )}
-            <Link href="/settings" className="text-xs text-blue-600 hover:underline whitespace-nowrap">
+            <Link href="/settings" className="link-primary text-xs whitespace-nowrap">
               + New League
             </Link>
           </div>
@@ -752,28 +753,28 @@ export default function NflTradeAnalyzer() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
             {/* League Settings */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">League Settings</h2>
+            <div className="card">
+              <h2 className="font-medium mb-2" style={{ color: "var(--color-text)" }}>League Settings</h2>
 
-              <label className="text-sm">League Name (optional)</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>League Name (optional)</label>
               <input
                 type="text"
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-2"
                 value={league.name}
                 onChange={(e) => updateLeague({ name: e.target.value })}
               />
 
-              <label className="text-sm">Number of Teams</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>Number of Teams</label>
               <input
                 type="number" min={2}
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-2"
                 value={league.teams}
                 onChange={(e) => updateLeague({ teams: parseInt(e.target.value || "12", 10) })}
               />
 
-              <label className="text-sm">League Type</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>League Type</label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-2"
                 value={league.leagueType}
                 onChange={(e) => updateLeague({ leagueType: e.target.value as "redraft" | "keeper" })}
               >
@@ -783,19 +784,19 @@ export default function NflTradeAnalyzer() {
 
               {league.leagueType === "keeper" && (
                 <>
-                  <label className="text-sm">Keepers per Team</label>
+                  <label className="text-sm" style={{ color: "var(--color-muted)" }}>Keepers per Team</label>
                   <input
                     type="number" min={0}
-                    className="border rounded-xl p-2 w-full mb-2"
+                    className="form-input mb-2"
                     value={league.keepersPerTeam}
                     onChange={(e) => updateLeague({ keepersPerTeam: parseInt(e.target.value || "0", 10) })}
                   />
                 </>
               )}
 
-              <label className="text-sm">QB Format</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>QB Format</label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-2"
                 value={league.qbFormat}
                 onChange={(e) => updateLeague({ qbFormat: e.target.value as "1QB" | "2QB" })}
               >
@@ -803,9 +804,9 @@ export default function NflTradeAnalyzer() {
                 <option value="2QB">2QB / Superflex</option>
               </select>
 
-              <label className="text-sm">PPR Format</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>PPR Format</label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-2"
                 value={league.pprFormat}
                 onChange={(e) => updatePprFormat(e.target.value as "standard" | "half" | "full")}
               >
@@ -814,33 +815,34 @@ export default function NflTradeAnalyzer() {
                 <option value="full">Full PPR (1.0)</option>
               </select>
 
-              <h3 className="text-sm font-semibold mt-3 mb-2">Roster Slots</h3>
+              <h3 className="text-sm font-semibold mt-3 mb-2" style={{ color: "var(--color-text)" }}>Roster Slots</h3>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(league.roster) as (keyof NflRoster)[]).map((pos) => (
                   <label key={pos} className="text-xs flex items-center gap-2">
-                    <span className="w-12">{pos}</span>
+                    <span className="w-12" style={{ color: "var(--color-text)" }}>{pos}</span>
                     <input
                       type="number" min={0}
-                      className="border rounded-xl p-1 w-full"
+                      className="form-input"
+                      style={{ padding: "0.25rem" }}
                       value={league.roster[pos]}
                       onChange={(e) => updateRoster(pos, parseInt(e.target.value || "0", 10))}
                     />
                   </label>
                 ))}
               </div>
-              <div className="text-xs text-gray-600 mt-2">
-                Total roster size: <span className="font-semibold">{totalRosterSize}</span>
+              <div className="text-xs mt-2" style={{ color: "var(--color-muted)" }}>
+                Total roster size: <span className="font-semibold" style={{ color: "var(--color-text)" }}>{totalRosterSize}</span>
               </div>
 
               {isPro && saveStatus === "saved" && (
-                <div className="text-xs text-green-600 mt-2">✓ Auto-saved</div>
+                <div className="text-xs mt-2" style={{ color: "var(--color-success)" }}>✓ Auto-saved</div>
               )}
             </div>
 
             {/* Scoring */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">Scoring Weights</h2>
-              <p className="text-xs text-gray-600 mb-3">
+            <div className="card">
+              <h2 className="font-medium mb-2" style={{ color: "var(--color-text)" }}>Scoring Weights</h2>
+              <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
                 Changing PPR Format above auto-updates the Reception weight.
                 Adjust any weight to match your league exactly.
               </p>
@@ -849,19 +851,20 @@ export default function NflTradeAnalyzer() {
                 <div>
                   {LEFT_WEIGHT_GROUPS.map(({ heading, keys }) => (
                     <div key={heading} className="mb-3">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-muted)" }}>
                         {heading}
                       </h3>
                       <div className="space-y-1">
                         {keys.map((key) => (
                           <div key={key} className="flex items-center justify-between gap-2">
-                            <label className="text-xs text-gray-700 flex-1">
+                            <label className="text-xs flex-1" style={{ color: "var(--color-text)" }}>
                               {WEIGHT_LABELS[key]}
                             </label>
                             <input
                               type="number"
                               step="0.01"
-                              className="border rounded-xl p-1 w-20 text-sm"
+                              className="form-input w-20 text-sm"
+                              style={{ padding: "0.25rem" }}
                               value={league.scoringWeights[key]}
                               onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
                             />
@@ -875,19 +878,20 @@ export default function NflTradeAnalyzer() {
                 <div>
                   {RIGHT_WEIGHT_GROUPS.map(({ heading, keys }) => (
                     <div key={heading} className="mb-3">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-muted)" }}>
                         {heading}
                       </h3>
                       <div className="space-y-1">
                         {keys.map((key) => (
                           <div key={key} className="flex items-center justify-between gap-2">
-                            <label className="text-xs text-gray-700 flex-1">
+                            <label className="text-xs flex-1" style={{ color: "var(--color-text)" }}>
                               {WEIGHT_LABELS[key]}
                             </label>
                             <input
                               type="number"
                               step="0.01"
-                              className="border rounded-xl p-1 w-20 text-sm"
+                              className="form-input w-20 text-sm"
+                              style={{ padding: "0.25rem" }}
                               value={league.scoringWeights[key]}
                               onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
                             />
@@ -903,8 +907,8 @@ export default function NflTradeAnalyzer() {
         )}
 
         {/* ── Trade Panel ────────────────────────────────────── */}
-        <div className="border rounded-2xl p-4 mb-6">
-          <h2 className="font-medium mb-3">Trade Information</h2>
+        <div className="card mb-6">
+          <h2 className="font-medium mb-3" style={{ color: "var(--color-text)" }}>Trade Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <NflTradeSide
               label="You Give"
@@ -952,52 +956,52 @@ export default function NflTradeAnalyzer() {
         </div>
 
         {/* ── Fairness Result ────────────────────────────────── */}
-        <div className="border rounded-2xl p-4">
+        <div className="card">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-medium">Fairness Result</h2>
+            <h2 className="font-medium" style={{ color: "var(--color-text)" }}>Fairness Result</h2>
             {isPro && autoSaveStatus === "saved" && (
-              <span className="text-xs text-green-600">✓ Auto-saved</span>
+              <span className="text-xs" style={{ color: "var(--color-success)" }}>✓ Auto-saved</span>
             )}
           </div>
 
           <div className="grid grid-cols-4 gap-4 mb-3">
             <div>
-              <div className="text-xs text-gray-600">You Give (VAR pts)</div>
-              <div className="text-lg font-semibold">{sendValue.toFixed(1)}</div>
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>You Give (VAR pts)</div>
+              <div className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>{sendValue.toFixed(1)}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-600">You Get (VAR pts)</div>
-              <div className="text-lg font-semibold">{recvValue.toFixed(1)}</div>
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>You Get (VAR pts)</div>
+              <div className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>{recvValue.toFixed(1)}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-600">Trade Rating</div>
-              <div className="text-lg font-semibold">{tradeRating.toFixed(1)} / 100</div>
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>Trade Rating</div>
+              <div className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>{tradeRating.toFixed(1)} / 100</div>
             </div>
             <div>
-              <div className="text-xs text-gray-600">Trade Outline</div>
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>Trade Outline</div>
               {(sendValue !== 0 || recvValue !== 0) && (
-                <div className="text-sm font-medium text-gray-800">{tradeOutline(safeDisplayScore)}</div>
+                <div className="text-sm font-medium" style={{ color: "var(--color-text)" }}>{tradeOutline(safeDisplayScore)}</div>
               )}
             </div>
           </div>
 
           {/* Fairness Scale Bar */}
           <div className="mb-3">
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <div className="flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
               <span>Opponent Wins</span>
-              <span className="font-medium text-gray-600">Fairness Scale</span>
+              <span className="font-medium">Fairness Scale</span>
               <span>You Win</span>
             </div>
             <div className="relative h-3 rounded-full overflow-hidden flex">
-              <div style={{ width: "10.5%", background: "#000000" }} />
-              <div style={{ width: "10%",   background: "#cc0000" }} />
-              <div style={{ width: "10%",   background: "#ff6600" }} />
-              <div style={{ width: "10%",   background: "#ffcc00" }} />
-              <div style={{ width: "19%",   background: "#33aa33" }} />
-              <div style={{ width: "10%",   background: "#ffcc00" }} />
-              <div style={{ width: "10%",   background: "#ff6600" }} />
-              <div style={{ width: "10%",   background: "#cc0000" }} />
-              <div style={{ width: "10.5%", background: "#000000" }} />
+              <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
+              <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
+              <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
               <div
                 className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
                 style={{ left: `${safeDisplayScore}%` }}
@@ -1006,7 +1010,7 @@ export default function NflTradeAnalyzer() {
           </div>
 
           {sendValue === 0 && recvValue === 0 && (
-            <div className="text-xs text-amber-700 mt-2">
+            <div className="text-xs mt-2" style={{ color: "var(--color-warning)" }}>
               All values are 0 — make sure you&apos;ve set scoring weights and added players.
             </div>
           )}
@@ -1031,19 +1035,20 @@ function NflApiStatus({
   dataMode: DataMode;
   setDataMode: (m: DataMode) => void;
 }) {
-  if (status === "loading") return <div className="text-xs text-gray-500">Loading NFL data…</div>;
-  if (status === "error")   return <div className="text-xs text-red-600">NFL API unavailable — please refresh</div>;
+  if (status === "loading") return <div className="text-xs" style={{ color: "var(--color-muted)" }}>Loading NFL data…</div>;
+  if (status === "error")   return <div className="text-xs" style={{ color: "var(--color-danger)" }}>NFL API unavailable — please refresh</div>;
   const activeId = (dataMode === "thisTotal" || dataMode === "thisAvg")
     ? currentSeasonId
     : priorSeasonId;
   return (
-    <div className="text-xs text-gray-600 text-right flex items-center gap-3">
+    <div className="text-xs text-right flex items-center gap-3" style={{ color: "var(--color-muted)" }}>
       <div>
         <div>{playerCount} players loaded</div>
         {activeId && <div>Season: {activeId}</div>}
       </div>
       <select
-        className="border rounded-lg px-2 py-1 text-xs text-gray-700 bg-white"
+        className="form-input"
+        style={{ fontSize: "0.75rem", paddingTop: "0.25rem", paddingBottom: "0.25rem" }}
         value={dataMode}
         onChange={(e) => setDataMode(e.target.value as DataMode)}
       >
@@ -1086,7 +1091,7 @@ function NflTradeSide({
 }: NflTradeSideProps) {
   return (
     <div>
-      <h3 className="text-sm font-semibold mb-2">{label} — Players</h3>
+      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>{label} — Players</h3>
       <NflPlayerTypeahead
         playerDb={playerDb}
         dbStatus={dbStatus}
@@ -1112,15 +1117,15 @@ function NflTradeSide({
         ))}
       </div>
 
-      <h3 className="text-sm font-semibold mt-4 mb-1">{label} — Picks</h3>
-      <p className="text-xs text-gray-600 mb-1">
+      <h3 className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--color-text)" }}>{label} — Picks</h3>
+      <p className="text-xs mb-1" style={{ color: "var(--color-muted)" }}>
         Enter picks as <span className="font-mono">round.slot</span> (e.g.,{" "}
         <span className="font-mono">1.01</span> = first round, first overall).
         Separate multiple picks with commas or new lines.
         Optionally prefix with a year (e.g., <span className="font-mono">2026 1.01</span>).
       </p>
       <textarea
-        className="border rounded-xl p-2 w-full h-14 text-sm"
+        className="form-input h-14 text-sm"
         placeholder="1.01, 2.05"
         value={picks}
         onChange={(e) => setPicks(e.target.value)}
@@ -1170,50 +1175,51 @@ function NflPlayerRow({
   const teTier         = teRank !== null ? teScarcityTier(teRank) : null;
 
   return (
-    <div className="border rounded-xl p-2 bg-gray-50 text-xs">
+    <div className="border rounded-xl p-2 text-xs" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 min-w-0">
-          <span className="font-semibold">{player.name}</span>
+          <span className="font-semibold" style={{ color: "var(--color-text)" }}>{player.name}</span>
           {rbTier === "elite" && (
-            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200">
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}>
               Elite RB
             </span>
           )}
           {rbTier === "scarce" && (
-            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-600 border border-blue-200">
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--color-success-subtle)", color: "var(--color-success)" }}>
               Scarce RB
             </span>
           )}
           {teTier === "elite" && (
-            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-purple-100 text-purple-700 border border-purple-200">
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--color-accent)", color: "var(--color-accent-text)", opacity: 0.85 }}>
               Elite TE
             </span>
           )}
           {teTier === "scarce" && (
-            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-600 border border-indigo-200">
+            <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--color-success-subtle)", color: "var(--color-primary)" }}>
               Scarce TE
             </span>
           )}
-          <span className="text-gray-500">
+          <span className="ml-1" style={{ color: "var(--color-muted)" }}>
             {dbEntry.team} · {player.position} · {dbEntry.gamesPlayed} GP
           </span>
         </div>
         <button
-          className="text-red-600 hover:text-red-800 px-2 shrink-0"
+          className="px-2 transition-colors shrink-0"
+          style={{ color: "var(--color-danger)" }}
           onClick={onRemove}
           title="Remove player"
         >
           ×
         </button>
       </div>
-      <div className="mt-1 flex justify-between text-gray-600">
+      <div className="mt-1 flex justify-between" style={{ color: "var(--color-muted)" }}>
         <span>
           Projected: {projected.toFixed(1)}
           {rank !== null && (
             <span className="ml-3">League Ranking: {rank} / {totalPlayers}</span>
           )}
         </span>
-        <span className="font-semibold text-gray-800">VAR: {varValue.toFixed(1)}</span>
+        <span className="font-semibold" style={{ color: "var(--color-text)" }}>VAR: {varValue.toFixed(1)}</span>
       </div>
       <div className="mt-1 flex items-center gap-2">
         <label className="flex items-center gap-1 cursor-pointer">
@@ -1222,10 +1228,10 @@ function NflPlayerRow({
             checked={player.isKeeper}
             onChange={onToggleKeeper}
           />
-          <span className="text-gray-600">Keeper</span>
+          <span style={{ color: "var(--color-muted)" }}>Keeper</span>
         </label>
         {player.isKeeper && (
-          <span className="text-blue-600">×{kMult.toFixed(2)}</span>
+          <span style={{ color: "var(--color-primary)" }}>×{kMult.toFixed(2)}</span>
         )}
       </div>
     </div>
@@ -1249,21 +1255,21 @@ function NflParsedPicksList({
       {parsedPicks.map((pk, idx) => {
         if (pk.error) {
           return (
-            <div key={idx} className="border rounded-xl p-2 bg-red-50 text-xs flex justify-between">
-              <span className="font-mono text-gray-700">{pk.raw}</span>
-              <span className="text-red-700">{pk.error}</span>
+            <div key={idx} className="border rounded-xl p-2 text-xs flex justify-between" style={{ background: "var(--color-success-subtle)" }}>
+              <span className="font-mono" style={{ color: "var(--color-text)" }}>{pk.raw}</span>
+              <span style={{ color: "var(--color-danger)" }}>{pk.error}</span>
             </div>
           );
         }
         const talentRank = keeperOffset + pk.overall;
         const value = valueForPick(pk, talentRanking, teams, keepersPerTeam);
         return (
-          <div key={idx} className="border rounded-xl p-2 bg-gray-50 text-xs flex justify-between">
-            <span className="font-mono font-semibold">
+          <div key={idx} className="border rounded-xl p-2 text-xs flex justify-between" style={{ background: "var(--color-surface)" }}>
+            <span className="font-mono font-semibold" style={{ color: "var(--color-text)" }}>
               {pk.year ? `${pk.year} ` : ""}
               {pk.round}.{pk.slot.toString().padStart(2, "0")}
             </span>
-            <span className="text-gray-600">
+            <span style={{ color: "var(--color-muted)" }}>
               talent rank {talentRank} · VAR {value.toFixed(1)}
             </span>
           </div>
@@ -1332,7 +1338,7 @@ function NflPlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: NflPl
     <div ref={wrapperRef} className="relative">
       <input
         type="text"
-        className="border rounded-xl p-2 w-full text-sm"
+        className="form-input text-sm"
         placeholder={placeholder}
         value={query}
         disabled={dbStatus !== "ready"}
@@ -1341,13 +1347,12 @@ function NflPlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: NflPl
         onKeyDown={handleKeyDown}
       />
       {open && matches.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full bg-white border rounded-xl shadow-lg max-h-64 overflow-auto">
+        <div className="absolute z-10 mt-1 w-full border rounded-xl shadow-lg max-h-64 overflow-auto" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
           {matches.map((p, i) => (
             <div
               key={p.id}
-              className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center ${
-                i === highlightIdx ? "bg-blue-50" : "hover:bg-gray-50"
-              }`}
+              className="px-3 py-2 text-sm cursor-pointer flex justify-between items-center"
+              style={{ background: i === highlightIdx ? "var(--color-bg)" : "var(--color-surface)" }}
               onMouseEnter={() => setHighlightIdx(i)}
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -1356,8 +1361,8 @@ function NflPlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: NflPl
                 setHighlightIdx(0);
               }}
             >
-              <span className="font-medium">{p.name}</span>
-              <span className="text-xs text-gray-500">
+              <span className="font-medium" style={{ color: "var(--color-text)" }}>{p.name}</span>
+              <span className="text-xs" style={{ color: "var(--color-muted)" }}>
                 {p.team} · {p.position} · {p.gamesPlayed} GP
               </span>
             </div>
@@ -1382,12 +1387,12 @@ function ProNav() {
     ...(tier === "tier3" ? [{ href: "/commissioner", label: "Commissioner" }] : []),
   ];
   return (
-    <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">
-      <span className="font-semibold text-gray-400 text-xs tracking-widest uppercase mr-2">
-        Trade Analyzer
-      </span>
+    <nav className="nav-bar">
+      <Link href="/" className="nav-wordmark">
+        thetradeanalyzer
+      </Link>
       {links.map(({ href, label }) => (
-        <Link key={href} href={href} className="text-gray-200 hover:text-white transition-colors">
+        <Link key={href} href={href} className="nav-link">
           {label}
         </Link>
       ))}
@@ -1406,9 +1411,9 @@ function NflHistoryRow({
   const timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const scoreBg =
-    entry.score >= 60 ? "bg-green-50 border-green-200" :
-    entry.score <= 40 ? "bg-red-50 border-red-200" :
-    "bg-gray-50 border-gray-200";
+    entry.score >= 60 ? "verdict-fair" :
+    entry.score <= 40 ? "verdict-danger" :
+    "verdict-neutral";
 
   const sendSummary = [
     ...entry.sendPlayerNames,
@@ -1427,41 +1432,44 @@ function NflHistoryRow({
         onClick={() => setExpanded((v) => !v)}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-gray-400 shrink-0">{dateStr} {timeStr}</span>
+          <span className="shrink-0" style={{ color: "var(--color-muted)" }}>{dateStr} {timeStr}</span>
           {entry.leagueName && (
-            <span className="text-gray-500 shrink-0 font-medium">{entry.leagueName}</span>
+            <span className="shrink-0 font-medium" style={{ color: "var(--color-text)" }}>{entry.leagueName}</span>
           )}
-          <span className="text-gray-600 truncate hidden sm:block">
+          <span className="truncate hidden sm:block" style={{ color: "var(--color-muted)" }}>
             {sendSummary} → {recvSummary}
           </span>
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-2">
-          <span className="font-semibold">{entry.score.toFixed(1)} / 100</span>
+          <span className="font-semibold" style={{ color: "var(--color-text)" }}>{entry.score.toFixed(1)} / 100</span>
           <button
-            className="text-red-400 hover:text-red-600 px-1"
+            className="px-1 transition-colors"
+            style={{ color: "var(--color-muted)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-danger)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted)")}
             onClick={(e) => { e.stopPropagation(); onDelete(entry.id); }}
             title="Remove"
           >×</button>
-          <span className="text-gray-400">{expanded ? "▲" : "▼"}</span>
+          <span style={{ color: "var(--color-muted)" }}>{expanded ? "▲" : "▼"}</span>
         </div>
       </div>
       {expanded && (
         <div className="px-3 pb-3 border-t border-inherit pt-2 space-y-2">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="font-semibold text-gray-700 mb-1">You Gave</div>
-              {entry.sendPlayerNames.length > 0 && <div className="mb-1">{entry.sendPlayerNames.join(", ")}</div>}
-              {entry.sendPicks && <div className="text-gray-500">Picks: {entry.sendPicks}</div>}
-              <div className="text-gray-600 mt-1">VAR: <span className="font-medium">{entry.sendValue.toFixed(1)}</span></div>
+              <div className="font-semibold mb-1" style={{ color: "var(--color-text)" }}>You Gave</div>
+              {entry.sendPlayerNames.length > 0 && <div className="mb-1" style={{ color: "var(--color-text)" }}>{entry.sendPlayerNames.join(", ")}</div>}
+              {entry.sendPicks && <div style={{ color: "var(--color-muted)" }}>Picks: {entry.sendPicks}</div>}
+              <div className="mt-1" style={{ color: "var(--color-muted)" }}>VAR: <span className="font-medium" style={{ color: "var(--color-text)" }}>{entry.sendValue.toFixed(1)}</span></div>
             </div>
             <div>
-              <div className="font-semibold text-gray-700 mb-1">You Got</div>
-              {entry.recvPlayerNames.length > 0 && <div className="mb-1">{entry.recvPlayerNames.join(", ")}</div>}
-              {entry.recvPicks && <div className="text-gray-500">Picks: {entry.recvPicks}</div>}
-              <div className="text-gray-600 mt-1">VAR: <span className="font-medium">{entry.recvValue.toFixed(1)}</span></div>
+              <div className="font-semibold mb-1" style={{ color: "var(--color-text)" }}>You Got</div>
+              {entry.recvPlayerNames.length > 0 && <div className="mb-1" style={{ color: "var(--color-text)" }}>{entry.recvPlayerNames.join(", ")}</div>}
+              {entry.recvPicks && <div style={{ color: "var(--color-muted)" }}>Picks: {entry.recvPicks}</div>}
+              <div className="mt-1" style={{ color: "var(--color-muted)" }}>VAR: <span className="font-medium" style={{ color: "var(--color-text)" }}>{entry.recvValue.toFixed(1)}</span></div>
             </div>
           </div>
-          <div className="text-gray-700 italic">{entry.verdict}</div>
+          <div className="italic" style={{ color: "var(--color-text)" }}>{entry.verdict}</div>
         </div>
       )}
     </div>

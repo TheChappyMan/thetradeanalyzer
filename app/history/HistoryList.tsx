@@ -31,7 +31,7 @@ type Props = {
 export default function HistoryList({ entries, onDelete }: Props) {
   if (entries.length === 0) {
     return (
-      <p className="text-sm text-gray-400 italic">
+      <p className="text-sm italic" style={{ color: "var(--color-muted)" }}>
         No trades saved yet. Use the analyzer to evaluate a trade — it will be
         saved automatically.
       </p>
@@ -65,12 +65,13 @@ function HistoryRow({
   const dateStr = date.toLocaleDateString();
   const timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  const scoreBg =
+  // Semantic verdict tint — uses brand component classes
+  const rowClass =
     entry.score >= 60
-      ? "bg-green-50 border-green-200"
+      ? "verdict-fair"
       : entry.score <= 40
-      ? "bg-red-50 border-red-200"
-      : "bg-gray-50 border-gray-200";
+      ? "verdict-danger"
+      : "verdict-neutral";
 
   const sendSummary =
     [
@@ -96,38 +97,49 @@ function HistoryRow({
   }
 
   return (
-    <div className={`border rounded-xl text-xs ${scoreBg}`}>
+    <div className={`border rounded-xl text-xs ${rowClass}`}>
       {/* ── Collapsed row ────────────────────────────────────── */}
       <div
         className="flex items-center justify-between px-3 py-2 cursor-pointer select-none"
         onClick={() => setExpanded((v) => !v)}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-gray-400 shrink-0">
+          <span className="shrink-0" style={{ color: "var(--color-muted)" }}>
             {dateStr} {timeStr}
           </span>
           {entry.leagueName && (
-            <span className="text-gray-500 shrink-0 font-medium">
+            <span
+              className="shrink-0 font-medium"
+              style={{ color: "var(--color-text)" }}
+            >
               {entry.leagueName}
             </span>
           )}
-          <span className="text-gray-600 truncate hidden sm:block">
+          <span
+            className="truncate hidden sm:block"
+            style={{ color: "var(--color-muted)" }}
+          >
             {sendSummary} → {recvSummary}
           </span>
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-2">
-          <span className="font-semibold">{entry.score.toFixed(1)} / 100</span>
+          <span className="font-semibold" style={{ color: "var(--color-text)" }}>
+            {entry.score.toFixed(1)} / 100
+          </span>
           {onDelete && entry.dbId && (
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-40 px-1"
+              className="px-1 transition-colors disabled:opacity-40"
+              style={{ color: "var(--color-muted)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-danger)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted)")}
               title="Delete trade"
             >
               ✕
             </button>
           )}
-          <span className="text-gray-400">{expanded ? "▲" : "▼"}</span>
+          <span style={{ color: "var(--color-muted)" }}>{expanded ? "▲" : "▼"}</span>
         </div>
       </div>
 
@@ -136,31 +148,60 @@ function HistoryRow({
         <div className="px-3 pb-3 border-t border-inherit pt-2 space-y-2">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="font-semibold text-gray-700 mb-1">You Gave</div>
+              <div
+                className="font-semibold mb-1"
+                style={{ color: "var(--color-text)" }}
+              >
+                You Gave
+              </div>
               {entry.sendPlayerNames.length > 0 && (
-                <div className="mb-1">{entry.sendPlayerNames.join(", ")}</div>
+                <div style={{ color: "var(--color-text)" }}>
+                  {entry.sendPlayerNames.join(", ")}
+                </div>
               )}
               {entry.sendPicks && (
-                <div className="text-gray-500">Picks: {entry.sendPicks}</div>
+                <div className="mt-0.5" style={{ color: "var(--color-muted)" }}>
+                  Picks: {entry.sendPicks}
+                </div>
               )}
-              <div className="text-gray-600 mt-1">
-                Value: <span className="font-medium">{entry.sendValue.toFixed(1)}</span>
+              <div className="mt-1" style={{ color: "var(--color-muted)" }}>
+                Value:{" "}
+                <span className="font-medium" style={{ color: "var(--color-text)" }}>
+                  {entry.sendValue.toFixed(1)}
+                </span>
               </div>
             </div>
             <div>
-              <div className="font-semibold text-gray-700 mb-1">You Got</div>
+              <div
+                className="font-semibold mb-1"
+                style={{ color: "var(--color-text)" }}
+              >
+                You Got
+              </div>
               {entry.recvPlayerNames.length > 0 && (
-                <div className="mb-1">{entry.recvPlayerNames.join(", ")}</div>
+                <div style={{ color: "var(--color-text)" }}>
+                  {entry.recvPlayerNames.join(", ")}
+                </div>
               )}
               {entry.recvPicks && (
-                <div className="text-gray-500">Picks: {entry.recvPicks}</div>
+                <div className="mt-0.5" style={{ color: "var(--color-muted)" }}>
+                  Picks: {entry.recvPicks}
+                </div>
               )}
-              <div className="text-gray-600 mt-1">
-                Value: <span className="font-medium">{entry.recvValue.toFixed(1)}</span>
+              <div className="mt-1" style={{ color: "var(--color-muted)" }}>
+                Value:{" "}
+                <span className="font-medium" style={{ color: "var(--color-text)" }}>
+                  {entry.recvValue.toFixed(1)}
+                </span>
               </div>
             </div>
           </div>
-          <div className="text-gray-700 italic">{entry.verdict}</div>
+          <div
+            className="italic"
+            style={{ color: "var(--color-text)" }}
+          >
+            {entry.verdict}
+          </div>
         </div>
       )}
     </div>

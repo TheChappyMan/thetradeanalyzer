@@ -98,15 +98,14 @@ export default function HistoryClientPage() {
   return (
     <div>
       {/* Sport tabs */}
-      <div className="flex gap-1 mb-4 border-b">
+      <div
+        className="flex gap-1 mb-4 border-b"
+        style={{ borderColor: "var(--color-border)" }}
+      >
         {SPORTS_CONFIG.map((s) => (
           <button
             key={s.key}
-            className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${
-              activeSport === s.key
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+            className={`tab-btn ${activeSport === s.key ? "tab-btn-active" : ""}`}
             onClick={() => handleSportChange(s.key)}
           >
             {s.label}
@@ -117,9 +116,15 @@ export default function HistoryClientPage() {
       {/* League filter */}
       {sportLeagues.length > 0 && (
         <div className="flex items-center gap-2 mb-4">
-          <label className="text-sm text-gray-600 shrink-0">League:</label>
+          <label
+            className="text-sm shrink-0"
+            style={{ color: "var(--color-muted)" }}
+          >
+            League:
+          </label>
           <select
-            className="border rounded-xl px-3 py-1.5 text-sm"
+            className="form-input"
+            style={{ width: "auto" }}
             value={filterLeagueId}
             onChange={(e) => setFilterLeagueId(e.target.value)}
           >
@@ -130,19 +135,21 @@ export default function HistoryClientPage() {
               </option>
             ))}
           </select>
-          <span className="text-xs text-gray-400 ml-1">
+          <span className="text-xs ml-1" style={{ color: "var(--color-muted)" }}>
             {filtered.length} trade{filtered.length !== 1 ? "s" : ""}
           </span>
         </div>
       )}
 
       {loading ? (
-        <p className="text-sm text-gray-400 italic">Loading…</p>
+        <p className="text-sm italic" style={{ color: "var(--color-muted)" }}>
+          Loading…
+        </p>
       ) : (
         <>
           {sportLeagues.length === 0 && (
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs" style={{ color: "var(--color-muted)" }}>
                 {filtered.length} trade{filtered.length !== 1 ? "s" : ""}
               </span>
             </div>
