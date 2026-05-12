@@ -30,7 +30,7 @@ export default function RootLayout({
             <SignedOut>
               <header className="nav-bar">
                 <Link href="/" className="nav-wordmark">
-                  thetradeanalyzer
+                  <img src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png" alt="The Trade Analyzer" />
                 </Link>
                 <div className="flex-1" />
                 <div className="flex items-center gap-3">
@@ -58,7 +58,7 @@ export default function RootLayout({
                 style={{ background: "var(--color-primary)" }}
               >
                 <Link href="/" className="nav-wordmark">
-                  thetradeanalyzer
+                  <img src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png" alt="The Trade Analyzer" />
                 </Link>
                 <UserButton
                   appearance={{

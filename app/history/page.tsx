@@ -138,7 +138,7 @@ function ProNav({ tier }: { tier: string }) {
   return (
     <nav className="nav-bar">
       <Link href="/" className="nav-wordmark">
-        thetradeanalyzer
+        <img src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png" alt="The Trade Analyzer" />
       </Link>
       {links.map(({ href, label }) => (
         <Link key={href} href={href} className="nav-link">
