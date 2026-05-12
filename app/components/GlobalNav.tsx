@@ -63,11 +63,11 @@ export default function GlobalNav() {
         {/* Push auth controls right */}
         <div className="flex-1" />
 
-        {/* Auth controls — always visible on all screen sizes */}
+        {/* Auth controls — desktop always visible; mobile hidden (moved into drawer) */}
         {isSignedIn ? (
           <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2">
             <SignInButton mode="modal">
               <button className="btn-secondary text-white border-white/40 hover:bg-white/10">
                 Sign In
@@ -124,6 +124,29 @@ export default function GlobalNav() {
               {label}
             </Link>
           ))}
+
+          {/* Auth buttons in drawer — signed-out mobile only */}
+          {!isSignedIn && (
+            <div className="flex items-center gap-3 pt-4">
+              <SignInButton mode="modal">
+                <button
+                  className="btn-secondary text-white border-white/40 hover:bg-white/10"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button
+                  className="rounded-lg px-4 py-1.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Sign Up Free
+                </button>
+              </SignUpButton>
+            </div>
+          )}
         </div>
       )}
     </>
