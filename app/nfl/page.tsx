@@ -705,7 +705,6 @@ export default function NflTradeAnalyzer() {
 
   return (
     <>
-      {isPro && <ProNav />}
       {!isPro && (
         <div className="upgrade-banner rounded-none px-6 py-2 text-xs mb-0">
           💡 Save your settings and track trade history — upgrade to Pro
@@ -1370,33 +1369,6 @@ function NflPlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: NflPl
         </div>
       )}
     </div>
-  );
-}
-
-// ── ProNav ────────────────────────────────────────────────────
-
-function ProNav() {
-  const { user } = useUser();
-  const tier = (user?.publicMetadata?.tier as string) ?? "free";
-  const links: { href: string; label: string }[] = [
-    { href: "/settings",     label: "Settings"     },
-    { href: "/history",      label: "History"      },
-    { href: "/nhl",          label: "NHL"          },
-    { href: "/nfl",          label: "NFL"          },
-    { href: "/mlb",          label: "MLB"          },
-    ...(tier === "tier3" ? [{ href: "/commissioner", label: "Commissioner" }] : []),
-  ];
-  return (
-    <nav className="nav-bar">
-      <Link href="/" className="nav-wordmark">
-        <img src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png" alt="The Trade Analyzer" />
-      </Link>
-      {links.map(({ href, label }) => (
-        <Link key={href} href={href} className="nav-link">
-          {label}
-        </Link>
-      ))}
-    </nav>
   );
 }
 

@@ -5,37 +5,11 @@
  * Shows seat management and league-wide trade history.
  */
 
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { getCommissionerGroup, getGroupSeats } from '@/lib/commissioner'
 import type { CommissionerSeat } from '@/lib/commissioner'
 import { SeatPanel, CommissionerTradeHistory } from './CommissionerClient'
-
-// ── ProNav ────────────────────────────────────────────────────────────────
-
-function ProNav() {
-  const links = [
-    { href: '/settings',      label: 'Settings'     },
-    { href: '/history',       label: 'History'      },
-    { href: '/nhl',           label: 'NHL'          },
-    { href: '/nfl',           label: 'NFL'          },
-    { href: '/mlb',           label: 'MLB'          },
-    { href: '/commissioner',  label: 'Commissioner' },
-  ]
-  return (
-    <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">
-      <span className="font-semibold text-gray-400 text-xs tracking-widest uppercase mr-2">
-        Trade Analyzer
-      </span>
-      {links.map(({ href, label }) => (
-        <Link key={href} href={href} className="text-gray-200 hover:text-white transition-colors">
-          {label}
-        </Link>
-      ))}
-    </nav>
-  )
-}
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
@@ -63,17 +37,14 @@ export default async function CommissionerPage() {
 
   if (!group) {
     return (
-      <>
-        <ProNav />
-        <div className="p-6 max-w-2xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-3">Commissioner Dashboard</h1>
-          <div className="border rounded-2xl p-6 text-center text-gray-600">
-            <p className="text-sm">
-              No active commissioner group found. Please contact support if you believe this is an error.
-            </p>
-          </div>
+      <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-3">Commissioner Dashboard</h1>
+        <div className="card text-center" style={{ color: 'var(--color-muted)' }}>
+          <p className="text-sm">
+            No active commissioner group found. Please contact support if you believe this is an error.
+          </p>
         </div>
-      </>
+      </div>
     )
   }
 
@@ -92,9 +63,7 @@ export default async function CommissionerPage() {
   })
 
   return (
-    <>
-      <ProNav />
-      <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
 
         {/* Page header */}
         <div className="flex items-center justify-between mb-6">
@@ -124,6 +93,6 @@ export default async function CommissionerPage() {
 
         </div>
       </div>
-    </>
+    </div>
   )
 }

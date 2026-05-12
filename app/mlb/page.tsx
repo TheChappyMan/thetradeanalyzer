@@ -1062,10 +1062,9 @@ export default function MlbTradeAnalyzer() {
 
   return (
     <>
-      {isPro && <ProNav />}
       {!isPro && (
-        <div style={{ background: "#f3f4f6", padding: "0.5rem 1rem", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
-          💡 Save your settings and trade history — upgrade to Pro
+        <div className="upgrade-banner rounded-none px-6 py-2 text-xs mb-0">
+          💡 Save your settings and track trade history — upgrade to Pro
         </div>
       )}
       <div className="p-6 max-w-6xl mx-auto">
@@ -1846,27 +1845,3 @@ function MlbHistoryRow({ entry, onDelete }: { entry: HistoryEntry; onDelete: (id
 // TIER-GATED NAV
 // ============================================================
 
-function ProNav() {
-  const { user } = useUser();
-  const tier = (user?.publicMetadata?.tier as string) ?? "free";
-  const links = [
-    { href: "/settings",     label: "Settings"     },
-    { href: "/history",      label: "History"      },
-    { href: "/nhl",          label: "NHL"          },
-    { href: "/nfl",          label: "NFL"          },
-    { href: "/mlb",          label: "MLB"          },
-    ...(tier === "tier3" ? [{ href: "/commissioner", label: "Commissioner" }] : []),
-  ];
-  return (
-    <nav className="bg-gray-900 text-white px-6 py-2.5 flex items-center gap-6 text-sm">
-      <span className="font-semibold text-gray-400 text-xs tracking-widest uppercase mr-2">
-        Trade Analyzer
-      </span>
-      {links.map(({ href, label }) => (
-        <Link key={href} href={href} className="text-gray-200 hover:text-white transition-colors">
-          {label}
-        </Link>
-      ))}
-    </nav>
-  );
-}
