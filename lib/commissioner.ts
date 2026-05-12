@@ -124,55 +124,7 @@ export async function getGroupMemberUserIds(
 }
 
 // ============================================================
-// EMAIL
+// EMAIL  (implemented in lib/email.ts)
 // ============================================================
 
-/**
- * Sends a commissioner group invite email.
- * Uses the Resend API if RESEND_API_KEY is set; logs to console otherwise.
- *
- * To wire up: install `resend` package and set RESEND_API_KEY env var.
- * The FROM address must be a verified sender in your Resend account.
- */
-export async function sendInviteEmail(args: {
-  to:         string
-  inviteUrl:  string
-  fromName?:  string
-}): Promise<void> {
-  const apiKey  = process.env.RESEND_API_KEY
-  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? 'https://thetradeanalyzer.com'
-  const from    = process.env.RESEND_FROM_EMAIL    ?? 'noreply@thetradeanalyzer.com'
-
-  const html = `
-    <h2>You've been invited to join a Trade Analyzer league group</h2>
-    <p>${args.fromName ? `<strong>${args.fromName}</strong> has invited you` : 'You have been invited'} to join a Fantasy Trade Analyzer commissioner group.</p>
-    <p>Click the link below to accept your invitation and activate full Pro access:</p>
-    <p><a href="${args.inviteUrl}" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;">Accept Invitation</a></p>
-    <p style="color:#6b7280;font-size:12px;">If you did not expect this email, you can ignore it. The link expires after use.</p>
-    <p style="color:#6b7280;font-size:12px;">${appUrl}</p>
-  `
-
-  if (!apiKey) {
-    console.log(`[commissioner] Invite email (no RESEND_API_KEY set):\nTo: ${args.to}\nURL: ${args.inviteUrl}`)
-    return
-  }
-
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method:  'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from,
-        to:      [args.to],
-        subject: 'You\'ve been invited to a Trade Analyzer commissioner group',
-        html,
-      }),
-    })
-    if (!res.ok) {
-      const body = await res.text()
-      console.error('[commissioner] Resend error:', body)
-    }
-  } catch (err) {
-    console.error('[commissioner] Failed to send invite email:', err)
-  }
-}
+export { sendInviteEmail, sendReinviteEmail } from './email'

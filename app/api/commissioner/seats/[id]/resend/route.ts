@@ -10,7 +10,8 @@
 import { NextResponse } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
-import { getCommissionerGroup, sendInviteEmail } from '@/lib/commissioner'
+import { getCommissionerGroup } from '@/lib/commissioner'
+import { sendReinviteEmail } from '@/lib/email'
 
 export async function POST(
   _request: Request,
@@ -52,11 +53,9 @@ export async function POST(
   }
 
   // ── Resend email ────────────────────────────────────────────
-  const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://thetradeanalyzer.com'
-  const inviteUrl = `${appUrl}/commissioner/accept-invite/${seat.invite_token}`
-  const fromName  = user?.fullName ?? user?.firstName ?? undefined
+  const commissionerEmail = user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? ''
 
-  await sendInviteEmail({ to: seat.invited_email, inviteUrl, fromName })
+  await sendReinviteEmail(seat.invited_email, seat.invite_token, commissionerEmail)
 
   return NextResponse.json({ success: true })
 }

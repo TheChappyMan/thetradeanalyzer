@@ -81,11 +81,9 @@ export async function POST(request: Request) {
   }
 
   // ── Send invite email ───────────────────────────────────────
-  const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://thetradeanalyzer.com'
-  const inviteUrl = `${appUrl}/commissioner/accept-invite/${seat.invite_token}`
-  const fromName  = user?.fullName ?? user?.firstName ?? undefined
+  const commissionerEmail = user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? ''
 
-  await sendInviteEmail({ to: email, inviteUrl, fromName })
+  await sendInviteEmail(email, seat.invite_token, commissionerEmail)
 
   return NextResponse.json({ data: seat }, { status: 201 })
 }
