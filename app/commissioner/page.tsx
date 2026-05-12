@@ -93,6 +93,5 @@ export default async function CommissionerPage() {
 
         </div>
       </div>
-    </div>
   )
 }
