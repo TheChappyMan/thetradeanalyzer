@@ -168,28 +168,40 @@ export default function Dashboard() {
 
       ) : isPro ? (
         /* ── Tier 1 dashboard ──────────────────────────────────── */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <DashCard
-            href="/nhl"
-            title="NHL League"
-            description="Analyze NHL trades using your league's scoring settings."
-          />
-          <DashCard
-            href="/nfl"
-            title="NFL League"
-            description="Analyze NFL trades using your league's scoring settings."
-          />
-          <DashCard
-            href="/mlb"
-            title="MLB League"
-            description="Analyze MLB trades using your league's scoring settings."
-          />
-          <DashCard
-            href="/history"
-            title="Trade History"
-            description="Review and compare trades you've analyzed."
-          />
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <DashCard
+              href="/nhl"
+              title="NHL League"
+              description="Analyze NHL trades using your league's scoring settings."
+            />
+            <DashCard
+              href="/nfl"
+              title="NFL League"
+              description="Analyze NFL trades using your league's scoring settings."
+            />
+            <DashCard
+              href="/mlb"
+              title="MLB League"
+              description="Analyze MLB trades using your league's scoring settings."
+            />
+            <DashCard
+              href="/history"
+              title="Trade History"
+              description="Review and compare trades you've analyzed."
+            />
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <Link
+              href="https://thetradeanalyzer.com/pricing"
+              className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+              style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+            >
+              Upgrade Your Plan
+            </Link>
+          </div>
+        </>
 
       ) : (
         /* ── Free dashboard ─────────────────────────────────────── */
@@ -222,25 +234,23 @@ export default function Dashboard() {
                 <SignInButton mode="modal">
                   <button className="btn-secondary">Sign In</button>
                 </SignInButton>
-                <Link href="/sign-up" className="btn-secondary">
+                <Link
+                  href="/sign-up"
+                  className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+                  style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+                >
                   Sign Up Free
                 </Link>
               </>
-            ) : null}
-            <Link
-              href="/sign-up?plan=pro-monthly"
-              className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
-              style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
-            >
-              Start Pro
-            </Link>
-            <Link
-              href="/sign-up?plan=proplus-monthly"
-              className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap border"
-              style={{ borderColor: "var(--color-accent)", color: "var(--color-accent)" }}
-            >
-              Start Pro Plus
-            </Link>
+            ) : (
+              <Link
+                href="https://thetradeanalyzer.com/pricing"
+                className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+                style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+              >
+                Upgrade Your Plan
+              </Link>
+            )}
           </div>
         </>
       )}
