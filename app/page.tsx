@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { SPORTS_CONFIG } from "@/lib/sports-config";
 import { useLeagueContext } from "@/lib/league-context";
 
@@ -216,16 +216,32 @@ export default function Dashboard() {
             <span>💡 Upgrade to Pro to save your settings and track trade history</span>
           </div>
 
-          {!isSignedIn && (
-            <div className="flex items-center justify-center gap-3 text-sm">
-              <SignInButton mode="modal">
-                <button className="btn-secondary">Sign In</button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="btn-accent">Sign Up Free</button>
-              </SignUpButton>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+            {!isSignedIn ? (
+              <>
+                <SignInButton mode="modal">
+                  <button className="btn-secondary">Sign In</button>
+                </SignInButton>
+                <Link href="/sign-up" className="btn-secondary">
+                  Sign Up Free
+                </Link>
+              </>
+            ) : null}
+            <Link
+              href="/sign-up?plan=pro-monthly"
+              className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+              style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+            >
+              Start Pro
+            </Link>
+            <Link
+              href="/sign-up?plan=proplus-monthly"
+              className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap border"
+              style={{ borderColor: "var(--color-accent)", color: "var(--color-accent)" }}
+            >
+              Start Pro Plus
+            </Link>
+          </div>
         </>
       )}
     </div>
