@@ -63,7 +63,7 @@ export default function Dashboard() {
       </h1>
 
       <div
-        className="mb-8 mx-auto max-w-2xl text-sm leading-relaxed space-y-3"
+        className="mb-8 text-sm leading-relaxed space-y-3"
         style={{ color: "var(--color-muted)" }}
       >
         <p>
