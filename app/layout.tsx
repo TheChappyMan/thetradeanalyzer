@@ -13,31 +13,31 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "thetradeanalyzer",
-  description: "Fantasy trade analyzer for NHL, NFL, and more",
+  title: 'The Trade Analyzer',
+  description: 'The most accurate trade analyzer for fantasy football, hockey, and baseball.',
   icons: {
     icon: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/Favicon.png',
     apple: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/Favicon.png',
   },
   openGraph: {
-    title: 'thetradeanalyzer',
-    description: 'Fantasy trade analysis for NHL, NFL, and MLB. Know the value before you make the move.',
+    title: 'The Trade Analyzer',
+    description: 'The most accurate trade analyzer for fantasy football, hockey, and baseball.',
     url: 'https://app.thetradeanalyzer.com',
-    siteName: 'thetradeanalyzer',
+    siteName: 'The Trade Analyzer',
     images: [
       {
         url: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Featured-Image.jpg',
         width: 1200,
         height: 630,
-        alt: 'thetradeanalyzer',
+        alt: 'The Trade Analyzer',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'thetradeanalyzer',
-    description: 'Fantasy trade analysis for NHL, NFL, and MLB. Know the value before you make the move.',
+    title: 'The Trade Analyzer',
+    description: 'The most accurate trade analyzer for fantasy football, hockey, and baseball.',
     images: ['https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Featured-Image.jpg'],
   },
 };
