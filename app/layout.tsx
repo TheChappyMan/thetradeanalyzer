@@ -15,6 +15,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "thetradeanalyzer",
   description: "Fantasy trade analyzer for NHL, NFL, and more",
+  icons: {
+    icon: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/Favicon.png',
+    apple: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/Favicon.png',
+  },
   openGraph: {
     title: 'thetradeanalyzer',
     description: 'Fantasy trade analysis for NHL, NFL, and MLB. Know the value before you make the move.',
