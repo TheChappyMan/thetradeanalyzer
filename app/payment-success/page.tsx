@@ -3,20 +3,115 @@
 /**
  * /payment-success
  *
- * Shown by Helcim after a successful subscription checkout.
- * Displays a brief confirmation, then redirects to the app dashboard
- * after 3 seconds so the user can start using their new tier.
+ * Helcim redirects here after a successful subscription checkout.
+ *
+ * ── Signed-out visitor (most common path) ────────────────────────────────
+ * Payment succeeded but no Clerk account exists yet.  Prompt the user to
+ * create an account with the same email they used at checkout.  The Clerk
+ * user.created webhook will detect the pending tier assignment and apply
+ * it automatically.
+ *
+ * ── Already signed-in visitor ────────────────────────────────────────────
+ * The Helcim webhook found their account and assigned the tier directly.
+ * Show the confirmation message and auto-redirect to the dashboard.
  *
  * Configure your Helcim plan's "Success URL" to:
  *   https://app.thetradeanalyzer.com/payment-success
  */
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 
-const REDIRECT_URL  = "https://app.thetradeanalyzer.com";
-const REDIRECT_SECS = 3;
+const DASHBOARD_URL  = "https://app.thetradeanalyzer.com";
+const REDIRECT_SECS  = 3;
+const LOGO_URL       = "https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png";
 
-export default function PaymentSuccessPage() {
+// ── Shared layout shell ────────────────────────────────────────────────────
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-8 text-center"
+      style={{ background: "var(--color-surface)" }}
+    >
+      {/* Logo */}
+      <a href={DASHBOARD_URL} className="mb-10 block">
+        <img src={LOGO_URL} alt="The Trade Analyzer" className="h-10 mx-auto" />
+      </a>
+
+      {children}
+    </div>
+  );
+}
+
+// ── Check icon ─────────────────────────────────────────────────────────────
+
+function CheckIcon() {
+  return (
+    <div
+      className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+      style={{ background: "var(--color-accent)" }}
+    >
+      <svg
+        className="w-8 h-8"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--color-accent-text)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </div>
+  );
+}
+
+// ── Signed-out state: prompt account creation ──────────────────────────────
+
+function CreateAccountPrompt() {
+  return (
+    <Shell>
+      <CheckIcon />
+
+      <h1
+        className="text-2xl font-semibold mb-3 tracking-tight"
+        style={{ color: "var(--color-text)" }}
+      >
+        Payment successful.
+      </h1>
+
+      <p
+        className="text-base mb-2 max-w-sm"
+        style={{ color: "var(--color-muted)" }}
+      >
+        Create your account to activate your access.
+      </p>
+
+      <p
+        className="text-sm mb-8 max-w-sm"
+        style={{ color: "var(--color-muted)" }}
+      >
+        <strong style={{ color: "var(--color-text)" }}>Important:</strong>{" "}
+        use the same email address you used at checkout — your plan will
+        activate automatically the moment your account is created.
+      </p>
+
+      <Link
+        href="/sign-up"
+        className="rounded-lg px-6 py-2.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+        style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+      >
+        Create Your Account
+      </Link>
+    </Shell>
+  );
+}
+
+// ── Signed-in state: already upgraded, auto-redirect ──────────────────────
+
+function UpgradeConfirmation() {
   const [countdown, setCountdown] = useState(REDIRECT_SECS);
 
   useEffect(() => {
@@ -24,7 +119,7 @@ export default function PaymentSuccessPage() {
       setCountdown((n) => {
         if (n <= 1) {
           clearInterval(interval);
-          window.location.href = REDIRECT_URL;
+          window.location.href = DASHBOARD_URL;
           return 0;
         }
         return n - 1;
@@ -35,44 +130,16 @@ export default function PaymentSuccessPage() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center p-8 text-center"
-      style={{ background: "var(--color-surface)" }}
-    >
-      {/* Logo */}
-      <a href={REDIRECT_URL} className="mb-10 block">
-        <img
-          src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png"
-          alt="The Trade Analyzer"
-          className="h-10 mx-auto"
-        />
-      </a>
+    <Shell>
+      <CheckIcon />
 
-      {/* Check icon */}
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-        style={{ background: "var(--color-accent)" }}
-      >
-        <svg
-          className="w-8 h-8"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--color-accent-text)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </div>
-
-      {/* Heading */}
       <h1
         className="text-2xl font-semibold mb-3 tracking-tight"
         style={{ color: "var(--color-text)" }}
       >
         You&apos;re all set.
       </h1>
+
       <p
         className="text-base mb-8 max-w-sm"
         style={{ color: "var(--color-muted)" }}
@@ -84,13 +151,27 @@ export default function PaymentSuccessPage() {
         …
       </p>
 
-      {/* Manual link in case redirect is slow */}
-      <a
-        href={REDIRECT_URL}
-        className="btn-accent text-sm"
-      >
+      <a href={DASHBOARD_URL} className="btn-accent text-sm">
         Go to Dashboard
       </a>
-    </div>
+    </Shell>
   );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────
+
+export default function PaymentSuccessPage() {
+  const { user, isLoaded } = useUser();
+
+  // While Clerk resolves, render the shell without content to avoid flash
+  if (!isLoaded) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ background: "var(--color-surface)" }}
+      />
+    );
+  }
+
+  return user ? <UpgradeConfirmation /> : <CreateAccountPrompt />;
 }

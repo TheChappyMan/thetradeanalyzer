@@ -32,6 +32,11 @@
  * ── Cancellation / expiry ────────────────────────────────────────────────
  *   tier1 / tier2  → set tier: "free" immediately
  *   tier3          → set grace_until = now + 7 days (not immediate removal)
+ *
+ * ── Pre-auth payment flow ────────────────────────────────────────────────
+ * If no Clerk user exists for the email yet, a row is written to
+ * pending_tier_assignments.  The Clerk user.created webhook picks it up
+ * and assigns the tier when the account is created.
  */
 
 import { NextResponse } from "next/server";
@@ -108,31 +113,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing customer email" }, { status: 400 });
   }
 
-  // ── 4. Look up Clerk user by email ──────────────────────────────────────
-  const clerk = await clerkClient();
-  const { data: userList } = await clerk.users.getUserList({
-    emailAddress: [customerEmail],
-  });
-
-  const clerkUser = userList?.[0];
-  if (!clerkUser) {
-    // User hasn't created an account yet — return 200 to prevent retries
-    console.warn(`[helcim webhook] No Clerk user found for ${customerEmail}`);
-    return NextResponse.json({ received: true, note: "No matching user" });
-  }
-
-  const userId = clerkUser.id;
-
-  // ── 5. Handle event ─────────────────────────────────────────────────────
+  // ── 4. Handle activation vs cancellation ────────────────────────────────
+  //
+  // Activation / creation events need the tier resolved first so we can
+  // write a pending assignment if the Clerk user doesn't exist yet.
 
   if (event === "subscription.activated" || event === "subscription.created") {
-    // ── Activation / renewal ──────────────────────────────────────────────
     const tier = PLAN_TIER[planCode];
     if (!tier) {
       console.warn(`[helcim webhook] Unknown planCode: ${planCode}`);
       return NextResponse.json({ error: `Unknown plan: ${planCode}` }, { status: 400 });
     }
 
+    // ── Look up Clerk user ──────────────────────────────────────────────
+    const clerk = await clerkClient();
+    const { data: userList } = await clerk.users.getUserList({
+      emailAddress: [customerEmail],
+    });
+    const clerkUser = userList?.[0];
+
+    if (!clerkUser) {
+      // No Clerk account yet — store as pending; the Clerk user.created
+      // webhook will pick this up and assign the tier on sign-up.
+      const { error: insertErr } = await supabase
+        .from("pending_tier_assignments")
+        .insert({ email: customerEmail, tier, plan: planCode });
+
+      if (insertErr) {
+        console.error("[helcim webhook] Failed to insert pending_tier_assignments:", insertErr.message);
+        // Still return 200 — retrying won't help if Supabase is the issue
+      } else {
+        console.log(`[helcim webhook] Stored pending tier=${tier} for ${customerEmail} (no Clerk account yet)`);
+      }
+
+      return NextResponse.json({ received: true, note: "Pending assignment created" });
+    }
+
+    const userId = clerkUser.id;
+
+    // ── Assign tier immediately ─────────────────────────────────────────
     await clerk.users.updateUser(userId, {
       publicMetadata: { ...clerkUser.publicMetadata, tier },
     });
@@ -168,6 +187,26 @@ export async function POST(request: Request) {
     event === "subscription.deactivated"
   ) {
     // ── Cancellation / expiry ─────────────────────────────────────────────
+    const clerk = await clerkClient();
+    const { data: userList } = await clerk.users.getUserList({
+      emailAddress: [customerEmail],
+    });
+    const clerkUser = userList?.[0];
+
+    if (!clerkUser) {
+      // No account exists — remove any pending assignment so they don't
+      // get a free tier upgrade after a refunded / cancelled payment.
+      await supabase
+        .from("pending_tier_assignments")
+        .delete()
+        .eq("email", customerEmail)
+        .is("assigned_at", null);
+
+      console.log(`[helcim webhook] Cancelled — removed pending assignment for ${customerEmail}`);
+      return NextResponse.json({ received: true });
+    }
+
+    const userId = clerkUser.id;
     const currentTier = (clerkUser.publicMetadata?.tier as string | undefined) ?? "free";
 
     if (currentTier === "tier3") {
