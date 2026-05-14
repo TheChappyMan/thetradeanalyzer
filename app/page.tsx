@@ -56,11 +56,31 @@ export default function Dashboard() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1
-        className="text-2xl font-semibold mb-6 tracking-tight"
+        className="text-2xl font-semibold mb-4 tracking-tight"
         style={{ color: "var(--color-text)" }}
       >
-        Welcome to thetradeanalyzer
+        Welcome to The Trade Analyzer
       </h1>
+
+      <div
+        className="mb-8 mx-auto max-w-2xl text-sm leading-relaxed space-y-3"
+        style={{ color: "var(--color-muted)" }}
+      >
+        <p>
+          The Trade Analyzer helps you win fantasy trades across NHL, NFL, and MLB.
+        </p>
+        <p>
+          Search for players, add picks, and get an instant fairness grade based on your
+          league&apos;s actual scoring settings. Whether you&apos;re in a points league, a
+          categories league, or a keeper format, the values adjust to what matters in your
+          specific league &mdash; not a generic ranking list.
+        </p>
+        <p>
+          To get started: click any sport above, configure your league settings, and start
+          analyzing trades. Free users can analyze trades right away with no account needed.
+          Sign up to save your league settings and track your trade history.
+        </p>
+      </div>
 
       {isTier2 ? (
         /* ── Tier 2 dashboard ──────────────────────────────────── */
