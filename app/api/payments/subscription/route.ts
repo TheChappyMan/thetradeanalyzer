@@ -1,5 +1,5 @@
 /**
- * POST /api/payments/helcim
+ * POST /api/payments/subscription
  *
  * Helcim webhook handler.
  *

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "PowerShell(Get-Command node,npm,npx -ErrorAction SilentlyContinue | Select-Object Name, Source; $env:PATH -split ';' | Where-Object { $_ -match 'node|npm' })",
+      "PowerShell($env:PATH -split ';' | Select-Object -First 30; Get-ChildItem \"C:\\\\Program Files\\\\nodejs\\\\\" -ErrorAction SilentlyContinue | Select-Object Name -First 5; Get-ChildItem \"$env:APPDATA\\\\npm\\\\\" -ErrorAction SilentlyContinue | Select-Object Name -First 5; Get-ChildItem \"$env:NVM_HOME\\\\\" -ErrorAction SilentlyContinue | Select-Object Name -First 5)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\\" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'node|nvm' } | Select-Object Name; Get-ChildItem \"C:\\\\Users\\\\JustinChapman\\\\AppData\\\\Roaming\\\\\" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'node|nvm' } | Select-Object Name; Get-ChildItem \"C:\\\\Users\\\\JustinChapman\\\\AppData\\\\Local\\\\\" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'node|nvm' } | Select-Object Name)",
+      "PowerShell(Get-ChildItem \"C:\\\\\" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'node|nvm' } | Select-Object Name; Get-ItemProperty \"HKLM:\\\\SOFTWARE\\\\Node.js\" -ErrorAction SilentlyContinue; Get-ItemProperty \"HKCU:\\\\SOFTWARE\\\\Node.js\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\JustinChapman\\\\AppData\\\\Local\" | Where-Object { $_.Name -match 'node|nvm|volta|fnm|npm' } | Select-Object Name 2>&1; Get-ChildItem \"C:\\\\Users\\\\JustinChapman\\\\AppData\\\\Roaming\" | Where-Object { $_.Name -match 'node|nvm|npm' } | Select-Object Name 2>&1)",
+      "Bash(where npm *)",
+      "Bash(where node *)",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\",\"User\"\\); where.exe node; where.exe npm; node --version; npm --version)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
