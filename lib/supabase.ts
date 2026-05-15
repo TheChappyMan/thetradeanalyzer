@@ -12,6 +12,26 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
   )
 }
 
+// Validate that the service role key actually carries role=service_role.
+// If the anon key was accidentally used, RLS will block all server-side
+// writes even though the code looks correct.
+try {
+  const payload = JSON.parse(
+    Buffer.from(supabaseServiceRoleKey.split('.')[1], 'base64url').toString('utf8')
+  )
+  if (payload?.role !== 'service_role') {
+    console.error(
+      `[supabase] MISCONFIGURATION: SUPABASE_SERVICE_ROLE_KEY has role="${payload?.role}" ` +
+      `— expected "service_role". RLS will block all server-side writes. ` +
+      `Copy the service_role key from Supabase → Settings → API and update ` +
+      `the SUPABASE_SERVICE_ROLE_KEY environment variable.`
+    )
+  }
+} catch {
+  // JWT decode failed — key is malformed or not a JWT at all
+  console.error('[supabase] MISCONFIGURATION: SUPABASE_SERVICE_ROLE_KEY is not a valid JWT.')
+}
+
 // ── Service role client ───────────────────────────────────────────────────────
 
 /**
