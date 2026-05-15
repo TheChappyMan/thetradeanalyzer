@@ -73,10 +73,10 @@ export default function Dashboard() {
           Search for players, add picks, and get an instant fairness grade based on your
           league&apos;s actual scoring settings. Whether you&apos;re in a points league, a
           categories league, or a keeper format, the values adjust to what matters in your
-          specific league &mdash; not a generic ranking list.
+          specific league, not a generic ranking list.
         </p>
         <p>
-          To get started: click any sport above, configure your league settings, and start
+          To get started: click any sport below, configure your league settings, and start
           analyzing trades. Free users can analyze trades right away with no account needed.
           Sign up to save your league settings and track your trade history.
         </p>
