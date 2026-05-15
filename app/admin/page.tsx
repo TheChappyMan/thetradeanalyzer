@@ -26,9 +26,8 @@ export type ReferralPayout = {
   status:           string;
   created_at:       string;
   paid_at:          string | null;
-  referral_codes: {
-    etransfer_email: string | null;
-  } | null;
+  // Supabase returns joined relations as an array even for single-row joins
+  referral_codes: { etransfer_email: string | null }[] | null;
 };
 
 // ── Page ───────────────────────────────────────────────────────────────────

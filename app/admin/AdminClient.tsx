@@ -145,7 +145,7 @@ function PayoutRow({
         {payout.referrer_user_id.slice(0, 16)}…
       </td>
       <td className="py-2 pr-4 text-xs" style={{ color: "var(--color-text)" }}>
-        {payout.referral_codes?.etransfer_email ?? <span style={{ color: "var(--color-muted)" }}>—</span>}
+        {payout.referral_codes?.[0]?.etransfer_email ?? <span style={{ color: "var(--color-muted)" }}>—</span>}
       </td>
       <td className="py-2 pr-4 text-xs" style={{ color: "var(--color-text)" }}>
         {payout.referred_email}
