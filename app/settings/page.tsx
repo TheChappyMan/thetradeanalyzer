@@ -5,6 +5,7 @@ import type { League, LeagueRow } from '@/lib/types'
 import type { NflLeague } from '@/lib/nfl-types'
 import type { MlbLeague } from '@/lib/mlb-types'
 import NhlSettingsForm from './NhlSettingsForm'
+import ReferralSection from './ReferralSection'
 
 export default async function SettingsPage() {
   // ── Auth check ──────────────────────────────────────────────
@@ -25,6 +26,13 @@ export default async function SettingsPage() {
       </div>
     )
   }
+
+  // ── Fetch referral code (all paid tiers) ────────────────────
+  const { data: referralRow } = await supabase
+    .from('referral_codes')
+    .select('code, etransfer_email')
+    .eq('user_id', userId)
+    .maybeSingle()
 
   if (tier === 'tier2' || tier === 'tier3') {
     // ── Tier 2: fetch ALL leagues for each sport ──────────────
@@ -54,15 +62,24 @@ export default async function SettingsPage() {
     const allMlbLeagues = (mlbResult.data ?? []) as LeagueRow[]
 
     return (
-      <NhlSettingsForm
-        initialLeague={(allNhlLeagues[0]?.settings ?? null) as League | null}
-        initialNflLeague={(allNflLeagues[0]?.settings ?? null) as NflLeague | null}
-        initialMlbLeague={(allMlbLeagues[0]?.settings ?? null) as MlbLeague | null}
-        tier={tier}
-        allNhlLeagues={allNhlLeagues}
-        allNflLeagues={allNflLeagues}
-        allMlbLeagues={allMlbLeagues}
-      />
+      <>
+        <NhlSettingsForm
+          initialLeague={(allNhlLeagues[0]?.settings ?? null) as League | null}
+          initialNflLeague={(allNflLeagues[0]?.settings ?? null) as NflLeague | null}
+          initialMlbLeague={(allMlbLeagues[0]?.settings ?? null) as MlbLeague | null}
+          tier={tier}
+          allNhlLeagues={allNhlLeagues}
+          allNflLeagues={allNflLeagues}
+          allMlbLeagues={allMlbLeagues}
+        />
+        {referralRow && (
+          <ReferralSection
+            code={referralRow.code}
+            etransferEmail={referralRow.etransfer_email ?? null}
+            userId={userId}
+          />
+        )}
+      </>
     )
   }
 
@@ -93,14 +110,23 @@ export default async function SettingsPage() {
   const initialMlbLeague = (mlbResult.data?.settings ?? null) as MlbLeague | null
 
   return (
-    <NhlSettingsForm
-      initialLeague={initialLeague}
-      initialNflLeague={initialNflLeague}
-      initialMlbLeague={initialMlbLeague}
-      tier={tier}
-      allNhlLeagues={[]}
-      allNflLeagues={[]}
-      allMlbLeagues={[]}
-    />
+    <>
+      <NhlSettingsForm
+        initialLeague={initialLeague}
+        initialNflLeague={initialNflLeague}
+        initialMlbLeague={initialMlbLeague}
+        tier={tier}
+        allNhlLeagues={[]}
+        allNflLeagues={[]}
+        allMlbLeagues={[]}
+      />
+      {referralRow && (
+        <ReferralSection
+          code={referralRow.code}
+          etransferEmail={referralRow.etransfer_email ?? null}
+          userId={userId}
+        />
+      )}
+    </>
   )
 }

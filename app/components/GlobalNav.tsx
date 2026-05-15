@@ -18,7 +18,7 @@ import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
  *         Auth buttons stay pinned in the header bar.
  * Desktop: single-row layout, unchanged.
  */
-export default function GlobalNav() {
+export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const { user, isLoaded } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -37,6 +37,9 @@ export default function GlobalNav() {
     ] : []),
     ...(isTier3 ? [
       { href: "/commissioner", label: "Commissioner" },
+    ] : []),
+    ...(isAdmin ? [
+      { href: "/admin",      label: "Admin"        },
     ] : []),
   ];
 

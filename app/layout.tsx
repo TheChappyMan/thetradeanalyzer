@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import GlobalNav from "./components/GlobalNav";
 import { LeagueProvider } from "@/lib/league-context";
+import { isAdminId } from "@/lib/auth";
 import Script from "next/script";
 import "./globals.css";
 
@@ -42,11 +44,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Resolve admin status server-side so ADMIN_USER_IDS is never sent to the client
+  const { userId } = await auth();
+  const adminUser = !!userId && isAdminId(userId);
+
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased">
@@ -112,7 +118,7 @@ export default function RootLayout({
         <ClerkProvider>
           <LeagueProvider>
             {/* ── Global top bar — always rendered for all visitors ── */}
-            <GlobalNav />
+            <GlobalNav isAdmin={adminUser} />
 
             {children}
           </LeagueProvider>

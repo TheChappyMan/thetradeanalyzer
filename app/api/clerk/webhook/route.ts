@@ -27,6 +27,7 @@ import { NextResponse }  from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { clerkClient }   from "@clerk/nextjs/server";
 import { supabase }      from "@/lib/supabase";
+import { ensureReferralCode } from "@/lib/referral";
 
 // ── Svix signature verification ───────────────────────────────────────────
 
@@ -80,6 +81,8 @@ interface ClerkEmailAddress {
 
 interface ClerkUserCreatedData {
   id:                        string;
+  first_name:                string | null;
+  username:                  string | null;
   primary_email_address_id:  string;
   email_addresses:           ClerkEmailAddress[];
 }
@@ -180,7 +183,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
-  // ── 7. Commissioner: create commissioner_groups row ───────────────────
+  // ── 7. Generate referral code ─────────────────────────────────────────
+  const displayName =
+    userData.first_name ??
+    userData.username ??
+    email.split("@")[0];
+
+  await ensureReferralCode(userId, displayName);
+
+  // ── 8. Commissioner: create commissioner_groups row ───────────────────
   if (tier === "tier3") {
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1);
@@ -204,7 +215,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // ── 8. Mark pending row as assigned ───────────────────────────────────
+  // ── 9. Mark pending row as assigned ───────────────────────────────────
   const { error: updateErr } = await supabase
     .from("pending_tier_assignments")
     .update({

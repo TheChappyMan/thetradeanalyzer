@@ -13,8 +13,8 @@
  *   "event":   "subscription.activated" | "subscription.cancelled" | "subscription.expired",
  *   "data": {
  *     "subscription": {
- *       "planCode": "pro-monthly",   // matches the code you set in Helcim
- *       "status":   "active" | "cancelled" | "expired"
+ *       "planCode":     "pro-monthly",
+ *       "referralCode": "K9M2-JUSTIN"   // ← only if Helcim passes it through
  *     },
  *     "customer": {
  *       "email": "user@example.com"
@@ -22,7 +22,15 @@
  *   }
  * }
  *
- * Adjust field paths below if your Helcim plan uses different keys.
+ * ── Referral code tracking limitation ────────────────────────────────────
+ * The WordPress pricing page appends ?ref=CODE to the Helcim subscription
+ * URL. Whether Helcim includes this in the webhook payload depends on their
+ * platform.  The code below reads data.subscription.referralCode — if
+ * Helcim does NOT pass custom URL parameters through to webhooks, referral
+ * tracking for new subscriptions will silently no-op and no payout row
+ * will be written.  In that case, implement a pre-checkout page at
+ * /checkout?plan=X&ref=CODE that stores the code in a Supabase session
+ * row keyed by email before forwarding to Helcim.
  *
  * ── Tier mapping ─────────────────────────────────────────────────────────
  *   pro-monthly / pro-annual       → tier1
@@ -39,10 +47,11 @@
  * and assigns the tier when the account is created.
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse }  from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
-import { clerkClient } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/supabase";
+import { clerkClient }   from "@clerk/nextjs/server";
+import { supabase }      from "@/lib/supabase";
+import { ensureReferralCode, getReferralByCode, recordReferralPayout, REFERRAL_PAYOUT } from "@/lib/referral";
 
 // ── Plan → tier mapping ────────────────────────────────────────────────────
 
@@ -61,7 +70,6 @@ function verifySignature(rawBody: string, signature: string, secret: string): bo
     const computed = createHmac("sha256", secret)
       .update(rawBody, "utf8")
       .digest("hex");
-    // timingSafeEqual requires equal-length buffers
     const a = Buffer.from(signature.toLowerCase());
     const b = Buffer.from(computed.toLowerCase());
     if (a.length !== b.length) return false;
@@ -98,14 +106,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  // Type-safe field extraction
-  const p = payload as Record<string, unknown>;
-  const event     = (p.event as string | undefined) ?? "";
-  const data      = (p.data as Record<string, unknown> | undefined) ?? {};
-  const subData   = (data.subscription as Record<string, unknown> | undefined) ?? {};
-  const custData  = (data.customer    as Record<string, unknown> | undefined) ?? {};
+  const p           = payload as Record<string, unknown>;
+  const event       = (p.event as string | undefined) ?? "";
+  const data        = (p.data as Record<string, unknown> | undefined) ?? {};
+  const subData     = (data.subscription as Record<string, unknown> | undefined) ?? {};
+  const custData    = (data.customer    as Record<string, unknown> | undefined) ?? {};
 
-  const planCode    = (subData.planCode as string | undefined) ?? "";
+  const planCode      = (subData.planCode     as string | undefined) ?? "";
+  const referralCode  = (subData.referralCode as string | undefined) ?? "";  // may be empty
   const customerEmail = ((custData.email as string | undefined) ?? "").trim().toLowerCase();
 
   if (!customerEmail) {
@@ -113,10 +121,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing customer email" }, { status: 400 });
   }
 
-  // ── 4. Handle activation vs cancellation ────────────────────────────────
-  //
-  // Activation / creation events need the tier resolved first so we can
-  // write a pending assignment if the Clerk user doesn't exist yet.
+  // ── 4. Activation ────────────────────────────────────────────────────────
 
   if (event === "subscription.activated" || event === "subscription.created") {
     const tier = PLAN_TIER[planCode];
@@ -125,117 +130,115 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Unknown plan: ${planCode}` }, { status: 400 });
     }
 
-    // ── Look up Clerk user ──────────────────────────────────────────────
+    // Look up Clerk user
     const clerk = await clerkClient();
-    const { data: userList } = await clerk.users.getUserList({
-      emailAddress: [customerEmail],
-    });
+    const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
     const clerkUser = userList?.[0];
 
     if (!clerkUser) {
-      // No Clerk account yet — store as pending; the Clerk user.created
-      // webhook will pick this up and assign the tier on sign-up.
+      // No Clerk account yet — store as pending
       const { error: insertErr } = await supabase
         .from("pending_tier_assignments")
         .insert({ email: customerEmail, tier, plan: planCode });
 
       if (insertErr) {
         console.error("[helcim webhook] Failed to insert pending_tier_assignments:", insertErr.message);
-        // Still return 200 — retrying won't help if Supabase is the issue
       } else {
-        console.log(`[helcim webhook] Stored pending tier=${tier} for ${customerEmail} (no Clerk account yet)`);
+        console.log(`[helcim webhook] Stored pending tier=${tier} for ${customerEmail}`);
       }
 
       return NextResponse.json({ received: true, note: "Pending assignment created" });
     }
 
-    const userId = clerkUser.id;
+    const userId      = clerkUser.id;
+    const displayName = clerkUser.firstName ?? clerkUser.username ?? customerEmail.split("@")[0];
 
-    // ── Assign tier immediately ─────────────────────────────────────────
+    // Assign tier
     await clerk.users.updateUser(userId, {
       publicMetadata: { ...clerkUser.publicMetadata, tier },
     });
 
-    // Commissioner (tier3): create or refresh commissioner_groups row
+    // Generate referral code
+    await ensureReferralCode(userId, displayName);
+
+    // Commissioner: create/refresh commissioner_groups
     if (tier === "tier3") {
       const expiresAt = new Date();
       expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-
-      // Upsert by commissioner_user_id
       const { error: upsertErr } = await supabase
         .from("commissioner_groups")
         .upsert(
-          {
-            commissioner_user_id: userId,
-            expires_at:           expiresAt.toISOString(),
-            grace_until:          null,   // clear any existing grace period
-          },
-          { onConflict: "commissioner_user_id" }
+          { commissioner_user_id: userId, expires_at: expiresAt.toISOString(), grace_until: null },
+          { onConflict: "commissioner_user_id" },
         );
-
-      if (upsertErr) {
-        console.error("[helcim webhook] Failed to upsert commissioner_groups:", upsertErr.message);
-        // Don't return an error — tier was set; log and continue
-      }
+      if (upsertErr) console.error("[helcim webhook] Failed to upsert commissioner_groups:", upsertErr.message);
     }
 
     console.log(`[helcim webhook] Set tier=${tier} for ${customerEmail} (${userId})`);
+
+    // ── Referral tracking (annual plans only) ──────────────────────────
+    // NOTE: referralCode will be empty unless Helcim passes the ?ref= URL
+    // parameter from the pricing page through to the webhook payload.
+    // If it's empty, this block is a no-op. See file header for details.
+    if (referralCode && REFERRAL_PAYOUT[planCode] !== undefined) {
+      const referrer = await getReferralByCode(referralCode);
+      if (referrer) {
+        await recordReferralPayout({
+          referralCodeId:  referrer.id,
+          referrerUserId:  referrer.user_id,
+          referredEmail:   customerEmail,
+          referredUserId:  userId,
+          plan:            planCode,
+          payoutAmount:    REFERRAL_PAYOUT[planCode],
+        });
+        console.log(`[helcim webhook] Recorded referral payout for code ${referralCode}`);
+      } else {
+        console.warn(`[helcim webhook] Referral code not found: ${referralCode}`);
+      }
+    }
+
+  // ── 5. Cancellation / expiry ─────────────────────────────────────────────
 
   } else if (
     event === "subscription.cancelled" ||
     event === "subscription.expired"  ||
     event === "subscription.deactivated"
   ) {
-    // ── Cancellation / expiry ─────────────────────────────────────────────
     const clerk = await clerkClient();
-    const { data: userList } = await clerk.users.getUserList({
-      emailAddress: [customerEmail],
-    });
+    const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
     const clerkUser = userList?.[0];
 
     if (!clerkUser) {
-      // No account exists — remove any pending assignment so they don't
-      // get a free tier upgrade after a refunded / cancelled payment.
+      // Remove any pending assignment
       await supabase
         .from("pending_tier_assignments")
         .delete()
         .eq("email", customerEmail)
         .is("assigned_at", null);
-
       console.log(`[helcim webhook] Cancelled — removed pending assignment for ${customerEmail}`);
       return NextResponse.json({ received: true });
     }
 
-    const userId = clerkUser.id;
+    const userId      = clerkUser.id;
     const currentTier = (clerkUser.publicMetadata?.tier as string | undefined) ?? "free";
 
     if (currentTier === "tier3") {
-      // Commissioner: 7-day grace period before losing access
       const graceUntil = new Date();
       graceUntil.setDate(graceUntil.getDate() + 7);
-
       const { error: graceErr } = await supabase
         .from("commissioner_groups")
         .update({ grace_until: graceUntil.toISOString() })
         .eq("commissioner_user_id", userId);
-
-      if (graceErr) {
-        console.error("[helcim webhook] Failed to set grace_until:", graceErr.message);
-      }
-
-      console.log(`[helcim webhook] Set grace_until=${graceUntil.toISOString()} for commissioner ${userId}`);
-
+      if (graceErr) console.error("[helcim webhook] Failed to set grace_until:", graceErr.message);
+      console.log(`[helcim webhook] Set grace_until for commissioner ${userId}`);
     } else {
-      // Pro / Pro Plus: immediate downgrade to free
       await clerk.users.updateUser(userId, {
         publicMetadata: { ...clerkUser.publicMetadata, tier: "free" },
       });
-
       console.log(`[helcim webhook] Downgraded to free for ${customerEmail} (${userId})`);
     }
 
   } else {
-    // Unknown event — acknowledge and ignore
     console.log(`[helcim webhook] Unhandled event type: ${event}`);
   }
 

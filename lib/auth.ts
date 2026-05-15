@@ -2,24 +2,54 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 
 export type UserTier = 'free' | 'tier1' | 'tier2' | 'tier3'
 
+// ── Admin helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the given Clerk userId is in the ADMIN_USER_IDS env var.
+ * Pure sync function — safe to call anywhere, including server components.
+ * Never exposed to client-side code.
+ */
+export function isAdminId(userId: string): boolean {
+  const adminIds = (process.env.ADMIN_USER_IDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  return adminIds.includes(userId)
+}
+
+/**
+ * Async wrapper that resolves the current user's ID then checks isAdminId.
+ * Use in API routes and server components.
+ */
+export async function isAdmin(): Promise<boolean> {
+  const { userId } = await auth()
+  if (!userId) return false
+  return isAdminId(userId)
+}
+
+// ── Tier helpers ──────────────────────────────────────────────────────────────
+
 /**
  * Returns the user's effective tier from Clerk publicMetadata.
  *
- * Tier sources (highest wins):
- *   publicMetadata.tier       — personal subscription set by Stripe webhook
- *                                'free' | 'tier1' | 'tier2' | 'tier3'
- *   (Commissioner metadata)   — tier3 commissioners have tier='tier3'
- *   (Manager grant)           — when a manager joins a commissioner group their
- *                                tier is upgraded to 'tier2' in Clerk metadata
- *                                and restored on removal; no separate field needed.
+ * Admin override: if the current user is in ADMIN_USER_IDS they always
+ * receive 'tier2' access regardless of their stored metadata.
  *
- * Grace-period enforcement for expired commissioner groups is handled by the
- * Stripe subscription webhook — it reverts member metadata after grace_until.
- * getUserTier() itself makes no Supabase calls; it's a fast Clerk-only read.
+ * Tier sources (highest wins):
+ *   ADMIN_USER_IDS (env)       — always tier2
+ *   publicMetadata.tier        — personal subscription set by webhook
+ *                                'free' | 'tier1' | 'tier2' | 'tier3'
+ *   (Commissioner metadata)    — tier3 commissioners have tier='tier3'
+ *   (Manager grant)            — managers receive tier='tier2' via Clerk metadata
+ *
+ * getUserTier() makes no Supabase calls; it's a fast Clerk-only read.
  */
 export async function getUserTier(): Promise<UserTier> {
   const { userId } = await auth()
   if (!userId) return 'free'
+
+  // Admins always get tier2 access
+  if (isAdminId(userId)) return 'tier2'
 
   const user = await currentUser()
   const tier = user?.publicMetadata?.tier as string | undefined
