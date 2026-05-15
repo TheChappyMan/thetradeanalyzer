@@ -1071,7 +1071,7 @@ export default function MlbTradeAnalyzer() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold">Fantasy Trade Analyzer (MLB)</h1>
+          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>Fantasy Trade Analyzer (MLB)</h1>
           <MlbApiStatus
             status={dbStatus}
             playerCount={playerDb.length}
@@ -1085,10 +1085,11 @@ export default function MlbTradeAnalyzer() {
         {/* Tier 2: league selector */}
         {isTier2 && (
           <div className="flex items-center gap-3 mb-4">
-            <label className="text-sm text-gray-600 shrink-0">League:</label>
+            <label className="text-sm shrink-0" style={{ color: "var(--color-muted)" }}>League:</label>
             {t2Leagues.length > 0 ? (
               <select
-                className="border rounded-xl px-3 py-1.5 text-sm"
+                className="form-input"
+                style={{ fontSize: "0.875rem" }}
                 value={activeLeagueId ?? ""}
                 onChange={(e) => setActiveLeagueId(e.target.value || null)}
               >
@@ -1097,9 +1098,9 @@ export default function MlbTradeAnalyzer() {
                 ))}
               </select>
             ) : (
-              <span className="text-sm text-gray-400 italic">No leagues yet</span>
+              <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>No leagues yet</span>
             )}
-            <Link href="/settings" className="text-xs text-blue-600 hover:underline whitespace-nowrap">
+            <Link href="/settings" className="link-primary text-xs whitespace-nowrap">
               + New League
             </Link>
           </div>
@@ -1110,25 +1111,25 @@ export default function MlbTradeAnalyzer() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
             {/* League Settings */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">League Settings</h2>
+            <div className="card">
+              <h2 className="font-medium mb-2" style={{ color: "var(--color-text)" }}>League Settings</h2>
 
-              <label className="text-sm">League Name (optional)</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>League Name (optional)</label>
               <input
-                type="text" className="border rounded-xl p-2 w-full mb-2"
+                type="text" className="form-input mb-2"
                 value={league.name} onChange={(e) => updateLeague({ name: e.target.value })}
               />
 
-              <label className="text-sm">Number of Teams</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>Number of Teams</label>
               <input
-                type="number" min={2} className="border rounded-xl p-2 w-full mb-2"
+                type="number" min={2} className="form-input mb-2"
                 value={league.teams}
                 onChange={(e) => updateLeague({ teams: parseInt(e.target.value || "12", 10) })}
               />
 
-              <label className="text-sm">League Type</label>
+              <label className="text-sm" style={{ color: "var(--color-muted)" }}>League Type</label>
               <select
-                className="border rounded-xl p-2 w-full mb-2"
+                className="form-input mb-2"
                 value={league.leagueType}
                 onChange={(e) => updateLeague({ leagueType: e.target.value as "redraft" | "keeper" })}
               >
@@ -1138,22 +1139,22 @@ export default function MlbTradeAnalyzer() {
 
               {league.leagueType === "keeper" && (
                 <>
-                  <label className="text-sm">Keepers per Team</label>
+                  <label className="text-sm" style={{ color: "var(--color-muted)" }}>Keepers per Team</label>
                   <input
-                    type="number" min={0} className="border rounded-xl p-2 w-full mb-2"
+                    type="number" min={0} className="form-input mb-2"
                     value={league.keepersPerTeam}
                     onChange={(e) => updateLeague({ keepersPerTeam: parseInt(e.target.value || "0", 10) })}
                   />
                 </>
               )}
 
-              <h3 className="text-sm font-semibold mt-3 mb-2">Roster Slots</h3>
+              <h3 className="text-sm font-semibold mt-3 mb-2" style={{ color: "var(--color-text)" }}>Roster Slots</h3>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(league.roster) as MlbRosterKey[]).map((pos) => (
                   <label key={pos} className="text-xs flex items-center gap-2">
-                    <span className="w-10">{pos}</span>
+                    <span className="w-10" style={{ color: "var(--color-text)" }}>{pos}</span>
                     <input
-                      type="number" min={0} className="border rounded-xl p-1 w-full"
+                      type="number" min={0} className="form-input" style={{ padding: "0.25rem" }}
                       value={league.roster[pos]}
                       onChange={(e) => updateRoster(pos, parseInt(e.target.value || "0", 10))}
                     />
@@ -1163,19 +1164,18 @@ export default function MlbTradeAnalyzer() {
             </div>
 
             {/* Scoring */}
-            <div className="border rounded-2xl p-4">
-              <h2 className="font-medium mb-2">Scoring Format</h2>
+            <div className="card">
+              <h2 className="font-medium mb-2" style={{ color: "var(--color-text)" }}>Scoring Format</h2>
 
               {/* Format toggle */}
               <div className="flex rounded-xl border overflow-hidden mb-3">
                 {(["5x5", "obp", "points"] as LeagueFormat[]).map((fmt) => (
                   <button
                     key={fmt}
-                    className={`flex-1 py-1.5 text-sm font-medium transition-colors ${
-                      league.format === fmt
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className="flex-1 py-1.5 text-sm font-medium transition-colors"
+                    style={league.format === fmt
+                      ? { background: "var(--color-primary)", color: "#fff" }
+                      : { color: "var(--color-muted)" }}
                     onClick={() => handleFormatChange(fmt)}
                   >
                     {fmt === "5x5" ? "5×5 Roto" : fmt === "obp" ? "OBP Roto" : "Points"}
@@ -1185,7 +1185,7 @@ export default function MlbTradeAnalyzer() {
 
               {isRotoMode ? (
                 <>
-                  <p className="text-xs text-gray-500 mb-3">
+                  <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
                     {league.format === "5x5"
                       ? "5×5: R, HR, RBI, SB, AVG (hitting) + W, SV, K, ERA, WHIP (pitching)."
                       : "OBP: same as 5×5 but OBP replaces AVG."}{" "}
@@ -1194,7 +1194,7 @@ export default function MlbTradeAnalyzer() {
                   <div className="grid grid-cols-2 gap-4">
                     {/* Hitter categories */}
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Hitters</h3>
+                      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>Hitters</h3>
                       <div className="space-y-1">
                         {HITTER_STATS.map((stat) => {
                           const cfg = league.hitterCategories[stat];
@@ -1210,11 +1210,13 @@ export default function MlbTradeAnalyzer() {
                               {cfg && (
                                 <div className="flex rounded-lg border overflow-hidden text-xs">
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    className="px-1.5 py-0.5"
+                                    style={cfg.direction === "more" ? { background: "var(--color-primary)", color: "#fff" } : { color: "var(--color-muted)" }}
                                     onClick={() => updateHitterCategory(stat, { direction: "more" })}
                                   >+</button>
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    className="px-1.5 py-0.5"
+                                    style={cfg.direction === "less" ? { background: "var(--color-primary)", color: "#fff" } : { color: "var(--color-muted)" }}
                                     onClick={() => updateHitterCategory(stat, { direction: "less" })}
                                   >−</button>
                                 </div>
@@ -1226,7 +1228,7 @@ export default function MlbTradeAnalyzer() {
                     </div>
                     {/* Pitcher categories */}
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Pitchers</h3>
+                      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>Pitchers</h3>
                       <div className="space-y-1">
                         {PITCHER_STATS.map((stat) => {
                           const cfg = league.pitcherCategories[stat];
@@ -1242,11 +1244,13 @@ export default function MlbTradeAnalyzer() {
                               {cfg && (
                                 <div className="flex rounded-lg border overflow-hidden text-xs">
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "more" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    className="px-1.5 py-0.5"
+                                    style={cfg.direction === "more" ? { background: "var(--color-primary)", color: "#fff" } : { color: "var(--color-muted)" }}
                                     onClick={() => updatePitcherCategory(stat, { direction: "more" })}
                                   >+</button>
                                   <button
-                                    className={`px-1.5 py-0.5 ${cfg.direction === "less" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                                    className="px-1.5 py-0.5"
+                                    style={cfg.direction === "less" ? { background: "var(--color-primary)", color: "#fff" } : { color: "var(--color-muted)" }}
                                     onClick={() => updatePitcherCategory(stat, { direction: "less" })}
                                   >−</button>
                                 </div>
@@ -1260,19 +1264,19 @@ export default function MlbTradeAnalyzer() {
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-500 mb-3">
+                  <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
                     Points per stat. Typical: R=1, H=1, HR=4, RBI=1, BB=1, SB=2, K=−1 (hitters);
                     W=5, L=−3, SV=5, HLD=3, K=1, IP=1, QS=3 (pitchers).
                   </p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Hitters</h3>
+                      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>Hitters</h3>
                       <div className="space-y-1">
                         {HITTER_STATS.map((stat) => (
                           <div key={stat} className="flex items-center justify-between gap-2">
-                            <label className="text-xs w-10">{stat}</label>
+                            <label className="text-xs w-10" style={{ color: "var(--color-muted)" }}>{stat}</label>
                             <input
-                              type="number" step="0.5" className="border rounded-xl p-1 w-full text-xs"
+                              type="number" step="0.5" className="form-input text-xs" style={{ padding: "0.25rem" }}
                               value={league.hitterWeights[stat]}
                               onChange={(e) => updateHitterWeight(stat, parseFloat(e.target.value || "0"))}
                             />
@@ -1281,13 +1285,13 @@ export default function MlbTradeAnalyzer() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold mb-2">Pitchers</h3>
+                      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>Pitchers</h3>
                       <div className="space-y-1">
                         {PITCHER_STATS.map((stat) => (
                           <div key={stat} className="flex items-center justify-between gap-2">
-                            <label className="text-xs w-10">{stat}</label>
+                            <label className="text-xs w-10" style={{ color: "var(--color-muted)" }}>{stat}</label>
                             <input
-                              type="number" step="0.5" className="border rounded-xl p-1 w-full text-xs"
+                              type="number" step="0.5" className="form-input text-xs" style={{ padding: "0.25rem" }}
                               value={league.pitcherWeights[stat]}
                               onChange={(e) => updatePitcherWeight(stat, parseFloat(e.target.value || "0"))}
                             />
@@ -1303,8 +1307,8 @@ export default function MlbTradeAnalyzer() {
         )}
 
         {/* Trade sides */}
-        <div className="border rounded-2xl p-4 mb-6">
-          <h2 className="font-medium mb-3">Trade</h2>
+        <div className="card mb-6">
+          <h2 className="font-medium mb-3" style={{ color: "var(--color-text)" }}>Trade</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <MlbTradeSide
               label="You Give"
@@ -1358,47 +1362,47 @@ export default function MlbTradeAnalyzer() {
         </div>
 
         {/* Fairness result */}
-        <div className="border rounded-2xl p-4 mb-6">
+        <div className="card mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-medium">Fairness Result</h2>
+            <h2 className="font-medium" style={{ color: "var(--color-text)" }}>Fairness Result</h2>
             {isPro && autoSaveStatus === "saved" && (
-              <span className="text-xs text-green-600">✓ Auto-saved</span>
+              <span className="text-xs" style={{ color: "var(--color-primary)" }}>✓ Auto-saved</span>
             )}
           </div>
           <div className="grid grid-cols-4 gap-4 mb-3">
             <div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>
                 {isRotoMode ? "You Give (z-score)" : "You Give (proj pts)"}
               </div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
                 {isRotoMode ? sendValue.toFixed(2) : sendValue.toFixed(1)}
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>
                 {isRotoMode ? "You Get (z-score)" : "You Get (proj pts)"}
               </div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>
                 {isRotoMode ? recvValue.toFixed(2) : recvValue.toFixed(1)}
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-600">Trade Rating</div>
-              <div className="text-lg font-semibold">{tradeRating.toFixed(1)} / 100</div>
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>Trade Rating</div>
+              <div className="text-lg font-semibold" style={{ color: "var(--color-text)" }}>{tradeRating.toFixed(1)} / 100</div>
             </div>
             <div>
-              <div className="text-xs text-gray-600">Trade Outline</div>
+              <div className="text-xs" style={{ color: "var(--color-muted)" }}>Trade Outline</div>
               {(sendValue !== 0 || recvValue !== 0) && (
-                <div className="text-sm font-medium text-gray-800">{tradeOutline(safeScore)}</div>
+                <div className="text-sm font-medium" style={{ color: "var(--color-text)" }}>{tradeOutline(safeScore)}</div>
               )}
             </div>
           </div>
 
           {/* Fairness scale bar */}
           <div className="mb-3">
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <div className="flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
               <span>Opponent Wins</span>
-              <span className="font-medium text-gray-600">Fairness Scale</span>
+              <span className="font-medium">Fairness Scale</span>
               <span>You Win</span>
             </div>
             <div className="relative h-3 rounded-full overflow-hidden flex">
@@ -1428,7 +1432,7 @@ export default function MlbTradeAnalyzer() {
 
           {(sendValue !== 0 || recvValue !== 0) && (
             <button
-              className="mt-3 text-xs border rounded-lg px-3 py-1 hover:bg-gray-50 transition-colors"
+              className="btn-secondary mt-3 text-xs"
               onClick={saveToHistory}
             >
               Save to History
@@ -1438,9 +1442,9 @@ export default function MlbTradeAnalyzer() {
 
         {/* Trade History (free users) */}
         {!isPro && history.length > 0 && (
-          <div className="border rounded-2xl p-4">
+          <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-medium">Trade History</h2>
+              <h2 className="font-medium" style={{ color: "var(--color-text)" }}>Trade History</h2>
               <button
                 className="text-xs text-red-500 hover:text-red-700"
                 onClick={() => { setHistory([]); saveHistory([]); }}
@@ -1475,18 +1479,18 @@ function MlbApiStatus({
   dataMode: DataMode;
   setDataMode: (m: DataMode) => void;
 }) {
-  if (status === "loading") return <div className="text-xs text-gray-500">Loading MLB data…</div>;
+  if (status === "loading") return <div className="text-xs" style={{ color: "var(--color-muted)" }}>Loading MLB data…</div>;
   if (status === "error")   return <div className="text-xs text-red-600">MLB API unavailable — please refresh</div>;
   const activeYear = (dataMode === "thisTotal" || dataMode === "thisAvg")
     ? currentSeasonYear : priorSeasonYear;
   return (
-    <div className="text-xs text-gray-600 text-right flex items-center gap-3">
+    <div className="text-xs text-right flex items-center gap-3" style={{ color: "var(--color-muted)" }}>
       <div>
         <div>{playerCount} players loaded</div>
         {activeYear > 0 && <div>Season: {activeYear}</div>}
       </div>
       <select
-        className="border rounded-lg px-2 py-1 text-xs text-gray-700 bg-white"
+        className="form-input text-xs"
         value={dataMode}
         onChange={(e) => setDataMode(e.target.value as DataMode)}
       >
@@ -1540,7 +1544,7 @@ function MlbTradeSide({
 
   return (
     <div>
-      <h3 className="text-sm font-semibold mb-2">{label} — Players</h3>
+      <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>{label} — Players</h3>
 
       {hasCloser && (
         <div className="mb-2 flex items-start gap-2 rounded-xl border border-yellow-300 bg-yellow-50 p-2 text-xs text-yellow-800">
@@ -1574,11 +1578,11 @@ function MlbTradeSide({
               : dbEntry.gamesPlayed < 10;
 
           return (
-            <div key={p.id} className="border rounded-xl p-2 bg-gray-50 text-xs">
+            <div key={p.id} className="card text-xs" style={{ padding: "0.5rem" }}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold">{p.name}</span>
-                  <span className="text-gray-500">{dbEntry.team}</span>
+                  <span className="font-semibold" style={{ color: "var(--color-text)" }}>{p.name}</span>
+                  <span style={{ color: "var(--color-muted)" }}>{dbEntry.team}</span>
                   {/* Position badge with scarcity indicator */}
                   <span className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
                     p.position === "C"  ? "border-purple-400 text-purple-700 bg-purple-50" :
@@ -1602,7 +1606,7 @@ function MlbTradeSide({
                 <button className="text-red-600 hover:text-red-800 px-2" onClick={() => onRemove(p.id)} title="Remove">×</button>
               </div>
 
-              <div className="text-gray-500 mb-1">
+              <div className="mb-1" style={{ color: "var(--color-muted)" }}>
                 {dbEntry.isPitcher
                   ? `${dbEntry.gamesPlayed} G${dbEntry.position === "SP" ? ` · ${dbEntry.gamesStarted} GS` : ""}`
                   : `${dbEntry.gamesPlayed} G`}
@@ -1618,10 +1622,10 @@ function MlbTradeSide({
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-1 cursor-pointer">
                   <input type="checkbox" checked={p.isKeeper} onChange={() => onToggleKeeper(p.id)} />
-                  <span className="text-gray-600">Keeper</span>
+                  <span style={{ color: "var(--color-muted)" }}>Keeper</span>
                 </label>
                 {p.isKeeper && (
-                  <span className="text-blue-600">
+                  <span style={{ color: "var(--color-primary)" }}>
                     rank ×{kMult.toFixed(2)}
                     {isKeeperLeague && dbEntry.age !== null && ` · age ×${ageMult.toFixed(2)}`}
                   </span>
@@ -1629,24 +1633,24 @@ function MlbTradeSide({
               </div>
 
               <div className="mt-1 flex justify-between">
-                <span className="text-gray-600">
+                <span style={{ color: "var(--color-muted)" }}>
                   {isRotoMode ? "z-score" : "Base"}: {isRotoMode ? base.toFixed(2) : base.toFixed(1)}
                   {rank !== null && <span className="ml-3">Rank: {rank} / {playerDb.length}</span>}
                 </span>
-                <span className="font-semibold">Adjusted: {isRotoMode ? adjusted.toFixed(2) : adjusted.toFixed(1)}</span>
+                <span className="font-semibold" style={{ color: "var(--color-text)" }}>Adjusted: {isRotoMode ? adjusted.toFixed(2) : adjusted.toFixed(1)}</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      <h3 className="text-sm font-semibold mt-4 mb-1">{label} — Picks</h3>
-      <p className="text-xs text-gray-600 mb-1">
+      <h3 className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--color-text)" }}>{label} — Picks</h3>
+      <p className="text-xs mb-1" style={{ color: "var(--color-muted)" }}>
         Enter as <span className="font-mono">round.slot</span> (e.g. <span className="font-mono">1.01</span>).
         Optionally prefix with year: <span className="font-mono">2027 1.01</span>.
       </p>
       <textarea
-        className="border rounded-xl p-2 w-full h-14 text-sm"
+        className="form-input h-14 text-sm"
         placeholder="1.01, 2.05"
         value={picks}
         onChange={(e) => setPicks(e.target.value)}
@@ -1672,19 +1676,19 @@ function MlbParsedPicksList({
         if (pk.error) {
           return (
             <div key={idx} className="border rounded-xl p-2 bg-red-50 text-xs flex justify-between">
-              <span className="font-mono text-gray-700">{pk.raw}</span>
+              <span className="font-mono" style={{ color: "var(--color-text)" }}>{pk.raw}</span>
               <span className="text-red-700">{pk.error}</span>
             </div>
           );
         }
         const value = valueForPick(pk, talentRanking, teams, keepersPerTeam);
         return (
-          <div key={idx} className="border rounded-xl p-2 bg-gray-50 text-xs flex justify-between">
-            <span className="font-mono font-semibold">
+          <div key={idx} className="card text-xs flex justify-between" style={{ padding: "0.5rem" }}>
+            <span className="font-mono font-semibold" style={{ color: "var(--color-text)" }}>
               {pk.year ? `${pk.year} ` : ""}
               {pk.round}.{pk.slot.toString().padStart(2, "0")}
             </span>
-            <span className="text-gray-600">
+            <span style={{ color: "var(--color-muted)" }}>
               talent rank {keeperOffset + pk.overall} · value {value.toFixed(1)}
             </span>
           </div>
@@ -1749,23 +1753,24 @@ function MlbPlayerTypeahead({
   return (
     <div ref={wrapperRef} className="relative">
       <input
-        type="text" className="border rounded-xl p-2 w-full text-sm"
+        type="text" className="form-input text-sm"
         placeholder={placeholder} value={query} disabled={dbStatus !== "ready"}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlightIdx(0); }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
       />
       {open && matches.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full bg-white border rounded-xl shadow-lg max-h-64 overflow-auto">
+        <div className="absolute z-10 mt-1 w-full border rounded-xl shadow-lg max-h-64 overflow-auto" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
           {matches.map((p, i) => (
             <div
               key={p.id}
-              className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center ${i === highlightIdx ? "bg-blue-50" : "hover:bg-gray-50"}`}
+              className={`px-3 py-2 text-sm cursor-pointer flex justify-between items-center ${i === highlightIdx ? "bg-blue-50" : ""}`}
+              style={i !== highlightIdx ? { background: "transparent" } : undefined}
               onMouseEnter={() => setHighlightIdx(i)}
               onMouseDown={(e) => { e.preventDefault(); onSelect(p); setQuery(""); setHighlightIdx(0); }}
             >
-              <span className="font-medium">{p.name}</span>
-              <span className="text-xs text-gray-500">
+              <span className="font-medium" style={{ color: "var(--color-text)" }}>{p.name}</span>
+              <span className="text-xs" style={{ color: "var(--color-muted)" }}>
                 {p.team} · {p.position} · {p.isPitcher
                   ? (p.position === "SP" ? `${p.gamesStarted} GS` : `${p.gamesPlayed} G`)
                   : `${p.gamesPlayed} G`}
@@ -1808,33 +1813,33 @@ function MlbHistoryRow({ entry, onDelete }: { entry: HistoryEntry; onDelete: (id
         onClick={() => setExpanded((v) => !v)}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-gray-400 shrink-0">{dateStr} {timeStr}</span>
-          {entry.leagueName && <span className="text-gray-500 shrink-0 font-medium">{entry.leagueName}</span>}
-          <span className="text-gray-600 truncate hidden sm:block">{sendSummary} → {recvSummary}</span>
+          <span className="shrink-0" style={{ color: "var(--color-muted)" }}>{dateStr} {timeStr}</span>
+          {entry.leagueName && <span className="shrink-0 font-medium" style={{ color: "var(--color-muted)" }}>{entry.leagueName}</span>}
+          <span className="truncate hidden sm:block" style={{ color: "var(--color-muted)" }}>{sendSummary} → {recvSummary}</span>
         </div>
         <div className="flex items-center gap-3 shrink-0 ml-2">
-          <span className="font-semibold">{entry.score.toFixed(1)} / 100</span>
+          <span className="font-semibold" style={{ color: "var(--color-text)" }}>{entry.score.toFixed(1)} / 100</span>
           <button className="text-red-400 hover:text-red-600 px-1" onClick={(e) => { e.stopPropagation(); onDelete(entry.id); }} title="Remove">×</button>
-          <span className="text-gray-400">{expanded ? "▲" : "▼"}</span>
+          <span style={{ color: "var(--color-muted)" }}>{expanded ? "▲" : "▼"}</span>
         </div>
       </div>
       {expanded && (
         <div className="px-3 pb-3 border-t border-inherit pt-2 space-y-2">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="font-semibold text-gray-700 mb-1">You Gave</div>
-              {entry.sendPlayerNames.length > 0 && <div className="mb-1">{entry.sendPlayerNames.join(", ")}</div>}
-              {entry.sendPicks && <div className="text-gray-500">Picks: {entry.sendPicks}</div>}
-              <div className="text-gray-600 mt-1">Value: <span className="font-medium">{entry.sendValue.toFixed(1)}</span></div>
+              <div className="font-semibold mb-1" style={{ color: "var(--color-text)" }}>You Gave</div>
+              {entry.sendPlayerNames.length > 0 && <div className="mb-1" style={{ color: "var(--color-text)" }}>{entry.sendPlayerNames.join(", ")}</div>}
+              {entry.sendPicks && <div style={{ color: "var(--color-muted)" }}>Picks: {entry.sendPicks}</div>}
+              <div className="mt-1" style={{ color: "var(--color-muted)" }}>Value: <span className="font-medium" style={{ color: "var(--color-text)" }}>{entry.sendValue.toFixed(1)}</span></div>
             </div>
             <div>
-              <div className="font-semibold text-gray-700 mb-1">You Got</div>
-              {entry.recvPlayerNames.length > 0 && <div className="mb-1">{entry.recvPlayerNames.join(", ")}</div>}
-              {entry.recvPicks && <div className="text-gray-500">Picks: {entry.recvPicks}</div>}
-              <div className="text-gray-600 mt-1">Value: <span className="font-medium">{entry.recvValue.toFixed(1)}</span></div>
+              <div className="font-semibold mb-1" style={{ color: "var(--color-text)" }}>You Got</div>
+              {entry.recvPlayerNames.length > 0 && <div className="mb-1" style={{ color: "var(--color-text)" }}>{entry.recvPlayerNames.join(", ")}</div>}
+              {entry.recvPicks && <div style={{ color: "var(--color-muted)" }}>Picks: {entry.recvPicks}</div>}
+              <div className="mt-1" style={{ color: "var(--color-muted)" }}>Value: <span className="font-medium" style={{ color: "var(--color-text)" }}>{entry.recvValue.toFixed(1)}</span></div>
             </div>
           </div>
-          <div className="text-gray-700 italic">{entry.verdict}</div>
+          <div className="italic" style={{ color: "var(--color-text)" }}>{entry.verdict}</div>
         </div>
       )}
     </div>
