@@ -38,21 +38,29 @@ export default async function SettingsPage() {
   const displayName =
     user?.firstName ?? user?.username ?? userId
 
-  const { data: existingCode } = await supabase
+  const { data: existingCode, error: codeSelectErr } = await supabase
     .from('referral_codes')
     .select('code, etransfer_email')
     .eq('user_id', userId)
     .maybeSingle()
+
+  if (codeSelectErr) {
+    console.error(`[settings] referral_codes select failed — code=${codeSelectErr.code} msg="${codeSelectErr.message}"`)
+  }
 
   let referralCode  = existingCode?.code            ?? null
   let etransferEmail = existingCode?.etransfer_email ?? null
 
   if (!referralCode) {
     // No code yet — generate one now (idempotent, handles race conditions)
+    console.log(`[settings] no referral code for userId=${userId} — calling ensureReferralCode`)
     const generated = await ensureReferralCode(userId, displayName)
     if (generated) {
+      console.log(`[settings] referral code generated: ${generated}`)
       referralCode  = generated
       etransferEmail = null
+    } else {
+      console.error(`[settings] ensureReferralCode returned null for userId=${userId}`)
     }
   }
 

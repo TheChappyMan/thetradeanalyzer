@@ -58,34 +58,64 @@ export async function ensureReferralCode(
   userId:      string,
   displayName: string,
 ): Promise<string | null> {
+  console.log(`[referral] ensureReferralCode start — userId=${userId} displayName="${displayName}"`)
+
   // 1. Check if a code already exists
-  const { data: existing } = await supabase
+  const { data: existing, error: selectErr } = await supabase
     .from('referral_codes')
     .select('code')
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (existing?.code) return existing.code
+  if (selectErr) {
+    // Surface the real DB error (e.g. "relation does not exist" if migration not applied)
+    console.error(`[referral] select failed — code=${selectErr.code} msg="${selectErr.message}"`)
+    // Don't abort: fall through and attempt insert (handles edge cases)
+  }
+
+  if (existing?.code) {
+    console.log(`[referral] existing code found: ${existing.code}`)
+    return existing.code
+  }
+
+  console.log('[referral] no existing code — generating new one')
 
   // 2. Try to insert a new code (retry on collision up to 5 times)
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = buildCode(displayName)
+    console.log(`[referral] attempt ${attempt + 1}/5 — trying code="${code}"`)
+
     const { data, error } = await supabase
       .from('referral_codes')
       .insert({ user_id: userId, code })
       .select('code')
       .single()
 
-    if (!error && data?.code) return data.code
+    if (!error && data?.code) {
+      console.log(`[referral] insert succeeded — code=${data.code}`)
+      return data.code
+    }
 
-    // Only retry on unique-constraint violations
-    if (error && !error.message.includes('unique')) {
-      console.error('[referral] Failed to insert referral code:', error.message)
+    if (error) {
+      console.error(`[referral] insert attempt ${attempt + 1} failed — code=${error.code} msg="${error.message}"`)
+    }
+
+    // Postgres unique-violation code is 23505.
+    // Also catch the human-readable string for older driver versions.
+    const isUniqueViolation =
+      error?.code === '23505' ||
+      (error?.message ?? '').toLowerCase().includes('unique')
+
+    if (!isUniqueViolation) {
+      // Non-retryable error (e.g. table missing, RLS, network)
+      console.error('[referral] non-retryable error — aborting')
       return null
     }
+
+    // Unique collision — try a different prefix
   }
 
-  console.error('[referral] Failed to generate unique referral code after 5 attempts')
+  console.error('[referral] exhausted 5 attempts — giving up')
   return null
 }
 

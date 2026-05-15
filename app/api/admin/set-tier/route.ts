@@ -54,7 +54,13 @@ export async function POST(request: Request) {
   // ── Generate referral code for paid tiers ────────────────────────────────
   if (PAID_TIERS.has(tier)) {
     const displayName = clerkUser.firstName ?? clerkUser.username ?? email.split("@")[0];
-    await ensureReferralCode(userId, displayName);
+    console.log(`[admin/set-tier] calling ensureReferralCode — userId=${userId} displayName="${displayName}"`);
+    const referralCode = await ensureReferralCode(userId, displayName);
+    if (referralCode) {
+      console.log(`[admin/set-tier] referral code ready: ${referralCode}`);
+    } else {
+      console.error(`[admin/set-tier] ensureReferralCode returned null for userId=${userId} — check logs above`);
+    }
   }
 
   // ── Commissioner: upsert commissioner_groups ─────────────────────────────
