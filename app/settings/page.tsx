@@ -1,6 +1,8 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { getUserTier } from '@/lib/auth'
+import { ensureReferralCode } from '@/lib/referral'
 import type { League, LeagueRow } from '@/lib/types'
 import type { NflLeague } from '@/lib/nfl-types'
 import type { MlbLeague } from '@/lib/mlb-types'
@@ -12,11 +14,12 @@ export default async function SettingsPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  // ── Tier gate ────────────────────────────────────────────────
-  const user = await currentUser()
-  const tier = (user?.publicMetadata?.tier as string | undefined) ?? 'free'
+  // ── Tier gate — uses getUserTier() so admin override is respected ────────
+  // (raw publicMetadata read would give 'free' for admin users with no
+  //  stored tier, bypassing the ADMIN_USER_IDS override in getUserTier)
+  const tier = await getUserTier()
 
-  if (tier !== 'tier1' && tier !== 'tier2' && tier !== 'tier3') {
+  if (tier === 'free') {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <h1 className="text-2xl font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Settings</h1>
@@ -27,12 +30,31 @@ export default async function SettingsPage() {
     )
   }
 
-  // ── Fetch referral code (all paid tiers) ────────────────────
-  const { data: referralRow } = await supabase
+  // ── Referral code — fetch or generate on demand ──────────────────────────
+  // ensureReferralCode is a no-op if a code already exists. This backfills
+  // existing paid users who were assigned a tier before the referral system
+  // was built and therefore have no row in referral_codes yet.
+  const user = await currentUser()
+  const displayName =
+    user?.firstName ?? user?.username ?? userId
+
+  const { data: existingCode } = await supabase
     .from('referral_codes')
     .select('code, etransfer_email')
     .eq('user_id', userId)
     .maybeSingle()
+
+  let referralCode  = existingCode?.code            ?? null
+  let etransferEmail = existingCode?.etransfer_email ?? null
+
+  if (!referralCode) {
+    // No code yet — generate one now (idempotent, handles race conditions)
+    const generated = await ensureReferralCode(userId, displayName)
+    if (generated) {
+      referralCode  = generated
+      etransferEmail = null
+    }
+  }
 
   if (tier === 'tier2' || tier === 'tier3') {
     // ── Tier 2: fetch ALL leagues for each sport ──────────────
@@ -72,10 +94,10 @@ export default async function SettingsPage() {
           allNflLeagues={allNflLeagues}
           allMlbLeagues={allMlbLeagues}
         />
-        {referralRow && (
+        {referralCode && (
           <ReferralSection
-            code={referralRow.code}
-            etransferEmail={referralRow.etransfer_email ?? null}
+            code={referralCode}
+            etransferEmail={etransferEmail}
             userId={userId}
           />
         )}
@@ -120,10 +142,10 @@ export default async function SettingsPage() {
         allNflLeagues={[]}
         allMlbLeagues={[]}
       />
-      {referralRow && (
+      {referralCode && (
         <ReferralSection
-          code={referralRow.code}
-          etransferEmail={referralRow.etransfer_email ?? null}
+          code={referralCode}
+          etransferEmail={etransferEmail}
           userId={userId}
         />
       )}
