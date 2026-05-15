@@ -18,9 +18,9 @@ const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 // ── Payout amounts ─────────────────────────────────────────────────────────
 
 export const REFERRAL_PAYOUT: Record<string, number> = {
-  'pro-annual':       10,
-  'proplus-annual':   16,
-  'commissioner':     50,
+  'pro-annual':       4,
+  'proplus-annual':   9,
+  'commissioner':     40,
 }
 
 // ── Code generation ────────────────────────────────────────────────────────

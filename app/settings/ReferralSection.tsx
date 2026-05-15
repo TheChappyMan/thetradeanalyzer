@@ -113,9 +113,9 @@ export default function ReferralSection({ code, etransferEmail: initialEmail, us
           Payout Rates (annual subscriptions only)
         </p>
         <ul className="text-sm space-y-1" style={{ color: "var(--color-text)" }}>
-          <li>Pro Annual referral — <strong>$10</strong></li>
-          <li>Pro Plus Annual referral — <strong>$16</strong></li>
-          <li>Commissioner referral — <strong>$50</strong></li>
+          <li>Pro Annual referral — <strong>$4</strong></li>
+          <li>Pro Plus Annual referral — <strong>$9</strong></li>
+          <li>Commissioner referral — <strong>$40</strong></li>
         </ul>
         <p className="text-xs mt-3" style={{ color: "var(--color-muted)" }}>
           Payouts are sent manually via e-transfer after a referred user

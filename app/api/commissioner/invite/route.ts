@@ -14,7 +14,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
 import { getCommissionerGroup, getGroupSeats, sendInviteEmail } from '@/lib/commissioner'
 
-const MAX_SEATS = 11  // commissioner + 11 managers = 12 total
+const MAX_SEATS = 13  // commissioner + 13 managers = 14 total
 
 export async function POST(request: Request) {
   // ── Auth ────────────────────────────────────────────────────

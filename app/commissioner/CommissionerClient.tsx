@@ -44,7 +44,7 @@ export function SeatPanel({ initialSeats, groupId, filledCount }: Props) {
   const [adding,      setAdding]      = useState(false);
   const [actionState, setActionState] = useState<Record<string, string>>({});
 
-  const MAX_MANAGER_SEATS = 11;
+  const MAX_MANAGER_SEATS = 13;
   const currentFilled     = seats.filter((s) => s.status !== "removed").length;
 
   async function handleAdd(e: React.FormEvent) {
@@ -120,7 +120,7 @@ export function SeatPanel({ initialSeats, groupId, filledCount }: Props) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-base">Seats</h2>
         <span className="text-xs text-gray-500 border rounded-full px-2.5 py-1">
-          {filledCount + 1 /* commissioner */ + activeSeats.filter((s) => s.status === "active").length} / 12 filled
+          {filledCount + 1 /* commissioner */ + activeSeats.filter((s) => s.status === "active").length} / 14 filled
         </span>
       </div>
 
@@ -215,7 +215,7 @@ export function SeatPanel({ initialSeats, groupId, filledCount }: Props) {
         </form>
       )}
       {!canAddMore && (
-        <p className="mt-3 text-xs text-gray-400 italic">All 11 manager seats are filled.</p>
+        <p className="mt-3 text-xs text-gray-400 italic">All 13 manager seats are filled.</p>
       )}
       {addError && <p className="mt-2 text-xs text-red-600">{addError}</p>}
     </div>
