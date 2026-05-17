@@ -113,9 +113,10 @@ export async function POST(request: Request) {
 
   } else if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object as Stripe.Invoice;
+    const subId   = invoice.parent?.subscription_details?.subscription ?? "unknown";
     console.warn(
       `[stripe webhook] Payment failed — ` +
-      `customer=${invoice.customer} subscription=${invoice.subscription} ` +
+      `customer=${invoice.customer} subscription=${subId} ` +
       `attempt=${invoice.attempt_count ?? "?"}`
     );
     // Do not remove access — Stripe retries automatically.
