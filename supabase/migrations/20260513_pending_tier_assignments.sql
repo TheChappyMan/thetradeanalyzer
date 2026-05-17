@@ -1,7 +1,7 @@
 -- ── pending_tier_assignments ─────────────────────────────────────────────────
 --
 -- Stores tier grants for users who paid before creating a Clerk account.
--- The Helcim webhook writes a row here when no matching Clerk user exists.
+-- The Stripe webhook writes a row here when no matching Clerk user exists.
 -- The Clerk user.created webhook reads this table and assigns the tier
 -- immediately after the account is created.
 --

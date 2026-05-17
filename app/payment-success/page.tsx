@@ -3,7 +3,14 @@
 /**
  * /payment-success
  *
- * Helcim redirects here after a successful subscription checkout.
+ * Stripe redirects here after a successful Payment Link checkout.
+ *
+ * Configure your Stripe Payment Links' "After payment" success URL to:
+ *   https://app.thetradeanalyzer.com/payment-success?session_id={CHECKOUT_SESSION_ID}
+ * ({CHECKOUT_SESSION_ID} is filled automatically by Stripe.)
+ *
+ * The session_id query param is accepted but not required — the page renders
+ * correctly whether or not it is present.
  *
  * ── Signed-out visitor (most common path) ────────────────────────────────
  * Payment succeeded but no Clerk account exists yet.  Prompt the user to
@@ -12,11 +19,8 @@
  * it automatically.
  *
  * ── Already signed-in visitor ────────────────────────────────────────────
- * The Helcim webhook found their account and assigned the tier directly.
+ * The Stripe webhook found their account and assigned the tier directly.
  * Show the confirmation message and auto-redirect to the dashboard.
- *
- * Configure your Helcim plan's "Success URL" to:
- *   https://app.thetradeanalyzer.com/payment-success
  */
 
 import { useEffect, useState } from "react";

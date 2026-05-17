@@ -1,246 +1,290 @@
 /**
  * POST /api/payments/subscription
  *
- * Helcim webhook handler.
+ * Stripe webhook handler.
  *
- * ── Verification ─────────────────────────────────────────────────────────
- * Helcim signs every webhook with HMAC-SHA256 using your secret.
- * The signature is delivered in the `X-Helcim-Hmac-Sha256` header as a
- * hex-encoded string of the raw request body.
+ * ── Webhook configuration (Stripe Dashboard) ─────────────────────────────
+ * Developers → Webhooks → Add endpoint:
+ *   URL:    https://app.thetradeanalyzer.com/api/payments/subscription
+ *   Events: checkout.session.completed
+ *           customer.subscription.deleted
+ *           invoice.payment_failed
  *
- * ── Payload shape (Helcim) ───────────────────────────────────────────────
- * {
- *   "event":   "subscription.activated" | "subscription.cancelled" | "subscription.expired",
- *   "data": {
- *     "subscription": {
- *       "planCode":     "pro-monthly",
- *       "referralCode": "K9M2-JUSTIN"   // ← only if Helcim passes it through
- *     },
- *     "customer": {
- *       "email": "user@example.com"
- *     }
- *   }
- * }
+ * ── Verification ──────────────────────────────────────────────────────────
+ * Stripe signs every webhook with the endpoint's signing secret.
+ * Verified via stripe.webhooks.constructEvent() using STRIPE_WEBHOOK_SECRET.
  *
- * ── Referral code tracking limitation ────────────────────────────────────
- * The WordPress pricing page appends ?ref=CODE to the Helcim subscription
- * URL. Whether Helcim includes this in the webhook payload depends on their
- * platform.  The code below reads data.subscription.referralCode — if
- * Helcim does NOT pass custom URL parameters through to webhooks, referral
- * tracking for new subscriptions will silently no-op and no payout row
- * will be written.  In that case, implement a pre-checkout page at
- * /checkout?plan=X&ref=CODE that stores the code in a Supabase session
- * row keyed by email before forwarding to Helcim.
+ * ── checkout.session.completed ────────────────────────────────────────────
+ * Fired when a Stripe Checkout / Payment Link session completes.
+ * The price ID is read from line_items and mapped to a tier.
+ *   • If a Clerk user exists   → tier assigned immediately
+ *   • If no Clerk user yet     → row written to pending_tier_assignments;
+ *                                 the Clerk user.created webhook picks it up
+ * For tier3: commissioner_groups row is created/refreshed.
+ * For annual plans: if session.metadata.referral_code is present, a
+ * referral_payouts row is recorded.
  *
- * ── Tier mapping ─────────────────────────────────────────────────────────
- *   pro-monthly / pro-annual       → tier1
- *   proplus-monthly / proplus-annual → tier2
- *   commissioner                   → tier3
+ * ── customer.subscription.deleted ─────────────────────────────────────────
+ * Fired when a subscription is cancelled and the billing period ends.
+ *   tier1 / tier2 → set tier: "free" immediately
+ *   tier3         → set grace_until = now + 7 days (graceful removal)
  *
- * ── Cancellation / expiry ────────────────────────────────────────────────
- *   tier1 / tier2  → set tier: "free" immediately
- *   tier3          → set grace_until = now + 7 days (not immediate removal)
+ * ── invoice.payment_failed ────────────────────────────────────────────────
+ * Logged only. Access is NOT removed on first failure — Stripe retries
+ * automatically. Remove access only on subscription.deleted.
  *
- * ── Pre-auth payment flow ────────────────────────────────────────────────
- * If no Clerk user exists for the email yet, a row is written to
- * pending_tier_assignments.  The Clerk user.created webhook picks it up
- * and assigns the tier when the account is created.
+ * ── Tier mapping ──────────────────────────────────────────────────────────
+ *   Pro Monthly       price_1TXSbzA9L1H9GntT2qHPLFAk → tier1
+ *   Pro Annual        price_1TYBclA9L1H9GntTzOkxpBcu → tier1
+ *   Pro Plus Monthly  price_1TYBdsA9L1H9GntTjZy0KCVC → tier2
+ *   Pro Plus Annual   price_1TYBjaA9L1H9GntTBHoiFimQ → tier2
+ *   Commissioner Ann. price_1TYBeSA9L1H9GntTbpxNWPRT → tier3
  */
 
 import { NextResponse }  from "next/server";
-import { createHmac, timingSafeEqual } from "crypto";
+import Stripe            from "stripe";
 import { clerkClient }   from "@clerk/nextjs/server";
 import { supabase }      from "@/lib/supabase";
-import { ensureReferralCode, getReferralByCode, recordReferralPayout, REFERRAL_PAYOUT } from "@/lib/referral";
+import {
+  ensureReferralCode,
+  getReferralByCode,
+  recordReferralPayout,
+  REFERRAL_PAYOUT,
+} from "@/lib/referral";
 
-// ── Plan → tier mapping ────────────────────────────────────────────────────
+// ── Stripe client ──────────────────────────────────────────────────────────
 
-const PLAN_TIER: Record<string, string> = {
-  "pro-monthly":      "tier1",
-  "pro-annual":       "tier1",
-  "proplus-monthly":  "tier2",
-  "proplus-annual":   "tier2",
-  "commissioner":     "tier3",
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-04-22.dahlia",
+});
+
+// ── Price ID → tier mapping ────────────────────────────────────────────────
+
+const PRICE_TIER: Record<string, string> = {
+  "price_1TXSbzA9L1H9GntT2qHPLFAk": "tier1",  // Pro Monthly
+  "price_1TYBclA9L1H9GntTzOkxpBcu": "tier1",  // Pro Annual
+  "price_1TYBdsA9L1H9GntTjZy0KCVC": "tier2",  // Pro Plus Monthly
+  "price_1TYBjaA9L1H9GntTBHoiFimQ": "tier2",  // Pro Plus Annual
+  "price_1TYBeSA9L1H9GntTbpxNWPRT": "tier3",  // Commissioner Annual
 };
 
-// ── Signature verification ─────────────────────────────────────────────────
+// ── Price ID → internal plan name (used as REFERRAL_PAYOUT key) ───────────
 
-function verifySignature(rawBody: string, signature: string, secret: string): boolean {
-  try {
-    const computed = createHmac("sha256", secret)
-      .update(rawBody, "utf8")
-      .digest("hex");
-    const a = Buffer.from(signature.toLowerCase());
-    const b = Buffer.from(computed.toLowerCase());
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
-}
+const PRICE_PLAN: Record<string, string> = {
+  "price_1TXSbzA9L1H9GntT2qHPLFAk": "pro-monthly",
+  "price_1TYBclA9L1H9GntTzOkxpBcu": "pro-annual",
+  "price_1TYBdsA9L1H9GntTjZy0KCVC": "proplus-monthly",
+  "price_1TYBjaA9L1H9GntTBHoiFimQ": "proplus-annual",
+  "price_1TYBeSA9L1H9GntTbpxNWPRT": "commissioner",
+};
 
 // ── POST handler ───────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  // ── 1. Read raw body (needed for HMAC) ──────────────────────────────────
+  // 1. Read raw body — must be text to pass to stripe.webhooks.constructEvent
   const rawBody = await request.text();
 
-  // ── 2. Verify signature ─────────────────────────────────────────────────
-  const webhookSecret = process.env.HELCIM_WEBHOOK_SECRET;
+  // 2. Verify Stripe webhook signature
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error("[helcim webhook] HELCIM_WEBHOOK_SECRET is not set");
+    console.error("[stripe webhook] STRIPE_WEBHOOK_SECRET is not set");
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
 
-  const signature = request.headers.get("X-Helcim-Hmac-Sha256") ?? "";
-  if (!signature || !verifySignature(rawBody, signature, webhookSecret)) {
-    console.warn("[helcim webhook] Invalid signature");
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
+  const stripeSignature = request.headers.get("stripe-signature") ?? "";
 
-  // ── 3. Parse payload ─────────────────────────────────────────────────────
-  let payload: unknown;
+  let event: Stripe.Event;
   try {
-    payload = JSON.parse(rawBody);
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    event = stripe.webhooks.constructEvent(rawBody, stripeSignature, webhookSecret);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[stripe webhook] Signature verification failed: ${msg}`);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const p           = payload as Record<string, unknown>;
-  const event       = (p.event as string | undefined) ?? "";
-  const data        = (p.data as Record<string, unknown> | undefined) ?? {};
-  const subData     = (data.subscription as Record<string, unknown> | undefined) ?? {};
-  const custData    = (data.customer    as Record<string, unknown> | undefined) ?? {};
+  console.log(`[stripe webhook] Received: ${event.type} (${event.id})`);
 
-  const planCode      = (subData.planCode     as string | undefined) ?? "";
-  const referralCode  = (subData.referralCode as string | undefined) ?? "";  // may be empty
-  const customerEmail = ((custData.email as string | undefined) ?? "").trim().toLowerCase();
+  // 3. Route by event type
+  if (event.type === "checkout.session.completed") {
+    await handleCheckoutSessionCompleted(event);
 
-  if (!customerEmail) {
-    console.warn("[helcim webhook] No customer email in payload");
-    return NextResponse.json({ error: "Missing customer email" }, { status: 400 });
-  }
+  } else if (event.type === "customer.subscription.deleted") {
+    await handleSubscriptionDeleted(event);
 
-  // ── 4. Activation ────────────────────────────────────────────────────────
-
-  if (event === "subscription.activated" || event === "subscription.created") {
-    const tier = PLAN_TIER[planCode];
-    if (!tier) {
-      console.warn(`[helcim webhook] Unknown planCode: ${planCode}`);
-      return NextResponse.json({ error: `Unknown plan: ${planCode}` }, { status: 400 });
-    }
-
-    // Look up Clerk user
-    const clerk = await clerkClient();
-    const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
-    const clerkUser = userList?.[0];
-
-    if (!clerkUser) {
-      // No Clerk account yet — store as pending
-      const { error: insertErr } = await supabase
-        .from("pending_tier_assignments")
-        .insert({ email: customerEmail, tier, plan: planCode });
-
-      if (insertErr) {
-        console.error("[helcim webhook] Failed to insert pending_tier_assignments:", insertErr.message);
-      } else {
-        console.log(`[helcim webhook] Stored pending tier=${tier} for ${customerEmail}`);
-      }
-
-      return NextResponse.json({ received: true, note: "Pending assignment created" });
-    }
-
-    const userId      = clerkUser.id;
-    const displayName = clerkUser.firstName ?? clerkUser.username ?? customerEmail.split("@")[0];
-
-    // Assign tier
-    await clerk.users.updateUser(userId, {
-      publicMetadata: { ...clerkUser.publicMetadata, tier },
-    });
-
-    // Generate referral code
-    await ensureReferralCode(userId, displayName);
-
-    // Commissioner: create/refresh commissioner_groups
-    if (tier === "tier3") {
-      const expiresAt = new Date();
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      const { error: upsertErr } = await supabase
-        .from("commissioner_groups")
-        .upsert(
-          { commissioner_user_id: userId, expires_at: expiresAt.toISOString(), grace_until: null },
-          { onConflict: "commissioner_user_id" },
-        );
-      if (upsertErr) console.error("[helcim webhook] Failed to upsert commissioner_groups:", upsertErr.message);
-    }
-
-    console.log(`[helcim webhook] Set tier=${tier} for ${customerEmail} (${userId})`);
-
-    // ── Referral tracking (annual plans only) ──────────────────────────
-    // NOTE: referralCode will be empty unless Helcim passes the ?ref= URL
-    // parameter from the pricing page through to the webhook payload.
-    // If it's empty, this block is a no-op. See file header for details.
-    if (referralCode && REFERRAL_PAYOUT[planCode] !== undefined) {
-      const referrer = await getReferralByCode(referralCode);
-      if (referrer) {
-        await recordReferralPayout({
-          referralCodeId:  referrer.id,
-          referrerUserId:  referrer.user_id,
-          referredEmail:   customerEmail,
-          referredUserId:  userId,
-          plan:            planCode,
-          payoutAmount:    REFERRAL_PAYOUT[planCode],
-        });
-        console.log(`[helcim webhook] Recorded referral payout for code ${referralCode}`);
-      } else {
-        console.warn(`[helcim webhook] Referral code not found: ${referralCode}`);
-      }
-    }
-
-  // ── 5. Cancellation / expiry ─────────────────────────────────────────────
-
-  } else if (
-    event === "subscription.cancelled" ||
-    event === "subscription.expired"  ||
-    event === "subscription.deactivated"
-  ) {
-    const clerk = await clerkClient();
-    const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
-    const clerkUser = userList?.[0];
-
-    if (!clerkUser) {
-      // Remove any pending assignment
-      await supabase
-        .from("pending_tier_assignments")
-        .delete()
-        .eq("email", customerEmail)
-        .is("assigned_at", null);
-      console.log(`[helcim webhook] Cancelled — removed pending assignment for ${customerEmail}`);
-      return NextResponse.json({ received: true });
-    }
-
-    const userId      = clerkUser.id;
-    const currentTier = (clerkUser.publicMetadata?.tier as string | undefined) ?? "free";
-
-    if (currentTier === "tier3") {
-      const graceUntil = new Date();
-      graceUntil.setDate(graceUntil.getDate() + 7);
-      const { error: graceErr } = await supabase
-        .from("commissioner_groups")
-        .update({ grace_until: graceUntil.toISOString() })
-        .eq("commissioner_user_id", userId);
-      if (graceErr) console.error("[helcim webhook] Failed to set grace_until:", graceErr.message);
-      console.log(`[helcim webhook] Set grace_until for commissioner ${userId}`);
-    } else {
-      await clerk.users.updateUser(userId, {
-        publicMetadata: { ...clerkUser.publicMetadata, tier: "free" },
-      });
-      console.log(`[helcim webhook] Downgraded to free for ${customerEmail} (${userId})`);
-    }
+  } else if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as Stripe.Invoice;
+    console.warn(
+      `[stripe webhook] Payment failed — ` +
+      `customer=${invoice.customer} subscription=${invoice.subscription} ` +
+      `attempt=${invoice.attempt_count ?? "?"}`
+    );
+    // Do not remove access — Stripe retries automatically.
+    // Access is removed only on customer.subscription.deleted.
 
   } else {
-    console.log(`[helcim webhook] Unhandled event type: ${event}`);
+    console.log(`[stripe webhook] Unhandled event type: ${event.type}`);
   }
 
   return NextResponse.json({ received: true });
+}
+
+// ── checkout.session.completed ─────────────────────────────────────────────
+
+async function handleCheckoutSessionCompleted(event: Stripe.Event) {
+  // Expand line_items to get the price ID (not included in the raw webhook payload)
+  const rawSession = event.data.object as Stripe.Checkout.Session;
+  const session = await stripe.checkout.sessions.retrieve(rawSession.id, {
+    expand: ["line_items"],
+  });
+
+  const customerEmail = (
+    session.customer_details?.email ?? session.customer_email ?? ""
+  ).trim().toLowerCase();
+
+  if (!customerEmail) {
+    console.warn("[stripe webhook] checkout.session.completed — no customer email");
+    return;
+  }
+
+  const priceId  = session.line_items?.data[0]?.price?.id ?? "";
+  const tier     = PRICE_TIER[priceId];
+  const planCode = PRICE_PLAN[priceId];
+
+  if (!tier || !planCode) {
+    console.warn(`[stripe webhook] checkout.session.completed — unknown price ID: "${priceId}"`);
+    return;
+  }
+
+  const referralCode = (session.metadata?.referral_code ?? "").trim();
+
+  // ── Look up Clerk user ────────────────────────────────────────────────────
+  const clerk = await clerkClient();
+  const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
+  const clerkUser = userList?.[0];
+
+  if (!clerkUser) {
+    // No Clerk account yet — store pending assignment.
+    // The Clerk user.created webhook will assign the tier on sign-up.
+    const { error: insertErr } = await supabase
+      .from("pending_tier_assignments")
+      .insert({ email: customerEmail, tier, plan: planCode });
+
+    if (insertErr) {
+      console.error("[stripe webhook] Failed to insert pending_tier_assignments:", insertErr.message);
+    } else {
+      console.log(`[stripe webhook] Stored pending tier=${tier} plan=${planCode} for ${customerEmail}`);
+    }
+    return;
+  }
+
+  const userId      = clerkUser.id;
+  const displayName = clerkUser.firstName ?? clerkUser.username ?? customerEmail.split("@")[0];
+
+  // ── Assign tier in Clerk publicMetadata ───────────────────────────────────
+  await clerk.users.updateUser(userId, {
+    publicMetadata: { ...clerkUser.publicMetadata, tier },
+  });
+  console.log(`[stripe webhook] Set tier=${tier} plan=${planCode} for ${customerEmail} (${userId})`);
+
+  // ── Generate referral code if not already present ─────────────────────────
+  await ensureReferralCode(userId, displayName);
+
+  // ── Commissioner: create/refresh commissioner_groups row ──────────────────
+  if (tier === "tier3") {
+    const expiresAt = new Date();
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    const { error: upsertErr } = await supabase
+      .from("commissioner_groups")
+      .upsert(
+        { commissioner_user_id: userId, expires_at: expiresAt.toISOString(), grace_until: null },
+        { onConflict: "commissioner_user_id" },
+      );
+    if (upsertErr) {
+      console.error("[stripe webhook] Failed to upsert commissioner_groups:", upsertErr.message);
+    }
+  }
+
+  // ── Referral payout (annual plans only) ───────────────────────────────────
+  // Pass referral_code in session.metadata.referral_code to credit the referrer.
+  // Only annual plans are eligible: pro-annual ($4), proplus-annual ($9), commissioner ($40).
+  if (referralCode && REFERRAL_PAYOUT[planCode] !== undefined) {
+    const referrer = await getReferralByCode(referralCode);
+    if (referrer) {
+      await recordReferralPayout({
+        referralCodeId:  referrer.id,
+        referrerUserId:  referrer.user_id,
+        referredEmail:   customerEmail,
+        referredUserId:  userId,
+        plan:            planCode,
+        payoutAmount:    REFERRAL_PAYOUT[planCode],
+      });
+      console.log(`[stripe webhook] Recorded referral payout — code=${referralCode} plan=${planCode}`);
+    } else {
+      console.warn(`[stripe webhook] Referral code not found: ${referralCode}`);
+    }
+  }
+}
+
+// ── customer.subscription.deleted ─────────────────────────────────────────
+
+async function handleSubscriptionDeleted(event: Stripe.Event) {
+  const subscription = event.data.object as Stripe.Subscription;
+  const customerId   = subscription.customer as string;
+
+  // Fetch customer from Stripe to get their email
+  let customerEmail = "";
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    if ((customer as Stripe.DeletedCustomer).deleted) {
+      console.warn(`[stripe webhook] subscription.deleted — customer ${customerId} already deleted`);
+      return;
+    }
+    customerEmail = ((customer as Stripe.Customer).email ?? "").trim().toLowerCase();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[stripe webhook] Failed to retrieve customer ${customerId}: ${msg}`);
+    return;
+  }
+
+  if (!customerEmail) {
+    console.warn(`[stripe webhook] subscription.deleted — no email for customer ${customerId}`);
+    return;
+  }
+
+  const clerk = await clerkClient();
+  const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
+  const clerkUser = userList?.[0];
+
+  if (!clerkUser) {
+    // Remove any unprocessed pending assignment for this email
+    await supabase
+      .from("pending_tier_assignments")
+      .delete()
+      .eq("email", customerEmail)
+      .is("assigned_at", null);
+    console.log(`[stripe webhook] subscription.deleted — removed pending assignment for ${customerEmail}`);
+    return;
+  }
+
+  const userId      = clerkUser.id;
+  const currentTier = (clerkUser.publicMetadata?.tier as string | undefined) ?? "free";
+
+  if (currentTier === "tier3") {
+    // Commissioner: 7-day grace period before removal
+    const graceUntil = new Date();
+    graceUntil.setDate(graceUntil.getDate() + 7);
+    const { error: graceErr } = await supabase
+      .from("commissioner_groups")
+      .update({ grace_until: graceUntil.toISOString() })
+      .eq("commissioner_user_id", userId);
+    if (graceErr) {
+      console.error("[stripe webhook] Failed to set grace_until:", graceErr.message);
+    }
+    console.log(`[stripe webhook] subscription.deleted — set grace_until for commissioner ${userId}`);
+  } else {
+    await clerk.users.updateUser(userId, {
+      publicMetadata: { ...clerkUser.publicMetadata, tier: "free" },
+    });
+    console.log(`[stripe webhook] subscription.deleted — downgraded to free for ${customerEmail} (${userId})`);
+  }
 }
