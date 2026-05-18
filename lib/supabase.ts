@@ -49,6 +49,9 @@ try {
  *   • Any admin / webhook operation
  */
 export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  db: {
+    schema: 'public',
+  },
   auth: {
     persistSession: false,
     autoRefreshToken: false,
