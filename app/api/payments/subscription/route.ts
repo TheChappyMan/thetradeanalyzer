@@ -104,6 +104,26 @@ export async function POST(request: Request) {
 
   console.log(`[stripe webhook] Received: ${event.type} (${event.id})`);
 
+  // Diagnostic: probe pending_tier_assignments visibility via the schema cache.
+  // If this logs an error the PostgREST schema cache is stale — reload it in
+  // Supabase Dashboard → Settings → API → "Reload schema cache", or rely on
+  // the RPC fallback below which bypasses the cache entirely.
+  {
+    const { error: probeErr } = await supabase
+      .from("pending_tier_assignments")
+      .select("id")
+      .limit(1);
+    if (probeErr) {
+      console.error(
+        `[stripe webhook] PROBE: pending_tier_assignments NOT visible via table API — ` +
+        `code=${probeErr.code} msg="${probeErr.message}" ` +
+        `(RPC path will be used for inserts)`
+      );
+    } else {
+      console.log("[stripe webhook] PROBE: pending_tier_assignments visible via table API ✓");
+    }
+  }
+
   // 3. Route by event type
   if (event.type === "checkout.session.completed") {
     await handleCheckoutSessionCompleted(event);
@@ -164,11 +184,15 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
   const clerkUser = userList?.[0];
 
   if (!clerkUser) {
-    // No Clerk account yet — store pending assignment.
-    // The Clerk user.created webhook will assign the tier on sign-up.
-    const { error: insertErr } = await supabase
-      .from("pending_tier_assignments")
-      .insert({ email: customerEmail, tier, plan: planCode });
+    // No Clerk account yet — store pending assignment via RPC to bypass the
+    // PostgREST schema cache (avoids "table not found in schema cache" errors
+    // when the cache is stale). The function insert_pending_tier_assignment()
+    // must exist in Supabase — run supabase/migrations/20260518_pending_tier_assignment_rpc.sql.
+    const { error: insertErr } = await supabase.rpc("insert_pending_tier_assignment", {
+      p_email: customerEmail,
+      p_tier:  tier,
+      p_plan:  planCode,
+    });
 
     if (insertErr) {
       console.error("[stripe webhook] Failed to insert pending_tier_assignments:", insertErr.message);
