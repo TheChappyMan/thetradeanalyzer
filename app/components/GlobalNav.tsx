@@ -22,10 +22,13 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const { user, isLoaded } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const tier      = (user?.publicMetadata?.tier as string | undefined) ?? "free";
-  const isSignedIn = isLoaded && !!user;
-  const hasPro    = tier === "tier1" || tier === "tier2" || tier === "tier3";
-  const isTier3   = tier === "tier3";
+  const tier        = (user?.publicMetadata?.tier as string | undefined) ?? "free";
+  const isSignedIn  = isLoaded && !!user;
+  const hasPro      = tier === "tier1" || tier === "tier2" || tier === "tier3";
+  const isTier3     = tier === "tier3";
+  // Show upgrade CTA for signed-in free and tier1 users only.
+  // tier2/tier3 and admins are already on the highest relevant plan.
+  const showUpgrade = isSignedIn && !isAdmin && (tier === "free" || tier === "tier1");
 
   const navLinks = [
     { href: "/nhl",          label: "NHL"          },
@@ -68,7 +71,18 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
 
         {/* Auth controls — desktop always visible; mobile hidden (moved into drawer) */}
         {isSignedIn ? (
-          <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
+          <div className="flex items-center gap-3">
+            {showUpgrade && (
+              <a
+                href="https://thetradeanalyzer.com/pricing"
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
+                style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+              >
+                Upgrade Your Plan
+              </a>
+            )}
+            <UserButton appearance={{ elements: { avatarBox: "w-7 h-7" } }} />
+          </div>
         ) : (
           <div className="hidden md:flex items-center gap-2">
             <SignInButton mode="modal">
@@ -127,6 +141,20 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
               {label}
             </Link>
           ))}
+
+          {/* Upgrade CTA in drawer — signed-in free/tier1 mobile only */}
+          {showUpgrade && (
+            <div className="pt-4">
+              <a
+                href="https://thetradeanalyzer.com/pricing"
+                className="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Upgrade Your Plan
+              </a>
+            </div>
+          )}
 
           {/* Auth buttons in drawer — signed-out mobile only */}
           {!isSignedIn && (
