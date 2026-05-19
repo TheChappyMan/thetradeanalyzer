@@ -487,12 +487,12 @@ function computeMlbPoolStats(
   const pitcherSlots = (["SP", "RP", "P"] as MlbRosterKey[])
     .reduce((s, k) => s + (roster[k] || 0), 0);
 
-  const hitterN  = Math.max(100, teams * hitterSlots);
-  const pitcherN = Math.max(40,  teams * pitcherSlots);
+  const hitterN  = Math.max(60, teams * hitterSlots);
+  const pitcherN = Math.max(30, teams * pitcherSlots);
 
   // Sort by playing-time proxies
   const topHitters  = [...hitters]
-    .sort((a, b) => (b.stats.AB || 0) - (a.stats.AB || 0))
+    .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
     .slice(0, hitterN);
   const topPitchers = [...pitchers]
     .sort((a, b) => (b.stats.IP || 0) - (a.stats.IP || 0))
