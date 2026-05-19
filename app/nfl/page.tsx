@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
+import nflPlayersJson from "@/lib/nfl-players.json";
 import {
   DEFAULT_NFL_LEAGUE,
   type NflLeague,
@@ -301,11 +302,22 @@ export default function NflTradeAnalyzer() {
       return "thisTotal";
     }
   });
-  const [currentSeasonDb,    setCurrentSeasonDb]    = useState<NflDbPlayer[]>([]);
-  const [priorSeasonDb,      setPriorSeasonDb]      = useState<NflDbPlayer[]>([]);
-  const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
-  const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
-  const [dbStatus,  setDbStatus]  = useState<DbStatus>("loading");
+  // Seed from static JSON so the analyzer is usable immediately on first paint.
+  // The useEffect below still fetches /api/nfl to replace with live ESPN data
+  // if it is available; static data is the reliable fallback.
+  const [currentSeasonDb,    setCurrentSeasonDb]    = useState<NflDbPlayer[]>(
+    nflPlayersJson.currentSeason.players as NflDbPlayer[]
+  );
+  const [priorSeasonDb,      setPriorSeasonDb]      = useState<NflDbPlayer[]>(
+    nflPlayersJson.priorSeason.players as NflDbPlayer[]
+  );
+  const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>(
+    nflPlayersJson.currentSeason.seasonId
+  );
+  const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>(
+    nflPlayersJson.priorSeason.seasonId
+  );
+  const [dbStatus,  setDbStatus]  = useState<DbStatus>("ready");
 
   // ── Tier 2: multi-league state ───────────────────────────────
   const [t2Leagues,      setT2Leagues]      = useState<LeagueRow[]>([]);
