@@ -24,6 +24,22 @@ import {
 } from "@/lib/nfl-valuation";
 
 // ============================================================
+// INJURY STATUS — TODO
+// ============================================================
+//
+// NFL injury logic (Q, D, IR, PUP, Out) is planned but not yet implemented.
+// The current data source is a static roster snapshot; it does not include
+// real-time injury designations.  Injury awareness will be added here once
+// the app is connected to a live NFL data feed (e.g. ESPN, NFL.com API, or
+// a third-party sports data provider) that exposes per-player injury status.
+//
+// When that data is available the implementation pattern to follow is:
+//   • Fetch injuryMap: Record<number, string> (playerId → status) in the API route
+//   • Add nflInjuryMultiplier(status, isRedraft): number  (Q→1.0 badge, D→0.85, IR→0.35, Out→0.10)
+//   • Apply multiplier in the value calculation (redraft only, same as NHL/MLB)
+//   • Render <InjuryBadge> on each player card
+//
+// ============================================================
 // TYPES
 // ============================================================
 

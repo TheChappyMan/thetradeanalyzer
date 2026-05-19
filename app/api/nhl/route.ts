@@ -16,6 +16,7 @@ import { NextResponse } from "next/server";
  */
 
 const NHL_STATS_BASE = "https://api.nhle.com/stats/rest/en";
+const NHL_WEB_BASE   = "https://api-web.nhle.com/v1";
 
 const ENDPOINT_MAP: Record<string, string> = {
   "skater-summary":  "skater/summary",
@@ -52,14 +53,44 @@ async function fetchNhlEndpoint(
   return json.data ?? [];
 }
 
-async function fetchOneSeason(season: string) {
+// ── Injury report ─────────────────────────────────────────────
+// Fetches the league-wide NHL injury report from the web API.
+// Returns a map of playerId → injuryStatus string (DTD, WTW, IR, LTIR, OFS, …).
+// Failures are silently ignored — injury data is supplemental.
+async function fetchInjuries(): Promise<Record<number, string>> {
+  const map: Record<number, string> = {};
+  try {
+    const res = await fetch(`${NHL_WEB_BASE}/injury`, { next: { revalidate: 1800 } });
+    if (!res.ok) return map;
+    const json = await res.json() as {
+      injured?: Array<{
+        id?: number;
+        playerId?: number;
+        player?: { id?: number };
+        injuryStatus?: string;
+        status?: string;
+      }>;
+    };
+    for (const entry of (json.injured ?? [])) {
+      const playerId = entry.id ?? entry.playerId ?? entry.player?.id;
+      const status   = entry.injuryStatus ?? entry.status;
+      if (playerId && status) map[playerId] = status;
+    }
+  } catch {
+    // silently skip — injury data is supplemental
+  }
+  return map;
+}
+
+async function fetchOneSeason(season: string, includeInjuries = false) {
   const [summary, realtime, faceoffs, goalies] = await Promise.all([
     fetchNhlEndpoint("skater/summary",     season),
     fetchNhlEndpoint("skater/realtime",    season),
     fetchNhlEndpoint("skater/faceoffwins", season),
     fetchNhlEndpoint("goalie/summary",     season),
   ]);
-  return { seasonId: season, summary, realtime, faceoffs, goalies };
+  const injuryMap = includeInjuries ? await fetchInjuries() : {} as Record<number, string>;
+  return { seasonId: season, summary, realtime, faceoffs, goalies, injuryMap };
 }
 
 // ── Route handler ─────────────────────────────────────────────
@@ -72,8 +103,8 @@ export async function GET(request: Request) {
   if (endpoint === "all-seasons") {
     try {
       const [currentSeason, priorSeason] = await Promise.all([
-        fetchOneSeason(computeCurrentSeasonId()),
-        fetchOneSeason(computePriorSeasonId()),
+        fetchOneSeason(computeCurrentSeasonId(), true),   // include injuries for current season
+        fetchOneSeason(computePriorSeasonId(), false),
       ]);
       return NextResponse.json({ currentSeason, priorSeason });
     } catch (err) {

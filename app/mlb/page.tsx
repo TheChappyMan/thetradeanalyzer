@@ -693,6 +693,7 @@ export default function MlbTradeAnalyzer() {
 
   const [currentSeasonDb,  setCurrentSeasonDb]  = useState<MlbDbPlayer[]>([]);
   const [priorSeasonDb,    setPriorSeasonDb]    = useState<MlbDbPlayer[]>([]);
+  const [injuryMap,        setInjuryMap]        = useState<Record<number, string>>({});
   const [currentSeasonYear, setCurrentSeasonYear] = useState<number>(0);
   const [priorSeasonYear,   setPriorSeasonYear]   = useState<number>(0);
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
@@ -704,10 +705,11 @@ export default function MlbTradeAnalyzer() {
   // ── Fetch both seasons ────────────────────────────────────────
   useEffect(() => {
     type SeasonPayload = {
-      season: number;
-      hitters:  MlbStatSplit[];
-      pitchers: MlbStatSplit[];
-      ageMap: Record<number, number>;
+      season:    number;
+      hitters:   MlbStatSplit[];
+      pitchers:  MlbStatSplit[];
+      ageMap:    Record<number, number>;
+      injuryMap: Record<number, string>;
     };
     let cancelled = false;
     fetch("/api/mlb?endpoint=all-seasons")
@@ -718,6 +720,7 @@ export default function MlbTradeAnalyzer() {
         const priDb = buildPlayerDatabase(priorSeason);
         setCurrentSeasonDb(curDb);
         setPriorSeasonDb(priDb);
+        setInjuryMap(currentSeason.injuryMap ?? {});
         setCurrentSeasonYear(currentSeason.season);
         setPriorSeasonYear(priorSeason.season);
         // Auto-detect sparse season → default to last year
@@ -859,7 +862,8 @@ export default function MlbTradeAnalyzer() {
     const scarcity = positionScarcityMultiplier(dbEntry.position);
     const ageMult  = ageMultiplier(dbEntry.age, league.leagueType === "keeper");
     const kMult    = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-    return base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult;
+    const iMult    = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], league.leagueType === "redraft");
+    return base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
   }
 
   const keepersPerTeam = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
@@ -874,7 +878,7 @@ export default function MlbTradeAnalyzer() {
     );
     return playerTotal + pickTotal;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap]);
+  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap, injuryMap]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -886,7 +890,7 @@ export default function MlbTradeAnalyzer() {
     );
     return playerTotal + pickTotal;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap]);
+  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap, injuryMap]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -1330,6 +1334,7 @@ export default function MlbTradeAnalyzer() {
               hitterWeights={league.hitterWeights}
               pitcherWeights={league.pitcherWeights}
               useRates={useRates}
+              injuryMap={injuryMap}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
               onToggleKeeper={(id) => toggleKeeper("send", id)}
@@ -1354,6 +1359,7 @@ export default function MlbTradeAnalyzer() {
               hitterWeights={league.hitterWeights}
               pitcherWeights={league.pitcherWeights}
               useRates={useRates}
+              injuryMap={injuryMap}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
               onToggleKeeper={(id) => toggleKeeper("recv", id)}
@@ -1503,6 +1509,61 @@ function MlbApiStatus({
   );
 }
 
+// ── Injury helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Returns the value multiplier for an injured MLB player.
+ * Only applied in redraft leagues — keeper leagues retain full value.
+ * DTD carries a badge only; IL designations discount value.
+ */
+function mlbInjuryMultiplier(status: string | undefined, isRedraft: boolean): number {
+  if (!status || !isRedraft) return 1.0;
+  switch (status) {
+    case "DTD":       return 1.0;   // badge only
+    case "10-Day IL": return 0.75;
+    case "15-Day IL": return 0.70;
+    case "60-Day IL": return 0.35;
+    case "Out for Season": return 0.10;
+    default:          return 1.0;
+  }
+}
+
+/** Coloured pill badge for injured MLB players. */
+function MlbInjuryBadge({
+  status,
+  mult,
+  isRedraft,
+}: {
+  status: string | undefined;
+  mult: number;
+  isRedraft: boolean;
+}) {
+  if (!status) return null;
+  const isAmber   = status === "DTD";
+  const isOrange  = status === "10-Day IL";
+  const isDeepOrange = status === "15-Day IL";
+  const isRed     = status === "60-Day IL";
+  const isDarkRed = status === "Out for Season";
+  const { border, text, bg } =
+    isAmber      ? { border: "border-amber-400",      text: "text-amber-700",      bg: "bg-amber-50"      } :
+    isOrange     ? { border: "border-orange-300",     text: "text-orange-600",     bg: "bg-orange-50"     } :
+    isDeepOrange ? { border: "border-orange-500",     text: "text-orange-800",     bg: "bg-orange-100"    } :
+    isRed        ? { border: "border-red-400",        text: "text-red-700",        bg: "bg-red-50"        } :
+    isDarkRed    ? { border: "border-red-700",        text: "text-red-900",        bg: "bg-red-100"       } :
+                   { border: "border-gray-300",       text: "text-gray-600",       bg: ""                 };
+  const showDiscount = isRedraft && mult < 1.0;
+  return (
+    <span
+      className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
+      title={showDiscount
+        ? `Value discounted ×${mult.toFixed(2)} for redraft`
+        : "Full value retained — keeper league"}
+    >
+      {status}
+    </span>
+  );
+}
+
 type MlbTradeSideProps = {
   label: string;
   players: TradePlayer[];
@@ -1523,6 +1584,7 @@ type MlbTradeSideProps = {
   hitterWeights:  HitterWeights;
   pitcherWeights: PitcherWeights;
   useRates: boolean;
+  injuryMap: Record<number, string>;
   onAdd: (p: MlbDbPlayer) => void;
   onRemove: (id: number) => void;
   onToggleKeeper: (id: number) => void;
@@ -1533,6 +1595,7 @@ function MlbTradeSide({
   playerDb, dbStatus, isKeeperLeague, rankMap,
   poolStats, isRotoMode, hitterCategories, pitcherCategories,
   hitterWeights, pitcherWeights, useRates,
+  injuryMap,
   onAdd, onRemove, onToggleKeeper,
 }: MlbTradeSideProps) {
 
@@ -1564,11 +1627,12 @@ function MlbTradeSide({
           const base = isRotoMode && poolStats
             ? mlbZScoreValue(dbEntry, hitterCategories, pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
             : projectedSeasonValue(dbEntry, hitterWeights, pitcherWeights, useRates);
-          const scarcity = positionScarcityMultiplier(dbEntry.position);
-          const ageMult  = ageMultiplier(dbEntry.age, isKeeperLeague);
-          const kMult    = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-          const adjusted = base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult;
-          const rank     = rankMap.get(p.id) ?? null;
+          const scarcity    = positionScarcityMultiplier(dbEntry.position);
+          const ageMult     = ageMultiplier(dbEntry.age, isKeeperLeague);
+          const kMult       = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
+          const iMult       = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], !isKeeperLeague);
+          const adjusted    = base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
+          const rank        = rankMap.get(p.id) ?? null;
 
           // Warnings
           const isEarlySeason = !dbEntry.isPitcher
@@ -1598,6 +1662,8 @@ function MlbTradeSide({
                       Closer
                     </span>
                   )}
+                  {/* Injury badge */}
+                  <MlbInjuryBadge status={injuryMap[dbEntry.mlbId]} mult={iMult} isRedraft={!isKeeperLeague} />
                   {/* Age badge */}
                   {dbEntry.age !== null && (
                     <span className="text-gray-400 text-[10px]">Age {dbEntry.age}</span>
@@ -1636,6 +1702,9 @@ function MlbTradeSide({
                 <span style={{ color: "var(--color-muted)" }}>
                   {isRotoMode ? "z-score" : "Base"}: {isRotoMode ? base.toFixed(2) : base.toFixed(1)}
                   {rank !== null && <span className="ml-3">Rank: {rank} / {playerDb.length}</span>}
+                  {iMult < 1.0 && (
+                    <span className="ml-2 text-orange-600">×{iMult.toFixed(2)} injury</span>
+                  )}
                 </span>
                 <span className="font-semibold" style={{ color: "var(--color-text)" }}>Adjusted: {isRotoMode ? adjusted.toFixed(2) : adjusted.toFixed(1)}</span>
               </div>

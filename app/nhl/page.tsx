@@ -727,6 +727,7 @@ export default function TradeAnalyzer() {
   });
   const [currentSeasonDb,  setCurrentSeasonDb]  = useState<DbPlayer[]>([]);
   const [priorSeasonDb,    setPriorSeasonDb]    = useState<DbPlayer[]>([]);
+  const [injuryMap,        setInjuryMap]        = useState<Record<number, string>>({});
   const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
   const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
@@ -740,11 +741,12 @@ export default function TradeAnalyzer() {
   // ── Load both seasons in one round-trip ──────────────────────
   useEffect(() => {
     type SeasonPayload = {
-      seasonId: string;
-      summary:  Record<string, unknown>[];
-      realtime: Record<string, unknown>[];
-      faceoffs: Record<string, unknown>[];
-      goalies:  Record<string, unknown>[];
+      seasonId:  string;
+      summary:   Record<string, unknown>[];
+      realtime:  Record<string, unknown>[];
+      faceoffs:  Record<string, unknown>[];
+      goalies:   Record<string, unknown>[];
+      injuryMap: Record<number, string>;
     };
     let cancelled = false;
     fetch("/api/nhl?endpoint=all-seasons")
@@ -763,6 +765,7 @@ export default function TradeAnalyzer() {
         setPriorSeasonDb(priPlayers);
         setCurrentSeasonIdStr(currentSeason.seasonId);
         setPriorSeasonIdStr(priorSeason.seasonId);
+        setInjuryMap(currentSeason.injuryMap ?? {});
         // Auto-detect: if user has no saved preference and current season is sparse,
         // default to last year's data.
         const savedMode = (() => { try { return localStorage.getItem(LS_DATA_MODE); } catch { return null; } })();
@@ -960,15 +963,17 @@ export default function TradeAnalyzer() {
   const isCatMode = league.scoringType === "categories";
 
   const sendValue = useMemo(() => {
+    const isRedraft = league.leagueType === "redraft";
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       const base = isCatMode && poolStats
         ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
         : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates);
-      const mult = positionMultiplier(p.positions, league.roster);
+      const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      return sum + base * mult * kMult;
+      const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
+      return sum + base * mult * kMult * iMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = sendPicksParsed.reduce(
@@ -976,18 +981,20 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap]);
+  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap, injuryMap]);
 
   const recvValue = useMemo(() => {
+    const isRedraft = league.leagueType === "redraft";
     const playerTotal = recvPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       const base = isCatMode && poolStats
         ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
         : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates);
-      const mult = positionMultiplier(p.positions, league.roster);
+      const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      return sum + base * mult * kMult;
+      const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
+      return sum + base * mult * kMult * iMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = recvPicksParsed.reduce(
@@ -995,7 +1002,7 @@ export default function TradeAnalyzer() {
       0
     );
     return playerTotal + pickTotal;
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap]);
+  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap, injuryMap]);
 
   const totalRosterSize = useMemo(() => {
     return Object.values(league.roster).reduce((a, b) => a + b, 0);
@@ -1478,6 +1485,8 @@ export default function TradeAnalyzer() {
             skaterWeights={league.skaterWeights}
             goalieWeights={league.goalieWeights}
             rankMap={rankMap}
+            injuryMap={injuryMap}
+            isRedraft={league.leagueType === "redraft"}
             onAdd={(p) => addPlayer("send", p)}
             onRemove={(id) => removePlayer("send", id)}
             onTogglePos={(id, pos) => togglePosition("send", id, pos)}
@@ -1499,6 +1508,8 @@ export default function TradeAnalyzer() {
             skaterWeights={league.skaterWeights}
             goalieWeights={league.goalieWeights}
             rankMap={rankMap}
+            injuryMap={injuryMap}
+            isRedraft={league.leagueType === "redraft"}
             onAdd={(p) => addPlayer("recv", p)}
             onRemove={(id) => removePlayer("recv", id)}
             onTogglePos={(id, pos) => togglePosition("recv", id, pos)}
@@ -1647,6 +1658,8 @@ type TradeSideProps = {
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
   rankMap: Map<number, number>;
+  injuryMap: Record<number, string>;
+  isRedraft: boolean;
   onAdd: (p: DbPlayer) => void;
   onRemove: (id: number) => void;
   onTogglePos: (id: number, pos: string) => void;
@@ -1658,6 +1671,7 @@ function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
   roster, skaterWeights, goalieWeights, rankMap,
+  injuryMap, isRedraft,
   onAdd, onRemove, onTogglePos, onToggleKeeper, useRates,
 }: TradeSideProps) {
   return (
@@ -1680,6 +1694,8 @@ function TradeSide({
             goalieWeights={goalieWeights}
             rank={rankMap.get(p.id) ?? null}
             totalPlayers={playerDb.length}
+            injuryStatus={injuryMap[p.id]}
+            isRedraft={isRedraft}
             onRemove={() => onRemove(p.id)}
             onTogglePos={(pos) => onTogglePos(p.id, pos)}
             onToggleKeeper={() => onToggleKeeper(p.id)}
@@ -1856,6 +1872,62 @@ function PlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: PlayerTy
   );
 }
 
+// ── Injury helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Returns the value multiplier for an injured player.
+ * Only applied in redraft leagues — keeper leagues retain full value.
+ * DTD and WTW carry a badge only; more severe designations discount value.
+ */
+function nhlInjuryMultiplier(status: string | undefined, isRedraft: boolean): number {
+  if (!status || !isRedraft) return 1.0;
+  switch (status.toUpperCase()) {
+    case "DTD":  return 1.0;   // badge only
+    case "WTW":  return 1.0;   // badge only
+    case "IR":   return 0.60;
+    case "LTIR": return 0.35;
+    case "OFS":
+    case "OUT":  return 0.10;  // out for season
+    default:     return 1.0;
+  }
+}
+
+/** Coloured pill badge shown on player cards for injured players. */
+function InjuryBadge({
+  status,
+  mult,
+  isRedraft,
+}: {
+  status: string | undefined;
+  mult: number;
+  isRedraft: boolean;
+}) {
+  if (!status) return null;
+  const s = status.toUpperCase();
+  const isAmber   = s === "DTD" || s === "WTW";
+  const isOrange  = s === "IR";
+  const isRed     = s === "LTIR";
+  const isDarkRed = s === "OFS" || s === "OUT";
+  const { border, text, bg } =
+    isAmber   ? { border: "border-amber-400",  text: "text-amber-700",  bg: "bg-amber-50"  } :
+    isOrange  ? { border: "border-orange-400", text: "text-orange-700", bg: "bg-orange-50" } :
+    isRed     ? { border: "border-red-400",    text: "text-red-700",    bg: "bg-red-50"    } :
+    isDarkRed ? { border: "border-red-700",    text: "text-red-900",    bg: "bg-red-100"   } :
+                { border: "border-gray-300",   text: "text-gray-600",   bg: ""             };
+  const label     = isDarkRed ? "Out for Season" : status;
+  const showDiscount = isRedraft && mult < 1.0;
+  return (
+    <span
+      className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
+      title={showDiscount
+        ? `Value discounted ×${mult.toFixed(2)} for redraft`
+        : "Full value retained — keeper league"}
+    >
+      {label}
+    </span>
+  );
+}
+
 type PlayerRowProps = {
   player: TradePlayer;
   dbEntry: DbPlayer | undefined;
@@ -1864,6 +1936,8 @@ type PlayerRowProps = {
   goalieWeights: GoalieWeights;
   rank: number | null;
   totalPlayers: number;
+  injuryStatus: string | undefined;
+  isRedraft: boolean;
   onRemove: () => void;
   onTogglePos: (pos: string) => void;
   onToggleKeeper: () => void;
@@ -1872,13 +1946,15 @@ type PlayerRowProps = {
 
 function PlayerRow({
   player, dbEntry, roster, skaterWeights, goalieWeights, rank, totalPlayers,
+  injuryStatus, isRedraft,
   onRemove, onTogglePos, onToggleKeeper, useRates,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
-  const mult = positionMultiplier(player.positions, roster);
+  const mult      = positionMultiplier(player.positions, roster);
   const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights, useRates);
-  const kMult = player.isKeeper ? keeperMultiplier(rank) : 1.0;
-  const adjValue = baseValue * mult * kMult;
+  const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
+  const iMult     = nhlInjuryMultiplier(injuryStatus, isRedraft);
+  const adjValue  = baseValue * mult * kMult * iMult;
 
   const unusedFlagged = player.positions.filter((p) => {
     if (p === "G") return false;
@@ -1891,10 +1967,11 @@ function PlayerRow({
   return (
     <div className="border rounded-xl p-2 text-xs" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
       <div className="flex items-center justify-between mb-1">
-        <div>
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-semibold" style={{ color: "var(--color-text)" }}>{player.name}</span>
-          <span className="ml-2" style={{ color: "var(--color-muted)" }}>
-            {dbEntry.team} · primary {player.primaryPosition} · {dbEntry.gamesPlayed} GP
+          <InjuryBadge status={injuryStatus} mult={iMult} isRedraft={isRedraft} />
+          <span style={{ color: "var(--color-muted)" }}>
+            {dbEntry.team} · {player.primaryPosition} · {dbEntry.gamesPlayed} GP
           </span>
         </div>
         <button
@@ -1949,6 +2026,9 @@ function PlayerRow({
           Base value: {baseValue.toFixed(1)}
           {rank !== null && (
             <span className="ml-3">League Ranking: {rank} / {totalPlayers}</span>
+          )}
+          {iMult < 1.0 && (
+            <span className="ml-2 text-orange-600">×{iMult.toFixed(2)} injury</span>
           )}
         </span>
         <span className="font-semibold" style={{ color: "var(--color-text)" }}>Adjusted: {adjValue.toFixed(1)}</span>

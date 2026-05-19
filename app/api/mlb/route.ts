@@ -49,31 +49,48 @@ async function fetchStats(
   return json.stats?.[0]?.splits ?? [];
 }
 
-async function fetchAges(
+// ── Player info (ages + IL status) ───────────────────────────
+// MLB people endpoint supports batched personIds.
+// status.code values: A (Active), D10 (10-Day IL), D15 (15-Day IL),
+//   D60 (60-Day IL), DTD (Day-to-Day). Failures are silently ignored.
+async function fetchPlayerInfo(
   playerIds: number[]
-): Promise<Record<number, number>> {
-  const ageMap: Record<number, number> = {};
-  if (playerIds.length === 0) return ageMap;
+): Promise<{ ageMap: Record<number, number>; injuryMap: Record<number, string> }> {
+  const ageMap:    Record<number, number> = {};
+  const injuryMap: Record<number, string> = {};
+  if (playerIds.length === 0) return { ageMap, injuryMap };
 
-  // MLB people endpoint supports batched personIds
   const batchSize = 250;
   for (let i = 0; i < playerIds.length; i += batchSize) {
     const batch = playerIds.slice(i, i + batchSize).join(",");
     try {
-      const url = `${MLB_BASE}/people?personIds=${batch}&fields=people,id,currentAge`;
-      const res = await fetch(url, { next: { revalidate: 3600 } });
+      const url = `${MLB_BASE}/people?personIds=${batch}&fields=people,id,currentAge,status`;
+      const res = await fetch(url, { next: { revalidate: 1800 } });
       if (!res.ok) continue;
       const json = (await res.json()) as {
-        people?: Array<{ id: number; currentAge?: number }>;
+        people?: Array<{
+          id: number;
+          currentAge?: number;
+          status?: { code?: string; description?: string };
+        }>;
       };
-      (json.people ?? []).forEach((p) => {
+      for (const p of (json.people ?? [])) {
         if (p.id && p.currentAge) ageMap[p.id] = p.currentAge;
-      });
+        if (p.id && p.status?.code) {
+          switch (p.status.code) {
+            case "D10": injuryMap[p.id] = "10-Day IL"; break;
+            case "D15": injuryMap[p.id] = "15-Day IL"; break;
+            case "D60": injuryMap[p.id] = "60-Day IL"; break;
+            case "DTD": injuryMap[p.id] = "DTD";       break;
+            // "A" = Active, "BRV" = Bereavement, "PAT" = Paternity, etc — no badge
+          }
+        }
+      }
     } catch {
-      // silently skip — ages are supplemental
+      // silently skip — player info is supplemental
     }
   }
-  return ageMap;
+  return { ageMap, injuryMap };
 }
 
 async function fetchOneSeason(season: number, includeAges: boolean) {
@@ -82,7 +99,8 @@ async function fetchOneSeason(season: number, includeAges: boolean) {
     fetchStats(season, "pitching"),
   ]);
 
-  let ageMap: Record<number, number> = {};
+  let ageMap:    Record<number, number> = {};
+  let injuryMap: Record<number, string> = {};
   if (includeAges) {
     const allIds = [
       ...new Set([
@@ -90,10 +108,10 @@ async function fetchOneSeason(season: number, includeAges: boolean) {
         ...pitchers.map((s) => s.player.id),
       ]),
     ];
-    ageMap = await fetchAges(allIds);
+    ({ ageMap, injuryMap } = await fetchPlayerInfo(allIds));
   }
 
-  return { season, hitters, pitchers, ageMap };
+  return { season, hitters, pitchers, ageMap, injuryMap };
 }
 
 // ── Route handler ─────────────────────────────────────────────
