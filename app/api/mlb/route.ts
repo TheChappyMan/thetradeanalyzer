@@ -38,9 +38,13 @@ async function fetchStats(
   season: number,
   group: "hitting" | "pitching"
 ): Promise<MlbStatSplit[]> {
+  // playerPool=All bypasses the default "qualified leaders" threshold so every
+  // player who appeared in at least one game is included (not just stat leaders).
+  // Without this parameter the API silently returns ~145 hitters / ~52 pitchers
+  // instead of the full ~765 / ~870+ who played during the season.
   const url =
     `${MLB_BASE}/stats?stats=season&season=${season}&group=${group}` +
-    `&gameType=R&limit=1000`;
+    `&gameType=R&limit=2000&playerPool=All`;
   const res = await fetch(url, { next: { revalidate: 3600 } });
   if (!res.ok) throw new Error(`MLB API ${res.status} for ${group}/${season}`);
   const json = (await res.json()) as {
