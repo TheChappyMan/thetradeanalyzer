@@ -459,6 +459,8 @@ type StatPoolStats  = { mean: number; stddev: number; avgVolume?: number };
 type MlbPoolStats   = {
   hitterStats:  Record<HitterStatKey,  StatPoolStats>;
   pitcherStats: Record<PitcherStatKey, StatPoolStats>;
+  hitterN: number;
+  pitcherN: number;
 };
 
 // Volume-weighted pitcher rate stats — longer stints count more than short ones.
@@ -489,6 +491,14 @@ function computeMlbPoolStats(
 
   const hitterN  = Math.max(60, teams * hitterSlots);
   const pitcherN = Math.max(30, teams * pitcherSlots);
+
+  // DEBUG — verify pool sizes are league-adjusted, not full database
+  console.log(
+    "[MLB pool]",
+    `hitters in DB: ${hitters.length}  →  pool hitterN: ${hitterN}  (${teams} teams × ${hitterSlots} slots, min 60)`,
+    `| pitchers in DB: ${pitchers.length}  →  pool pitcherN: ${pitcherN}  (${teams} teams × ${pitcherSlots} slots, min 30)`,
+    "| z-scores computed against top-N pool, not full DB"
+  );
 
   // Sort by playing-time proxies
   const topHitters  = [...hitters]
@@ -532,7 +542,7 @@ function computeMlbPoolStats(
     }
   }
 
-  return { hitterStats: hitterPoolStats, pitcherStats: pitcherPoolStats };
+  return { hitterStats: hitterPoolStats, pitcherStats: pitcherPoolStats, hitterN, pitcherN };
 }
 
 function _hitterZ(
@@ -1702,7 +1712,16 @@ function MlbTradeSide({
               <div className="mt-1 flex justify-between">
                 <span style={{ color: "var(--color-muted)" }}>
                   {isRotoMode ? "z-score" : "Base"}: {isRotoMode ? base.toFixed(2) : base.toFixed(1)}
-                  {rank !== null && <span className="ml-3">Rank: {rank} / {playerDb.length}</span>}
+                  {rank !== null && (() => {
+                    const poolDenom = poolStats
+                      ? (dbEntry.isPitcher ? poolStats.pitcherN : poolStats.hitterN)
+                      : playerDb.length;
+                    return (
+                      <span className="ml-3" title={`Ranked among all ${playerDb.length} players; league pool size is ${poolDenom}`}>
+                        Rank: {rank} / {poolDenom}
+                      </span>
+                    );
+                  })()}
                   {iMult < 1.0 && (
                     <span className="ml-2 text-orange-600">×{iMult.toFixed(2)} injury</span>
                   )}
