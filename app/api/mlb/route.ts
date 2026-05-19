@@ -53,51 +53,96 @@ async function fetchStats(
   return json.stats?.[0]?.splits ?? [];
 }
 
-// ── Player info (ages + IL status) ───────────────────────────
-// MLB people endpoint supports batched personIds.
-// status.code values: A (Active), D10 (10-Day IL), D15 (15-Day IL),
-//   D60 (60-Day IL), DTD (Day-to-Day). Failures are silently ignored.
-async function fetchPlayerInfo(
+// ── Player ages ──────────────────────────────────────────────
+// MLB people endpoint supports batched personIds for age lookup.
+// NOTE: the people endpoint does NOT return roster/IL status — do not
+// add &fields=…,status here, that field is silently ignored by the API.
+async function fetchAges(
   playerIds: number[]
-): Promise<{ ageMap: Record<number, number>; injuryMap: Record<number, string> }> {
-  const ageMap:    Record<number, number> = {};
-  const injuryMap: Record<number, string> = {};
-  if (playerIds.length === 0) return { ageMap, injuryMap };
+): Promise<Record<number, number>> {
+  const ageMap: Record<number, number> = {};
+  if (playerIds.length === 0) return ageMap;
 
   const batchSize = 250;
   for (let i = 0; i < playerIds.length; i += batchSize) {
     const batch = playerIds.slice(i, i + batchSize).join(",");
     try {
-      const url = `${MLB_BASE}/people?personIds=${batch}&fields=people,id,currentAge,status`;
-      const res = await fetch(url, { next: { revalidate: 1800 } });
+      const url = `${MLB_BASE}/people?personIds=${batch}&fields=people,id,currentAge`;
+      const res = await fetch(url, { next: { revalidate: 3600 } });
       if (!res.ok) continue;
       const json = (await res.json()) as {
-        people?: Array<{
-          id: number;
-          currentAge?: number;
-          status?: { code?: string; description?: string };
-        }>;
+        people?: Array<{ id: number; currentAge?: number }>;
       };
       for (const p of (json.people ?? [])) {
         if (p.id && p.currentAge) ageMap[p.id] = p.currentAge;
-        if (p.id && p.status?.code) {
-          switch (p.status.code) {
-            case "D10": injuryMap[p.id] = "10-Day IL"; break;
-            case "D15": injuryMap[p.id] = "15-Day IL"; break;
-            case "D60": injuryMap[p.id] = "60-Day IL"; break;
-            case "DTD": injuryMap[p.id] = "DTD";       break;
-            // "A" = Active, "BRV" = Bereavement, "PAT" = Paternity, etc — no badge
-          }
-        }
       }
     } catch {
-      // silently skip — player info is supplemental
+      // silently skip — ages are supplemental
     }
   }
-  return { ageMap, injuryMap };
+  return ageMap;
 }
 
-async function fetchOneSeason(season: number, includeAges: boolean) {
+// ── IL status via 40-man rosters ─────────────────────────────
+// The /people batch endpoint does NOT return IL status — status must be
+// read from each team's 40-man roster (/teams/{id}/roster?rosterType=40Man).
+// All 30 rosters are fetched in parallel (one call per team).
+//
+// Relevant status codes on the 40-man roster:
+//   D10 → 10-Day IL    (~58 players league-wide)
+//   D15 → 15-Day IL    (~66 players league-wide)
+//   D60 → 60-Day IL   (~119 players league-wide)
+//   D7  → 7-Day IL    (concussion IL, rare)
+//   A   → Active — no badge
+//   RM  → Minor leagues — no badge
+//   RA  → Rehab assignment — no badge
+//   NYR → Not yet reported — no badge
+
+const MLB_TEAM_IDS = [
+  108, 109, 110, 111, 112, 113, 114, 115, 116, 117,
+  118, 119, 120, 121, 133, 134, 135, 136, 137, 138,
+  139, 140, 141, 142, 143, 144, 145, 146, 147, 158,
+];
+
+type RosterEntry = {
+  person?: { id?: number };
+  status?: { code?: string };
+};
+
+async function fetchMlbInjuries(season: number): Promise<Record<number, string>> {
+  const injuryMap: Record<number, string> = {};
+
+  const results = await Promise.allSettled(
+    MLB_TEAM_IDS.map((teamId) =>
+      fetch(
+        `${MLB_BASE}/teams/${teamId}/roster?rosterType=40Man&season=${season}`,
+        { next: { revalidate: 1800 } }
+      )
+        .then((r) => (r.ok ? (r.json() as Promise<{ roster?: RosterEntry[] }>) : { roster: [] }))
+        .catch(() => ({ roster: [] as RosterEntry[] }))
+    )
+  );
+
+  for (const result of results) {
+    if (result.status !== "fulfilled") continue;
+    for (const entry of (result.value.roster ?? [])) {
+      const id   = entry.person?.id;
+      const code = entry.status?.code;
+      if (!id || !code) continue;
+      switch (code) {
+        case "D7":  injuryMap[id] = "7-Day IL";  break;
+        case "D10": injuryMap[id] = "10-Day IL"; break;
+        case "D15": injuryMap[id] = "15-Day IL"; break;
+        case "D60": injuryMap[id] = "60-Day IL"; break;
+        // "A" Active, "RM" Minors, "RA" Rehab, "NYR" Not Yet Reported — no badge
+      }
+    }
+  }
+
+  return injuryMap;
+}
+
+async function fetchOneSeason(season: number, includeSupplemental: boolean) {
   const [hitters, pitchers] = await Promise.all([
     fetchStats(season, "hitting"),
     fetchStats(season, "pitching"),
@@ -105,14 +150,20 @@ async function fetchOneSeason(season: number, includeAges: boolean) {
 
   let ageMap:    Record<number, number> = {};
   let injuryMap: Record<number, string> = {};
-  if (includeAges) {
+
+  if (includeSupplemental) {
+    // Ages: batched people endpoint  |  IL status: 30 parallel 40-man roster calls
+    // Run both in parallel — neither depends on the other.
     const allIds = [
       ...new Set([
         ...hitters.map((s) => s.player.id),
         ...pitchers.map((s) => s.player.id),
       ]),
     ];
-    ({ ageMap, injuryMap } = await fetchPlayerInfo(allIds));
+    [ageMap, injuryMap] = await Promise.all([
+      fetchAges(allIds),
+      fetchMlbInjuries(season),
+    ]);
   }
 
   return { season, hitters, pitchers, ageMap, injuryMap };

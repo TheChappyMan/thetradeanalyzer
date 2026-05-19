@@ -1520,6 +1520,7 @@ function mlbInjuryMultiplier(status: string | undefined, isRedraft: boolean): nu
   if (!status || !isRedraft) return 1.0;
   switch (status) {
     case "DTD":       return 1.0;   // badge only
+    case "7-Day IL":  return 1.0;   // badge only (concussion IL — typically short)
     case "10-Day IL": return 0.75;
     case "15-Day IL": return 0.70;
     case "60-Day IL": return 0.35;
@@ -1539,11 +1540,11 @@ function MlbInjuryBadge({
   isRedraft: boolean;
 }) {
   if (!status) return null;
-  const isAmber   = status === "DTD";
-  const isOrange  = status === "10-Day IL";
+  const isAmber      = status === "DTD" || status === "7-Day IL";
+  const isOrange     = status === "10-Day IL";
   const isDeepOrange = status === "15-Day IL";
-  const isRed     = status === "60-Day IL";
-  const isDarkRed = status === "Out for Season";
+  const isRed        = status === "60-Day IL";
+  const isDarkRed    = status === "Out for Season";
   const { border, text, bg } =
     isAmber      ? { border: "border-amber-400",      text: "text-amber-700",      bg: "bg-amber-50"      } :
     isOrange     ? { border: "border-orange-300",     text: "text-orange-600",     bg: "bg-orange-50"     } :
