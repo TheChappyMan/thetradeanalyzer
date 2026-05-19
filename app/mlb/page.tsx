@@ -459,8 +459,6 @@ type StatPoolStats  = { mean: number; stddev: number; avgVolume?: number };
 type MlbPoolStats   = {
   hitterStats:  Record<HitterStatKey,  StatPoolStats>;
   pitcherStats: Record<PitcherStatKey, StatPoolStats>;
-  hitterN: number;
-  pitcherN: number;
 };
 
 // Volume-weighted pitcher rate stats — longer stints count more than short ones.
@@ -542,7 +540,7 @@ function computeMlbPoolStats(
     }
   }
 
-  return { hitterStats: hitterPoolStats, pitcherStats: pitcherPoolStats, hitterN, pitcherN };
+  return { hitterStats: hitterPoolStats, pitcherStats: pitcherPoolStats };
 }
 
 function _hitterZ(
@@ -1712,16 +1710,7 @@ function MlbTradeSide({
               <div className="mt-1 flex justify-between">
                 <span style={{ color: "var(--color-muted)" }}>
                   {isRotoMode ? "z-score" : "Base"}: {isRotoMode ? base.toFixed(2) : base.toFixed(1)}
-                  {rank !== null && (() => {
-                    const poolDenom = poolStats
-                      ? (dbEntry.isPitcher ? poolStats.pitcherN : poolStats.hitterN)
-                      : playerDb.length;
-                    return (
-                      <span className="ml-3" title={`Ranked among all ${playerDb.length} players; league pool size is ${poolDenom}`}>
-                        Rank: {rank} / {poolDenom}
-                      </span>
-                    );
-                  })()}
+                  {rank !== null && <span className="ml-3">Rank: {rank} / {playerDb.length}</span>}
                   {iMult < 1.0 && (
                     <span className="ml-2 text-orange-600">×{iMult.toFixed(2)} injury</span>
                   )}
