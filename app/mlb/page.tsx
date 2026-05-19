@@ -972,7 +972,7 @@ export default function MlbTradeAnalyzer() {
       }).catch(() => {});
     }, 5000);
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, currentLeagueId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, currentLeagueId, sendValue, recvValue, score]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Updaters ──────────────────────────────────────────────────
   const updateLeague    = (patch: Partial<MlbLeague>) => setLeague((p) => ({ ...p, ...patch }));
@@ -1436,7 +1436,7 @@ export default function MlbTradeAnalyzer() {
             </div>
           )}
 
-          {(sendValue !== 0 || recvValue !== 0) && (
+          {isPro && (sendValue !== 0 || recvValue !== 0) && (
             <button
               className="btn-secondary mt-3 text-xs"
               onClick={saveToHistory}
