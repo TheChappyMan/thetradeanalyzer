@@ -155,7 +155,7 @@ export default function NhlSettingsForm({
   allMlbLeagues: initialMlbLeagues,
   referralSection,
 }: Props) {
-  const isTier2 = tier === "tier2";
+  const isTier2 = tier === "tier2" || tier === "tier3";
   const isPaid  = tier === "tier1" || tier === "tier2" || tier === "tier3";
 
   // Free users only have access to the Manage Subscription tab
