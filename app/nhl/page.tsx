@@ -1106,6 +1106,25 @@ export default function TradeAnalyzer() {
     };
   }, [isPro, sendPlayers, recvPlayers, sendPicks, recvPicks, currentLeagueId]);
 
+  // ── GA4: fire trade_analyzed when both sides are stable for 3 s ──
+  useEffect(() => {
+    const hasSend = sendPlayers.length > 0 || sendPicks.trim() !== "";
+    const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
+    if (!hasSend || !hasRecv || tradeRating === 0) return;
+    const timer = setTimeout(() => {
+      if (typeof window.gtag !== "function") return;
+      window.gtag("event", "trade_analyzed", {
+        sport: "nhl",
+        user_tier: tier,
+        is_logged_in: !!user,
+        league_format: league.scoringType,
+        trade_rating: tradeRating,
+        has_picks: sendPicks.trim() !== "" || recvPicks.trim() !== "",
+      });
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [tradeRating, sendPlayers, recvPlayers, sendPicks, recvPicks, tier, user, league.scoringType]);
+
   const updateLeague = (patch: Partial<League>) =>
     setLeague((prev) => ({ ...prev, ...patch }));
   const updateRoster = (pos: RosterKey, val: number) =>
