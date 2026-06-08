@@ -1033,9 +1033,9 @@ export default function NflTradeAnalyzer() {
 
           {/* Fairness Scale Bar */}
           <div className="mb-3">
-            <div className="flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
+            <div className="relative flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
               <span>Opponent Wins</span>
-              <span className="font-medium">Fairness Scale</span>
+              <span className="absolute left-1/2 -translate-x-1/2 font-medium">Fairness Scale</span>
               <span>You Win</span>
             </div>
             <div className="relative h-3 rounded-full overflow-hidden flex">

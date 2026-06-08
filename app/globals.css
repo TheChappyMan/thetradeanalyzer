@@ -35,11 +35,11 @@
   --color-warning-subtle:  #FDF3E8;
 
   /* Fairness bar segment colors */
-  --bar-extreme:   #0A3640;
-  --bar-danger:    #C44536;
-  --bar-warning:   #D4843B;
-  --bar-mild:      #E9B44C;
-  --bar-fair:      #2D8659;
+  --bar-extreme:   #000000;
+  --bar-danger:    #cc0000;
+  --bar-warning:   #ff6600;
+  --bar-mild:      #ffcc00;
+  --bar-fair:      #33aa33;
 }
 
 /* ============================================================
