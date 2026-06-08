@@ -194,7 +194,7 @@ function fantasyScore(stats, pos) {
 
 // ── Build a list of NflDbPlayer for one season ─────────────────────────────
 
-const POS_LIMITS = { QB: 32, RB: 70, WR: 90, TE: 32, K: 16, DST: 32 }
+const POS_LIMITS = { QB: 48, RB: 100, WR: 130, TE: 55, K: 32, DST: 32 }
 
 function buildPlayers(allPlayerMeta, seasonData) {
   const { totals, gpCounts } = seasonData

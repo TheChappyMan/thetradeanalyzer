@@ -579,6 +579,294 @@
         }
       },
       {
+        "id": 12794,
+        "name": "Michael Penix",
+        "team": "ATL",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 1982,
+          "passTDs": 9,
+          "passInt": 3,
+          "rushYds": 70,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 12824,
+        "name": "Jayden Daniels",
+        "team": "WAS",
+        "position": "QB",
+        "gamesPlayed": 7,
+        "stats": {
+          "passYds": 1262,
+          "passTDs": 8,
+          "passInt": 3,
+          "rushYds": 278,
+          "rushTDs": 2,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 59715,
+        "name": "Kirk Cousins",
+        "team": "LV",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1721,
+          "passTDs": 10,
+          "passInt": 5,
+          "rushYds": 7,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 12820,
+        "name": "Spencer Rattler",
+        "team": "NO",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 1586,
+          "passTDs": 8,
+          "passInt": 5,
+          "rushYds": 167,
+          "rushTDs": 0,
+          "rec": 1,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 48627,
+        "name": "Shedeur Sanders",
+        "team": "CLE",
+        "position": "QB",
+        "gamesPlayed": 11,
+        "stats": {
+          "passYds": 1400,
+          "passTDs": 7,
+          "passInt": 10,
+          "rushYds": 169,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 51023,
+        "name": "Kyler Murray",
+        "team": "MIN",
+        "position": "QB",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 962,
+          "passTDs": 6,
+          "passInt": 3,
+          "rushYds": 173,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 47738,
+        "name": "Dillon Gabriel",
+        "team": "CLE",
+        "position": "QB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 937,
+          "passTDs": 7,
+          "passInt": 2,
+          "rushYds": 86,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 51584,
+        "name": "Carson Wentz",
+        "team": "MIN",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1216,
+          "passTDs": 6,
+          "passInt": 5,
+          "rushYds": 57,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 39758,
+        "name": "Davis Mills",
+        "team": "HOU",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 915,
+          "passTDs": 5,
+          "passInt": 1,
+          "rushYds": 60,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 89686,
+        "name": "Tyrod Taylor",
+        "team": "GB",
+        "position": "QB",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 779,
+          "passTDs": 5,
+          "passInt": 5,
+          "rushYds": 143,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 71269,
+        "name": "Malik Willis",
+        "team": "MIA",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 422,
+          "passTDs": 3,
+          "passInt": 0,
+          "rushYds": 123,
+          "rushTDs": 2,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 60703,
+        "name": "Russell Wilson",
+        "team": "FA",
+        "position": "QB",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 831,
+          "passTDs": 3,
+          "passInt": 3,
+          "rushYds": 106,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 79230,
+        "name": "Jake Browning",
+        "team": "TB",
+        "position": "QB",
+        "gamesPlayed": 11,
+        "stats": {
+          "passYds": 771,
+          "passTDs": 6,
+          "passInt": 8,
+          "rushYds": 39,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 34311,
+        "name": "Tyler Huntley",
+        "team": "BAL",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 426,
+          "passTDs": 2,
+          "passInt": 0,
+          "rushYds": 151,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 17632,
+        "name": "Jameis Winston",
+        "team": "NYG",
+        "position": "QB",
+        "gamesPlayed": 7,
+        "stats": {
+          "passYds": 567,
+          "passTDs": 2,
+          "passInt": 2,
+          "rushYds": 23,
+          "rushTDs": 1,
+          "rec": 1,
+          "recYds": 33,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 47699,
+        "name": "Riley Leonard",
+        "team": "IND",
+        "position": "QB",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 415,
+          "passTDs": 2,
+          "passInt": 3,
+          "rushYds": 27,
+          "rushTDs": 2,
+          "rec": 0,
+          "recYds": -3,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
         "id": 86336,
         "name": "Christian McCaffrey",
         "team": "SF",
@@ -1839,6 +2127,546 @@
         }
       },
       {
+        "id": 12860,
+        "name": "Audric Estime",
+        "team": "NO",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 198,
+          "rushTDs": 1,
+          "rec": 12,
+          "recYds": 103,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 78693,
+        "name": "Malik Davis",
+        "team": "DAL",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 250,
+          "rushTDs": 2,
+          "rec": 2,
+          "recYds": 16,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 89659,
+        "name": "Zavier Scott",
+        "team": "MIN",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 114,
+          "rushTDs": 0,
+          "rec": 14,
+          "recYds": 98,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 33713,
+        "name": "Kendre Miller",
+        "team": "NO",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 193,
+          "rushTDs": 1,
+          "rec": 5,
+          "recYds": 30,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71205,
+        "name": "Jerome Ford",
+        "team": "WAS",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 73,
+          "rushTDs": 0,
+          "rec": 26,
+          "recYds": 103,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12653,
+        "name": "Hunter Luepke",
+        "team": "DAL",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 71,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 109,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 17800,
+        "name": "Ameer Abdullah",
+        "team": "JAX",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 60,
+          "rushTDs": 1,
+          "rec": 16,
+          "recYds": 99,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 11639,
+        "name": "Jaleel McLaughlin",
+        "team": "DEN",
+        "position": "RB",
+        "gamesPlayed": 8,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 187,
+          "rushTDs": 1,
+          "rec": 4,
+          "recYds": 27,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87428,
+        "name": "James Conner",
+        "team": "ARI",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 95,
+          "rushTDs": 1,
+          "rec": 8,
+          "recYds": 38,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12893,
+        "name": "Trey Benson",
+        "team": "ARI",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 160,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 64,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 10673,
+        "name": "Chris Brooks",
+        "team": "GB",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 106,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 91,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12892,
+        "name": "Jawhar Jordan",
+        "team": "HOU",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 193,
+          "rushTDs": 0,
+          "rec": 7,
+          "recYds": 34,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 72167,
+        "name": "Tyler Badie",
+        "team": "DEN",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 23,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 141,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 79362,
+        "name": "Miles Sanders",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 117,
+          "rushTDs": 1,
+          "rec": 8,
+          "recYds": 30,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 39595,
+        "name": "Jaret Patterson",
+        "team": "LAC",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 159,
+          "rushTDs": 1,
+          "rec": 3,
+          "recYds": 8,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 22123,
+        "name": "Raheem Mostert",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 104,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 70,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13897,
+        "name": "Dare Ogunbowale",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 25,
+          "rushTDs": 1,
+          "rec": 10,
+          "recYds": 76,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 81443,
+        "name": "Andrew Beck",
+        "team": "NYJ",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 5,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 45,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47640,
+        "name": "Jaydon Blue",
+        "team": "DAL",
+        "position": "RB",
+        "gamesPlayed": 5,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 129,
+          "rushTDs": 1,
+          "rec": 1,
+          "recYds": 5,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 48693,
+        "name": "LeQuint Allen",
+        "team": "JAX",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 94,
+          "rushTDs": 0,
+          "rec": 10,
+          "recYds": 54,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12851,
+        "name": "Rasheen Ali",
+        "team": "BAL",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 24,
+          "rushTDs": 0,
+          "rec": 9,
+          "recYds": 68,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47701,
+        "name": "Raheim Sanders",
+        "team": "CLE",
+        "position": "RB",
+        "gamesPlayed": 7,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 92,
+          "rushTDs": 1,
+          "rec": 3,
+          "recYds": 21,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88045,
+        "name": "Antonio Gibson",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 106,
+          "rushTDs": 1,
+          "rec": 2,
+          "recYds": 6,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 12857,
+        "name": "Braelon Allen",
+        "team": "NYJ",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 76,
+          "rushTDs": 1,
+          "rec": 2,
+          "recYds": 17,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 43252,
+        "name": "George Holani",
+        "team": "SEA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 73,
+          "rushTDs": 1,
+          "rec": 2,
+          "recYds": 15,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 12858,
+        "name": "Will Shipley",
+        "team": "PHI",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 49,
+          "rushTDs": 0,
+          "rec": 9,
+          "recYds": 56,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 47503,
+        "name": "Terrell Jennings",
+        "team": "NE",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 73,
+          "rushTDs": 1,
+          "rec": 1,
+          "recYds": 9,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 59109,
+        "name": "C.J. Ham",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 5,
+          "rushTDs": 2,
+          "rec": 2,
+          "recYds": 11,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 79332,
+        "name": "Trayveon Williams",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 36,
+          "rushTDs": 0,
+          "rec": 8,
+          "recYds": 55,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 70052,
+        "name": "Adam Prentice",
+        "team": "DEN",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 44,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 53,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
         "id": 30574,
         "name": "Puka Nacua",
         "team": "LAR",
@@ -2039,7 +2867,7 @@
       {
         "id": 51056,
         "name": "A.J. Brown",
-        "team": "PHI",
+        "team": "NE",
         "position": "WR",
         "gamesPlayed": 16,
         "stats": {
@@ -3371,7 +4199,7 @@
       {
         "id": 86365,
         "name": "JuJu Smith-Schuster",
-        "team": "FA",
+        "team": "NYG",
         "position": "WR",
         "gamesPlayed": 17,
         "stats": {
@@ -3455,6 +4283,726 @@
           "rec": 33,
           "recYds": 274,
           "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 48662,
+        "name": "Jaylin Noel",
+        "team": "HOU",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 12,
+          "rushTDs": 0,
+          "rec": 26,
+          "recYds": 292,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 48566,
+        "name": "Tre' Harris",
+        "team": "LAC",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 10,
+          "rushTDs": 0,
+          "rec": 30,
+          "recYds": 324,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 15990,
+        "name": "Devaughn Vele",
+        "team": "NO",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 25,
+          "recYds": 293,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47772,
+        "name": "Tory Horton",
+        "team": "SEA",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 161,
+          "recTDs": 5,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 17861,
+        "name": "Tyler Lockett",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 32,
+          "recYds": 291,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 55730,
+        "name": "Cedric Tillman",
+        "team": "CLE",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 21,
+          "recYds": 270,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 56933,
+        "name": "Kalif Raymond",
+        "team": "CHI",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 19,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 289,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13810,
+        "name": "Malik Nabers",
+        "team": "NYG",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 271,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 48560,
+        "name": "Isaiah Bond",
+        "team": "CLE",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 29,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 338,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52744,
+        "name": "Demarcus Robinson",
+        "team": "SF",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 6,
+          "rushTDs": 0,
+          "rec": 22,
+          "recYds": 276,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 89666,
+        "name": "Tim Patrick",
+        "team": "NYJ",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 15,
+          "recYds": 187,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 48696,
+        "name": "Kyle Williams",
+        "team": "NE",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 3,
+          "rushTDs": 0,
+          "rec": 10,
+          "recYds": 209,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 16199,
+        "name": "Christian Kirk",
+        "team": "SF",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 28,
+          "recYds": 239,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 39721,
+        "name": "Rashod Bateman",
+        "team": "BAL",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 224,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13874,
+        "name": "Luke McCaffrey",
+        "team": "WAS",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 11,
+          "recYds": 203,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53630,
+        "name": "Tyreek Hill",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 21,
+          "recYds": 265,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 39760,
+        "name": "Dyami Brown",
+        "team": "WAS",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 30,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 227,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 40809,
+        "name": "Joshua Palmer",
+        "team": "BUF",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 22,
+          "recYds": 303,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71112,
+        "name": "Jahan Dotson",
+        "team": "ATL",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 262,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 79365,
+        "name": "David Sills",
+        "team": "TB",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 191,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 15752,
+        "name": "Brandin Cooks",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 279,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88470,
+        "name": "Xavier Smith",
+        "team": "LAR",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 303,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53484,
+        "name": "Jayden Reed",
+        "team": "GB",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 28,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 207,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 16299,
+        "name": "Calvin Ridley",
+        "team": "TEN",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 17,
+          "recYds": 303,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 10680,
+        "name": "Tyrell Shavers",
+        "team": "BUF",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 15,
+          "recYds": 245,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13717,
+        "name": "Isaiah Williams",
+        "team": "NYJ",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 34,
+          "rushTDs": 0,
+          "rec": 26,
+          "recYds": 193,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 71110,
+        "name": "Jalen Tolbert",
+        "team": "MIA",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 203,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13784,
+        "name": "Devontez Walker",
+        "team": "BAL",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 136,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13808,
+        "name": "Roman Wilson",
+        "team": "PIT",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 166,
+          "recTDs": 2,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 52681,
+        "name": "Chris Moore",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 9,
+          "rushTDs": 0,
+          "rec": 11,
+          "recYds": 207,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47735,
+        "name": "Jack Bech",
+        "team": "LV",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 224,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88106,
+        "name": "Tyler Johnson",
+        "team": "DAL",
+        "position": "WR",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 197,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 49779,
+        "name": "Jaylin Lane",
+        "team": "WAS",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 7,
+          "rushTDs": 0,
+          "rec": 16,
+          "recYds": 225,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 52141,
+        "name": "Hunter Renfrow",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 6,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 15,
+          "recYds": 89,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 39689,
+        "name": "Tutu Atwell",
+        "team": "MIA",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 192,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 65229,
+        "name": "Adam Thielen",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 186,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52078,
+        "name": "Lil'Jordan Humphrey",
+        "team": "DEN",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 156,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87381,
+        "name": "Mitch Tinsley",
+        "team": "CIN",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 8,
+          "recYds": 116,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13778,
+        "name": "Jordan Whittington",
+        "team": "LAR",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 12,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 171,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 72159,
+        "name": "Kevin Austin",
+        "team": "NO",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 140,
+          "recTDs": 1,
           "fumblesLost": 0
         }
       },
@@ -4035,6 +5583,420 @@
         }
       },
       {
+        "id": 48559,
+        "name": "Gunnar Helm",
+        "team": "TEN",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 44,
+          "recYds": 357,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87458,
+        "name": "Jonnu Smith",
+        "team": "FA",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 70,
+          "rushTDs": 1,
+          "rec": 38,
+          "recYds": 222,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47773,
+        "name": "Mason Taylor",
+        "team": "NYJ",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 44,
+          "recYds": 369,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 51054,
+        "name": "Noah Fant",
+        "team": "NO",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 34,
+          "recYds": 288,
+          "recTDs": 3,
+          "fumblesLost": 3
+        }
+      },
+      {
+        "id": 86891,
+        "name": "Cole Kmet",
+        "team": "CHI",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 30,
+          "recYds": 347,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52706,
+        "name": "Tyler Higbee",
+        "team": "LAR",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 25,
+          "recYds": 281,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 30514,
+        "name": "Darnell Washington",
+        "team": "PIT",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 31,
+          "recYds": 364,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 16334,
+        "name": "Mike Gesicki",
+        "team": "CIN",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 28,
+          "recYds": 307,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 30540,
+        "name": "Michael Mayer",
+        "team": "LV",
+        "position": "TE",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 35,
+          "recYds": 328,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71303,
+        "name": "Greg Dulcich",
+        "team": "MIA",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": -7,
+          "rushTDs": 0,
+          "rec": 26,
+          "recYds": 335,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 53453,
+        "name": "Davis Allen",
+        "team": "LAR",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 208,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 40879,
+        "name": "Tommy Tremble",
+        "team": "CAR",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 27,
+          "recYds": 249,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71170,
+        "name": "Isaiah Likely",
+        "team": "NYG",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 27,
+          "recYds": 307,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 72230,
+        "name": "Daniel Bellinger",
+        "team": "TEN",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 286,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52476,
+        "name": "Austin Hooper",
+        "team": "ATL",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 21,
+          "recYds": 263,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52205,
+        "name": "Josh Oliver",
+        "team": "MIN",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 15,
+          "recYds": 160,
+          "recTDs": 4,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47739,
+        "name": "Terrance Ferguson",
+        "team": "LAR",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 11,
+          "recYds": 231,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53516,
+        "name": "Elijah Higgins",
+        "team": "ARI",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 30,
+          "recYds": 301,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 49819,
+        "name": "Jackson Hawes",
+        "team": "BUF",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 16,
+          "recYds": 187,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13709,
+        "name": "Ja'Tavion Sanders",
+        "team": "CAR",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 29,
+          "recYds": 190,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 47702,
+        "name": "Mitchell Evans",
+        "team": "CAR",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 1,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 171,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 46535,
+        "name": "Tanner Hudson",
+        "team": "CIN",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 168,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 30539,
+        "name": "Luke Musgrave",
+        "team": "GB",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 252,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
         "id": 22121,
         "name": "Jason Myers",
         "team": "SEA",
@@ -4272,6 +6234,246 @@
           "fgMissed": 0,
           "patMade": 39,
           "patMissed": 0
+        }
+      },
+      {
+        "id": 14425,
+        "name": "Cairo Santos",
+        "team": "CHI",
+        "position": "K",
+        "gamesPlayed": 15,
+        "stats": {
+          "fgMade0to39": 11,
+          "fgMade40to49": 10,
+          "fgMade50plus": 4,
+          "fgMissed": 0,
+          "patMade": 39,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 43913,
+        "name": "Riley Patterson",
+        "team": "MIA",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 13,
+          "fgMade40to49": 11,
+          "fgMade50plus": 3,
+          "fgMissed": 0,
+          "patMade": 34,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 61209,
+        "name": "Chad Ryland",
+        "team": "ARI",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 12,
+          "fgMade40to49": 7,
+          "fgMade50plus": 6,
+          "fgMissed": 0,
+          "patMade": 36,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 87348,
+        "name": "Blake Grupe",
+        "team": "IND",
+        "position": "K",
+        "gamesPlayed": 16,
+        "stats": {
+          "fgMade0to39": 19,
+          "fgMade40to49": 3,
+          "fgMade50plus": 7,
+          "fgMissed": 0,
+          "patMade": 25,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 87600,
+        "name": "Nick Folk",
+        "team": "ATL",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 14,
+          "fgMade40to49": 7,
+          "fgMade50plus": 7,
+          "fgMissed": 0,
+          "patMade": 22,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 87624,
+        "name": "Jake Elliott",
+        "team": "PHI",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 9,
+          "fgMade40to49": 7,
+          "fgMade50plus": 4,
+          "fgMissed": 0,
+          "patMade": 41,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 62880,
+        "name": "Brandon McManus",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 14,
+        "stats": {
+          "fgMade0to39": 18,
+          "fgMade40to49": 3,
+          "fgMade50plus": 3,
+          "fgMissed": 0,
+          "patMade": 32,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 89552,
+        "name": "Andre Szmyt",
+        "team": "CLE",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 14,
+          "fgMade40to49": 5,
+          "fgMade50plus": 5,
+          "fgMissed": 0,
+          "patMade": 25,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 53112,
+        "name": "Ryan Fitzgerald",
+        "team": "CAR",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 14,
+          "fgMade40to49": 8,
+          "fgMade50plus": 2,
+          "fgMissed": 0,
+          "patMade": 27,
+          "patMissed": 3
+        }
+      },
+      {
+        "id": 31581,
+        "name": "Matt Prater",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 15,
+        "stats": {
+          "fgMade0to39": 11,
+          "fgMade40to49": 6,
+          "fgMade50plus": 1,
+          "fgMissed": 0,
+          "patMade": 46,
+          "patMissed": 3
+        }
+      },
+      {
+        "id": 42472,
+        "name": "Daniel Carlson",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 11,
+          "fgMade40to49": 6,
+          "fgMade50plus": 5,
+          "fgMissed": 0,
+          "patMade": 21,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 88513,
+        "name": "Zane Gonzalez",
+        "team": "MIA",
+        "position": "K",
+        "gamesPlayed": 9,
+        "stats": {
+          "fgMade0to39": 4,
+          "fgMade40to49": 8,
+          "fgMade50plus": 7,
+          "fgMissed": 0,
+          "patMade": 17,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 78374,
+        "name": "Matt Gay",
+        "team": "LV",
+        "position": "K",
+        "gamesPlayed": 12,
+        "stats": {
+          "fgMade0to39": 7,
+          "fgMade40to49": 6,
+          "fgMade50plus": 4,
+          "fgMissed": 0,
+          "patMade": 26,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 43150,
+        "name": "Harrison Mevis",
+        "team": "LAR",
+        "position": "K",
+        "gamesPlayed": 11,
+        "stats": {
+          "fgMade0to39": 6,
+          "fgMade40to49": 5,
+          "fgMade50plus": 1,
+          "fgMissed": 0,
+          "patMade": 39,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 61145,
+        "name": "Jake Moody",
+        "team": "WAS",
+        "position": "K",
+        "gamesPlayed": 16,
+        "stats": {
+          "fgMade0to39": 12,
+          "fgMade40to49": 5,
+          "fgMade50plus": 2,
+          "fgMissed": 0,
+          "patMade": 15,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 44447,
+        "name": "Michael Badgley",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 9,
+        "stats": {
+          "fgMade0to39": 4,
+          "fgMade40to49": 5,
+          "fgMade50plus": 2,
+          "fgMissed": 0,
+          "patMade": 20,
+          "patMissed": 5
         }
       },
       {
@@ -5297,6 +7499,294 @@
           "passInt": 8,
           "rushYds": 54,
           "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 11913,
+        "name": "Cooper Rush",
+        "team": "FA",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1844,
+          "passTDs": 12,
+          "passInt": 5,
+          "rushYds": 18,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 3
+        }
+      },
+      {
+        "id": 31583,
+        "name": "Joe Flacco",
+        "team": "CIN",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1761,
+          "passTDs": 12,
+          "passInt": 7,
+          "rushYds": 26,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 4
+        }
+      },
+      {
+        "id": 78141,
+        "name": "Gardner Minshew",
+        "team": "ARI",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 2013,
+          "passTDs": 9,
+          "passInt": 10,
+          "rushYds": 58,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 4
+        }
+      },
+      {
+        "id": 39562,
+        "name": "Mac Jones",
+        "team": "SF",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1672,
+          "passTDs": 8,
+          "passInt": 8,
+          "rushYds": 92,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 60154,
+        "name": "Aidan O'Connell",
+        "team": "LV",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 1612,
+          "passTDs": 8,
+          "passInt": 4,
+          "rushYds": 30,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 16267,
+        "name": "Mason Rudolph",
+        "team": "PIT",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1530,
+          "passTDs": 9,
+          "passInt": 9,
+          "rushYds": 106,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 51051,
+        "name": "Drew Lock",
+        "team": "SEA",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 1071,
+          "passTDs": 6,
+          "passInt": 5,
+          "rushYds": 133,
+          "rushTDs": 2,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 86273,
+        "name": "Deshaun Watson",
+        "team": "CLE",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 1148,
+          "passTDs": 5,
+          "passInt": 3,
+          "rushYds": 148,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 3
+        }
+      },
+      {
+        "id": 12820,
+        "name": "Spencer Rattler",
+        "team": "NO",
+        "position": "QB",
+        "gamesPlayed": 8,
+        "stats": {
+          "passYds": 1317,
+          "passTDs": 4,
+          "passInt": 5,
+          "rushYds": 146,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 3
+        }
+      },
+      {
+        "id": 34311,
+        "name": "Tyler Huntley",
+        "team": "BAL",
+        "position": "QB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 829,
+          "passTDs": 3,
+          "passInt": 3,
+          "rushYds": 135,
+          "rushTDs": 2,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 89688,
+        "name": "Andy Dalton",
+        "team": "PHI",
+        "position": "QB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 989,
+          "passTDs": 7,
+          "passInt": 6,
+          "rushYds": 34,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71269,
+        "name": "Malik Willis",
+        "team": "MIA",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 550,
+          "passTDs": 3,
+          "passInt": 0,
+          "rushYds": 138,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 17633,
+        "name": "Marcus Mariota",
+        "team": "WAS",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 364,
+          "passTDs": 4,
+          "passInt": 0,
+          "rushYds": 92,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52646,
+        "name": "Jacoby Brissett",
+        "team": "ARI",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 826,
+          "passTDs": 2,
+          "passInt": 1,
+          "rushYds": 62,
+          "rushTDs": 0,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 12794,
+        "name": "Michael Penix",
+        "team": "ATL",
+        "position": "QB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 775,
+          "passTDs": 3,
+          "passInt": 3,
+          "rushYds": 11,
+          "rushTDs": 1,
+          "rec": 0,
+          "recYds": 0,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87562,
+        "name": "Joshua Dobbs",
+        "team": "FA",
+        "position": "QB",
+        "gamesPlayed": 5,
+        "stats": {
+          "passYds": 361,
+          "passTDs": 2,
+          "passInt": 2,
+          "rushYds": 24,
+          "rushTDs": 2,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
@@ -6564,6 +9054,546 @@
         }
       },
       {
+        "id": 86336,
+        "name": "Christian McCaffrey",
+        "team": "SF",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 202,
+          "rushTDs": 0,
+          "rec": 15,
+          "recYds": 146,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 12852,
+        "name": "Isaiah Davis",
+        "team": "NYJ",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 174,
+          "rushTDs": 1,
+          "rec": 9,
+          "recYds": 75,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 72166,
+        "name": "Tyler Goodson",
+        "team": "ATL",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 153,
+          "rushTDs": 1,
+          "rec": 11,
+          "recYds": 61,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 10673,
+        "name": "Chris Brooks",
+        "team": "GB",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 183,
+          "rushTDs": 1,
+          "rec": 11,
+          "recYds": 69,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 63971,
+        "name": "Cordarrelle Patterson",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 135,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 80,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 71139,
+        "name": "Hassan Haskins",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 89,
+          "rushTDs": 2,
+          "rec": 3,
+          "recYds": 49,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 87463,
+        "name": "Jamaal Williams",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 164,
+          "rushTDs": 1,
+          "rec": 9,
+          "recYds": 57,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87356,
+        "name": "D'Onta Foreman",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 232,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 54,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 53458,
+        "name": "Chris Rodriguez",
+        "team": "JAX",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 173,
+          "rushTDs": 2,
+          "rec": 1,
+          "recYds": 12,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 40585,
+        "name": "Michael Carter",
+        "team": "TEN",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 131,
+          "rushTDs": 1,
+          "rec": 11,
+          "recYds": 57,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71178,
+        "name": "Zamir White",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 183,
+          "rushTDs": 1,
+          "rec": 6,
+          "recYds": 30,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 13848,
+        "name": "Kimani Vidal",
+        "team": "LAC",
+        "position": "RB",
+        "gamesPlayed": 10,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 155,
+          "rushTDs": 0,
+          "rec": 5,
+          "recYds": 62,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12890,
+        "name": "Blake Corum",
+        "team": "LAR",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 207,
+          "rushTDs": 0,
+          "rec": 7,
+          "recYds": 58,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 84942,
+        "name": "D'Ernest Johnson",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 143,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 96,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88109,
+        "name": "Patrick Taylor",
+        "team": "SF",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 183,
+          "rushTDs": 1,
+          "rec": 3,
+          "recYds": 25,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71109,
+        "name": "Pierre Strong",
+        "team": "GB",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 108,
+          "rushTDs": 0,
+          "rec": 14,
+          "recYds": 104,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13844,
+        "name": "Jaylen Wright",
+        "team": "MIA",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 249,
+          "rushTDs": 0,
+          "rec": 3,
+          "recYds": 8,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 33713,
+        "name": "Kendre Miller",
+        "team": "NO",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 148,
+          "rushTDs": 1,
+          "rec": 5,
+          "recYds": 33,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 40586,
+        "name": "Khalil Herbert",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 130,
+          "rushTDs": 1,
+          "rec": 10,
+          "recYds": 25,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 72258,
+        "name": "Ty Chandler",
+        "team": "NO",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 182,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 42,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12886,
+        "name": "Carson Steele",
+        "team": "PHI",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 183,
+          "rushTDs": 0,
+          "rec": 7,
+          "recYds": 26,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
+        "id": 18947,
+        "name": "Michael Burton",
+        "team": "CLE",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 8,
+          "rushTDs": 1,
+          "rec": 10,
+          "recYds": 65,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 72225,
+        "name": "Sincere McCormick",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 183,
+          "rushTDs": 0,
+          "rec": 6,
+          "recYds": 29,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88211,
+        "name": "JaMycal Hasty",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 69,
+          "rushTDs": 0,
+          "rec": 10,
+          "recYds": 59,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 79205,
+        "name": "Alec Ingold",
+        "team": "LAC",
+        "position": "RB",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 17,
+          "rushTDs": 1,
+          "rec": 11,
+          "recYds": 96,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 12653,
+        "name": "Hunter Luepke",
+        "team": "DAL",
+        "position": "RB",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 38,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 111,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53455,
+        "name": "Kenny McIntosh",
+        "team": "SEA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 172,
+          "rushTDs": 0,
+          "rec": 3,
+          "recYds": 22,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 10681,
+        "name": "Jordan Mims",
+        "team": "SF",
+        "position": "RB",
+        "gamesPlayed": 11,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 70,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 71,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 84815,
+        "name": "Craig Reynolds",
+        "team": "FA",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 139,
+          "rushTDs": 0,
+          "rec": 3,
+          "recYds": 40,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53485,
+        "name": "Eric Gray",
+        "team": "NYG",
+        "position": "RB",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 31,
+          "rushTDs": 0,
+          "rec": 10,
+          "recYds": 82,
+          "recTDs": 0,
+          "fumblesLost": 2
+        }
+      },
+      {
         "id": 39691,
         "name": "Ja'Marr Chase",
         "team": "CIN",
@@ -6872,7 +9902,7 @@
       {
         "id": 51056,
         "name": "A.J. Brown",
-        "team": "PHI",
+        "team": "NE",
         "position": "WR",
         "gamesPlayed": 13,
         "stats": {
@@ -8184,6 +11214,726 @@
         }
       },
       {
+        "id": 76752,
+        "name": "Rashid Shaheed",
+        "team": "SEA",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 29,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 349,
+          "recTDs": 3,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 71206,
+        "name": "Chris Olave",
+        "team": "NO",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 7,
+          "rushTDs": 0,
+          "rec": 32,
+          "recYds": 400,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 52474,
+        "name": "Sterling Shepard",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 69,
+          "rushTDs": 0,
+          "rec": 32,
+          "recYds": 334,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52545,
+        "name": "Tyler Boyd",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 3,
+          "rushTDs": 0,
+          "rec": 39,
+          "recYds": 390,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 16199,
+        "name": "Christian Kirk",
+        "team": "SF",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 27,
+          "recYds": 379,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 15752,
+        "name": "Brandin Cooks",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": -3,
+          "rushTDs": 0,
+          "rec": 26,
+          "recYds": 259,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 39760,
+        "name": "Dyami Brown",
+        "team": "WAS",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 26,
+          "rushTDs": 0,
+          "rec": 30,
+          "recYds": 308,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 13782,
+        "name": "Troy Franklin",
+        "team": "DEN",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 8,
+          "rushTDs": 0,
+          "rec": 28,
+          "recYds": 263,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53491,
+        "name": "Rashee Rice",
+        "team": "KC",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 1,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 288,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 45672,
+        "name": "Justin Watson",
+        "team": "HOU",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 22,
+          "recYds": 289,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 86987,
+        "name": "Van Jefferson",
+        "team": "WAS",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 276,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 10758,
+        "name": "Kendrick Bourne",
+        "team": "ARI",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 6,
+          "rushTDs": 0,
+          "rec": 28,
+          "recYds": 305,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52078,
+        "name": "Lil'Jordan Humphrey",
+        "team": "DEN",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 31,
+          "recYds": 293,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 86822,
+        "name": "Brandon Aiyuk",
+        "team": "SF",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 25,
+          "recYds": 374,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 86499,
+        "name": "Curtis Samuel",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 14,
+          "rushTDs": 0,
+          "rec": 31,
+          "recYds": 253,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88106,
+        "name": "Tyler Johnson",
+        "team": "DAL",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 26,
+          "recYds": 291,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 86439,
+        "name": "Mike Williams",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 18,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 21,
+          "recYds": 298,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 88043,
+        "name": "Gabe Davis",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 239,
+          "recTDs": 2,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 86365,
+        "name": "JuJu Smith-Schuster",
+        "team": "NYG",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 231,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13742,
+        "name": "Malik Washington",
+        "team": "MIA",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 25,
+          "rushTDs": 1,
+          "rec": 26,
+          "recYds": 223,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 71209,
+        "name": "John Metchie",
+        "team": "CAR",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 254,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13780,
+        "name": "Adonai Mitchell",
+        "team": "NYJ",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 24,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 6,
+          "rushTDs": 0,
+          "rec": 23,
+          "recYds": 312,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 17697,
+        "name": "Nelson Agholor",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 14,
+          "recYds": 231,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 56933,
+        "name": "Kalif Raymond",
+        "team": "CHI",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 17,
+          "recYds": 215,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13778,
+        "name": "Jordan Whittington",
+        "team": "LAR",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 12,
+          "rushTDs": 0,
+          "rec": 22,
+          "recYds": 293,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 44118,
+        "name": "DJ Turner",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 33,
+          "rushTDs": 1,
+          "rec": 16,
+          "recYds": 158,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 43295,
+        "name": "Cedrick Wilson",
+        "team": "DET",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 21,
+          "passTDs": 1,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 211,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 53519,
+        "name": "Derius Davis",
+        "team": "LAC",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 39,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 112,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71112,
+        "name": "Jahan Dotson",
+        "team": "ATL",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 13,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 216,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87554,
+        "name": "Josh Reynolds",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 194,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 39791,
+        "name": "Tylan Wallace",
+        "team": "CLE",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 11,
+          "recYds": 193,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 11598,
+        "name": "Ryan Miller",
+        "team": "NYG",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 128,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 61856,
+        "name": "Robert Woods",
+        "team": "FA",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 203,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 87278,
+        "name": "Jalen Brooks",
+        "team": "ARI",
+        "position": "WR",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 177,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 30573,
+        "name": "Trey Palmer",
+        "team": "NO",
+        "position": "WR",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 172,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52011,
+        "name": "Mecole Hardman",
+        "team": "BUF",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 62,
+          "rushTDs": 1,
+          "rec": 12,
+          "recYds": 90,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 89386,
+        "name": "Malik Heath",
+        "team": "ATL",
+        "position": "WR",
+        "gamesPlayed": 13,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 10,
+          "recYds": 97,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13751,
+        "name": "Ja'Lynn Polk",
+        "team": "NO",
+        "position": "WR",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 12,
+          "recYds": 87,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13874,
+        "name": "Luke McCaffrey",
+        "team": "WAS",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 18,
+          "recYds": 168,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53487,
+        "name": "Jonathan Mingo",
+        "team": "DAL",
+        "position": "WR",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 5,
+          "rushTDs": 0,
+          "rec": 17,
+          "recYds": 167,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
         "id": 13713,
         "name": "Brock Bowers",
         "team": "LV",
@@ -8760,6 +12510,420 @@
         }
       },
       {
+        "id": 86437,
+        "name": "Evan Engram",
+        "team": "DEN",
+        "position": "TE",
+        "gamesPlayed": 14,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 47,
+          "recYds": 365,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 51018,
+        "name": "T.J. Hockenson",
+        "team": "MIN",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 41,
+          "recYds": 455,
+          "recTDs": 0,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13712,
+        "name": "AJ Barner",
+        "team": "SEA",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 30,
+          "recYds": 245,
+          "recTDs": 4,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 13709,
+        "name": "Ja'Tavion Sanders",
+        "team": "CAR",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 33,
+          "recYds": 342,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52205,
+        "name": "Josh Oliver",
+        "team": "MIN",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 22,
+          "recYds": 258,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12924,
+        "name": "Theo Johnson",
+        "team": "NYG",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 29,
+          "recYds": 331,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87022,
+        "name": "Colby Parkinson",
+        "team": "LAR",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 30,
+          "recYds": 294,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 51977,
+        "name": "Dawson Knox",
+        "team": "BUF",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 22,
+          "recYds": 311,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 71308,
+        "name": "Grant Calcaterra",
+        "team": "PHI",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 24,
+          "recYds": 298,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 40879,
+        "name": "Tommy Tremble",
+        "team": "CAR",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 23,
+          "recYds": 234,
+          "recTDs": 2,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 53451,
+        "name": "Josh Whyle",
+        "team": "GB",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 28,
+          "recYds": 248,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 60182,
+        "name": "Luke Schoonmaker",
+        "team": "DAL",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 27,
+          "recYds": 241,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 52647,
+        "name": "Nick Vannett",
+        "team": "FA",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 17,
+          "recYds": 135,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 53516,
+        "name": "Elijah Higgins",
+        "team": "ARI",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 20,
+          "recYds": 172,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 87026,
+        "name": "Adam Trautman",
+        "team": "DEN",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 188,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 11633,
+        "name": "Nate Adkins",
+        "team": "DEN",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 14,
+          "recYds": 115,
+          "recTDs": 3,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 89537,
+        "name": "Johnny Mundt",
+        "team": "PHI",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 142,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 30514,
+        "name": "Darnell Washington",
+        "team": "PIT",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 200,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 46535,
+        "name": "Tanner Hudson",
+        "team": "CIN",
+        "position": "TE",
+        "gamesPlayed": 12,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 1,
+          "rushTDs": 0,
+          "rec": 19,
+          "recYds": 154,
+          "recTDs": 1,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 53489,
+        "name": "Payne Durham",
+        "team": "TB",
+        "position": "TE",
+        "gamesPlayed": 16,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 11,
+          "recYds": 115,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 75693,
+        "name": "Stone Smartt",
+        "team": "PHI",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 16,
+          "recYds": 208,
+          "recTDs": 0,
+          "fumblesLost": 1
+        }
+      },
+      {
+        "id": 43054,
+        "name": "Brock Wright",
+        "team": "DET",
+        "position": "TE",
+        "gamesPlayed": 17,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 13,
+          "recYds": 100,
+          "recTDs": 2,
+          "fumblesLost": 0
+        }
+      },
+      {
+        "id": 12926,
+        "name": "Cade Stover",
+        "team": "HOU",
+        "position": "TE",
+        "gamesPlayed": 15,
+        "stats": {
+          "passYds": 0,
+          "passTDs": 0,
+          "passInt": 0,
+          "rushYds": 0,
+          "rushTDs": 0,
+          "rec": 15,
+          "recYds": 133,
+          "recTDs": 1,
+          "fumblesLost": 0
+        }
+      },
+      {
         "id": 12722,
         "name": "Brandon Aubrey",
         "team": "DAL",
@@ -8822,7 +12986,7 @@
       {
         "id": 43301,
         "name": "Jason Sanders",
-        "team": "NYG",
+        "team": "NYJ",
         "position": "K",
         "gamesPlayed": 17,
         "stats": {
@@ -8972,7 +13136,7 @@
       {
         "id": 15071,
         "name": "Joshua Karty",
-        "team": "ARI",
+        "team": "FA",
         "position": "K",
         "gamesPlayed": 17,
         "stats": {
@@ -8997,6 +13161,246 @@
           "fgMissed": 0,
           "patMade": 31,
           "patMissed": 2
+        }
+      },
+      {
+        "id": 15097,
+        "name": "Will Reichard",
+        "team": "MIN",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 11,
+          "fgMade40to49": 5,
+          "fgMade50plus": 8,
+          "fgMissed": 0,
+          "patMade": 38,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 15068,
+        "name": "Cam Little",
+        "team": "JAX",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 14,
+          "fgMade40to49": 8,
+          "fgMade50plus": 5,
+          "fgMissed": 0,
+          "patMade": 27,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 61209,
+        "name": "Chad Ryland",
+        "team": "ARI",
+        "position": "K",
+        "gamesPlayed": 13,
+        "stats": {
+          "fgMade0to39": 17,
+          "fgMade40to49": 7,
+          "fgMade50plus": 4,
+          "fgMissed": 0,
+          "patMade": 26,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 12971,
+        "name": "Younghoe Koo",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 12,
+          "fgMade40to49": 7,
+          "fgMade50plus": 6,
+          "fgMissed": 0,
+          "patMade": 26,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 83626,
+        "name": "Joey Slye",
+        "team": "TEN",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 15,
+          "fgMade40to49": 5,
+          "fgMade50plus": 6,
+          "fgMissed": 0,
+          "patMade": 25,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 61145,
+        "name": "Jake Moody",
+        "team": "WAS",
+        "position": "K",
+        "gamesPlayed": 14,
+        "stats": {
+          "fgMade0to39": 14,
+          "fgMade40to49": 6,
+          "fgMade50plus": 4,
+          "fgMissed": 0,
+          "patMade": 32,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 80327,
+        "name": "Austin Seibert",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 14,
+        "stats": {
+          "fgMade0to39": 17,
+          "fgMade40to49": 8,
+          "fgMade50plus": 2,
+          "fgMissed": 0,
+          "patMade": 22,
+          "patMissed": 2
+        }
+      },
+      {
+        "id": 14425,
+        "name": "Cairo Santos",
+        "team": "CHI",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 8,
+          "fgMade40to49": 5,
+          "fgMade50plus": 8,
+          "fgMissed": 0,
+          "patMade": 25,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 87600,
+        "name": "Nick Folk",
+        "team": "ATL",
+        "position": "K",
+        "gamesPlayed": 14,
+        "stats": {
+          "fgMade0to39": 7,
+          "fgMade40to49": 8,
+          "fgMade50plus": 6,
+          "fgMissed": 0,
+          "patMade": 25,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 43532,
+        "name": "Eddy Pineiro",
+        "team": "SF",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 15,
+          "fgMade40to49": 6,
+          "fgMade50plus": 1,
+          "fgMissed": 0,
+          "patMade": 33,
+          "patMissed": 2
+        }
+      },
+      {
+        "id": 88484,
+        "name": "Harrison Butker",
+        "team": "KC",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 15,
+          "fgMade40to49": 4,
+          "fgMade50plus": 2,
+          "fgMissed": 0,
+          "patMade": 29,
+          "patMissed": 2
+        }
+      },
+      {
+        "id": 62880,
+        "name": "Brandon McManus",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 11,
+        "stats": {
+          "fgMade0to39": 14,
+          "fgMade40to49": 3,
+          "fgMade50plus": 3,
+          "fgMissed": 0,
+          "patMade": 30,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 42864,
+        "name": "Evan McPherson",
+        "team": "CIN",
+        "position": "K",
+        "gamesPlayed": 17,
+        "stats": {
+          "fgMade0to39": 10,
+          "fgMade40to49": 3,
+          "fgMade50plus": 3,
+          "fgMissed": 0,
+          "patMade": 37,
+          "patMissed": 1
+        }
+      },
+      {
+        "id": 61829,
+        "name": "Dustin Hopkins",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 16,
+        "stats": {
+          "fgMade0to39": 9,
+          "fgMade40to49": 5,
+          "fgMade50plus": 4,
+          "fgMissed": 0,
+          "patMade": 17,
+          "patMissed": 3
+        }
+      },
+      {
+        "id": 44581,
+        "name": "Greg Joseph",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 12,
+        "stats": {
+          "fgMade0to39": 10,
+          "fgMade40to49": 5,
+          "fgMade50plus": 1,
+          "fgMissed": 0,
+          "patMade": 11,
+          "patMissed": 0
+        }
+      },
+      {
+        "id": 87183,
+        "name": "Anders Carlson",
+        "team": "FA",
+        "position": "K",
+        "gamesPlayed": 8,
+        "stats": {
+          "fgMade0to39": 5,
+          "fgMade40to49": 5,
+          "fgMade50plus": 3,
+          "fgMissed": 0,
+          "patMade": 12,
+          "patMissed": 3
         }
       },
       {
