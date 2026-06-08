@@ -1238,7 +1238,7 @@ export default function TradeAnalyzer() {
       )}
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>Fantasy Trade Analyzer (NHL) — V3</h1>
+          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>NHL Trade Analyzer</h1>
           <ApiStatus
             status={dbStatus}
             playerCount={playerDb.length}

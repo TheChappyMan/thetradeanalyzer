@@ -1102,7 +1102,7 @@ export default function MlbTradeAnalyzer() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>Fantasy Trade Analyzer (MLB)</h1>
+          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>MLB Trade Analyzer</h1>
           <MlbApiStatus
             status={dbStatus}
             playerCount={playerDb.length}
