@@ -989,7 +989,7 @@ export default function MlbTradeAnalyzer() {
     if (!hasSend || !hasRecv || tradeRating === 0) return;
     const timer = setTimeout(() => {
       if (typeof window.gtag !== "function") return;
-      window.gtag("event", "trade_analyzed", {
+      window.gtag("event", "trade_analyzed_MLB", {
         sport: "mlb",
         user_tier: tier,
         is_logged_in: !!user,

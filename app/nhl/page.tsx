@@ -1113,7 +1113,7 @@ export default function TradeAnalyzer() {
     if (!hasSend || !hasRecv || tradeRating === 0) return;
     const timer = setTimeout(() => {
       if (typeof window.gtag !== "function") return;
-      window.gtag("event", "trade_analyzed", {
+      window.gtag("event", "trade_analyzed_NHL", {
         sport: "nhl",
         user_tier: tier,
         is_logged_in: !!user,
