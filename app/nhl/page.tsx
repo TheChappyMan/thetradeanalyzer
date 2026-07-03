@@ -169,6 +169,15 @@ function asString(v: unknown): string {
   return typeof v === "string" ? v : "";
 }
 
+// The NHL stats API reports wings as single-letter codes ("L"/"R").
+// Everything downstream (POSITION_SLOT_MAP, the eligible-position
+// checkboxes, the auto-W fallback) expects "LW"/"RW".
+function normalizePositionCode(code: string): string {
+  if (code === "L") return "LW";
+  if (code === "R") return "RW";
+  return code;
+}
+
 function buildPlayerDatabase(args: {
   summary: Record<string, unknown>[];
   realtime: Record<string, unknown>[];
@@ -188,7 +197,7 @@ function buildPlayerDatabase(args: {
       id,
       name: asString(s.skaterFullName),
       team: asString(s.teamAbbrevs),
-      position: asString(s.positionCode),
+      position: normalizePositionCode(asString(s.positionCode)),
       isGoalie: false,
       gamesPlayed: asNumber(s.gamesPlayed),
       stats: {
