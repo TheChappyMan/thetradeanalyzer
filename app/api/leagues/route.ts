@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server'
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
+import { getUserTier, isEffectivelyTier2 } from '@/lib/auth'
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
 
 async function getUserId(): Promise<string | null> {
   const { userId } = await auth()
   return userId
-}
-
-async function getTier(): Promise<string | undefined> {
-  const user = await currentUser()
-  return user?.publicMetadata?.tier as string | undefined
 }
 
 // ── GET /api/leagues ───────────────────────────────────────────────────────
@@ -159,8 +155,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const tier = await getTier()
-  if (tier !== 'tier2') {
+  // getUserTier() includes the admin override and treats tier3 as ≥ tier2
+  const tier = await getUserTier()
+  if (!isEffectivelyTier2(tier)) {
     return NextResponse.json(
       { error: 'Tier 2 subscription required' },
       { status: 403 }

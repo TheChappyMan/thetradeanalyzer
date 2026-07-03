@@ -16,6 +16,11 @@ import { getCommissionerGroup, getGroupSeats, sendInviteEmail } from '@/lib/comm
 
 const MAX_SEATS = 13  // commissioner + 13 managers = 14 total
 
+// Rate limit: at most 5 invites per group per hour. Counted from the DB
+// (including removed seats) so deleting a seat doesn't reset the window.
+const INVITE_LIMIT = 5
+const INVITE_WINDOW_MS = 60 * 60 * 1000
+
 export async function POST(request: Request) {
   // ── Auth ────────────────────────────────────────────────────
   const { userId } = await auth()
@@ -43,6 +48,21 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: 'No active commissioner group found — please contact support' },
       { status: 403 }
+    )
+  }
+
+  // ── Invite rate limit ───────────────────────────────────────
+  const windowStart = new Date(Date.now() - INVITE_WINDOW_MS).toISOString()
+  const { count: recentInvites } = await supabase
+    .from('commissioner_seats')
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', group.id)
+    .gte('invited_at', windowStart)
+
+  if ((recentInvites ?? 0) >= INVITE_LIMIT) {
+    return NextResponse.json(
+      { error: 'Too many invites — please wait an hour before inviting more managers' },
+      { status: 429 }
     )
   }
 

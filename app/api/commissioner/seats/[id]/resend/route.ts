@@ -12,6 +12,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
 import { getCommissionerGroup } from '@/lib/commissioner'
 import { sendReinviteEmail } from '@/lib/email'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(
   _request: Request,
@@ -28,6 +29,19 @@ export async function POST(
   }
 
   const { id: seatId } = await params
+
+  // ── Rate limits ─────────────────────────────────────────────
+  // 1 resend per seat per 5 minutes, and 10 resends per user per hour.
+  // In-memory (per server instance) — enough to stop inbox flooding.
+  if (
+    !rateLimit(`resend:seat:${seatId}`, 1, 5 * 60 * 1000) ||
+    !rateLimit(`resend:user:${userId}`, 10, 60 * 60 * 1000)
+  ) {
+    return NextResponse.json(
+      { error: 'Too many resend requests — please wait a few minutes' },
+      { status: 429 }
+    )
+  }
 
   // ── Verify seat ownership ───────────────────────────────────
   const group = await getCommissionerGroup(userId)

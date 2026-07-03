@@ -74,6 +74,15 @@ export async function GET(request: Request) {
   const filterDateFrom = searchParams.get('dateFrom')
   const filterDateTo   = searchParams.get('dateTo')
 
+  // memberId must belong to this commissioner's group — otherwise a tier3
+  // user could read trades of arbitrary users by guessing their IDs.
+  if (filterMember && !memberIds.includes(filterMember)) {
+    return NextResponse.json(
+      { error: 'Member is not part of your commissioner group' },
+      { status: 403 }
+    )
+  }
+
   // Target user IDs after optional member filter
   const targetIds = filterMember ? [filterMember] : memberIds
 
