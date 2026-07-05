@@ -8,7 +8,7 @@
  */
 
 import { useState, useTransition } from "react";
-import type { ReferralPayout }     from "./page";
+import type { ReferralPayout, FeedbackRow, FeedbackStats } from "./page";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -220,16 +220,145 @@ function PayoutTable({
   );
 }
 
+// ── Section 4 — Accuracy feedback ──────────────────────────────────────────
+
+const SPORT_LABELS: Record<string, string> = {
+  nhl: "NHL", nfl: "NFL", mlb: "MLB", overall: "Overall",
+};
+
+function ratingColor(avg: number): string {
+  if (avg >= 7.5) return "var(--color-primary)";
+  if (avg >= 5)   return "var(--color-accent)";
+  return "var(--color-danger)";
+}
+
+function FeedbackSection({
+  feedback,
+  stats,
+}: {
+  feedback: FeedbackRow[];
+  stats:    FeedbackStats[];
+}) {
+  const [sportFilter, setSportFilter] = useState<string>("all");
+
+  const filtered = sportFilter === "all"
+    ? feedback
+    : feedback.filter((f) => f.sport === sportFilter);
+
+  // Keep a stable card order: sports first, overall last
+  const orderedStats = [...stats].sort((a, b) => {
+    if (a.sport === "overall") return 1;
+    if (b.sport === "overall") return -1;
+    return a.sport.localeCompare(b.sport);
+  });
+
+  return (
+    <section className="card mt-6">
+      <h2 className="text-base font-semibold mb-4" style={{ color: "var(--color-text)" }}>
+        Accuracy Feedback
+      </h2>
+
+      {feedback.length === 0 ? (
+        <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+          No feedback submitted yet.
+        </p>
+      ) : (
+        <>
+          {/* Average score cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            {orderedStats.map((s) => (
+              <div
+                key={s.sport}
+                className="rounded-xl border p-3 text-center"
+                style={{ borderColor: "var(--color-border)" }}
+              >
+                <div className="text-xs mb-1" style={{ color: "var(--color-muted)" }}>
+                  {SPORT_LABELS[s.sport] ?? s.sport.toUpperCase()}
+                </div>
+                <div className="text-2xl font-semibold" style={{ color: ratingColor(s.average) }}>
+                  {s.average.toFixed(1)}
+                </div>
+                <div className="text-[10px]" style={{ color: "var(--color-muted)" }}>
+                  {s.count} rating{s.count === 1 ? "" : "s"}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Sport filter */}
+          <div className="flex items-center gap-2 mb-3">
+            <label className="text-xs" style={{ color: "var(--color-muted)" }}>Filter:</label>
+            <select
+              value={sportFilter}
+              onChange={(e) => setSportFilter(e.target.value)}
+              className="border rounded-lg px-2 py-1 text-xs"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-input-bg)", color: "var(--color-text)" }}
+            >
+              <option value="all">All sports</option>
+              <option value="nhl">NHL</option>
+              <option value="nfl">NFL</option>
+              <option value="mlb">MLB</option>
+            </select>
+            <span className="text-xs" style={{ color: "var(--color-muted)" }}>
+              {filtered.length} submission{filtered.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {/* Individual submissions */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                  {["Date", "Sport", "Rating", "Comments", "User"].map((h) => (
+                    <th key={h} className="pb-2 pr-4 text-xs font-semibold" style={{ color: "var(--color-muted)" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((f) => (
+                  <tr key={f.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                    <td className="py-2 pr-4 text-xs whitespace-nowrap" style={{ color: "var(--color-muted)" }}>
+                      {fmt(f.created_at)}
+                    </td>
+                    <td className="py-2 pr-4 text-xs" style={{ color: "var(--color-text)" }}>
+                      {SPORT_LABELS[f.sport] ?? f.sport.toUpperCase()}
+                    </td>
+                    <td className="py-2 pr-4 text-xs font-semibold whitespace-nowrap" style={{ color: ratingColor(f.rating) }}>
+                      {f.rating} / 10
+                    </td>
+                    <td className="py-2 pr-4 text-xs max-w-md" style={{ color: "var(--color-text)" }}>
+                      {f.comments ?? <span style={{ color: "var(--color-muted)" }}>—</span>}
+                    </td>
+                    <td className="py-2 text-xs" style={{ color: "var(--color-muted)" }}>
+                      {f.user_id ? `${f.user_id.slice(0, 16)}…` : "Anonymous"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 // ── Main export ────────────────────────────────────────────────────────────
 
 export default function AdminClient({
   pendingPayouts: initialPending,
   paidPayouts,
   totalPending,
+  feedback,
+  feedbackStats,
 }: {
   pendingPayouts: ReferralPayout[];
   paidPayouts:    ReferralPayout[];
   totalPending:   number;
+  feedback:       FeedbackRow[];
+  feedbackStats:  FeedbackStats[];
 }) {
   const [pending, setPending] = useState(initialPending);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -285,6 +414,9 @@ export default function AdminClient({
           </div>
         )}
       </section>
+
+      {/* ── Section 4 ─────────────────────────────────────────────── */}
+      <FeedbackSection feedback={feedback} stats={feedbackStats} />
     </>
   );
 }

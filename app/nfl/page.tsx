@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
+import AccuracyRating from "@/app/components/AccuracyRating";
 import nflPlayersJson from "@/lib/nfl-players.json";
 import {
   DEFAULT_NFL_LEAGUE,
@@ -1061,6 +1062,8 @@ export default function NflTradeAnalyzer() {
             </div>
           )}
         </div>
+
+        <AccuracyRating sport="nfl" />
 
       </div>
     </>

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
+import AccuracyRating from "@/app/components/AccuracyRating";
 import {
   type HitterStatKey,
   type PitcherStatKey,
@@ -1492,6 +1493,8 @@ export default function MlbTradeAnalyzer() {
             </div>
           </div>
         )}
+
+        <AccuracyRating sport="mlb" />
 
       </div>
     </>

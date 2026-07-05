@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
+import AccuracyRating from "@/app/components/AccuracyRating";
 
 /**
  * Fantasy Trade Analyzer – V3 (Next.js 15 / TypeScript)
@@ -1618,6 +1619,8 @@ export default function TradeAnalyzer() {
           </div>
         )}
       </div>
+
+      <AccuracyRating sport="nhl" />
 
       </div>
     </>
