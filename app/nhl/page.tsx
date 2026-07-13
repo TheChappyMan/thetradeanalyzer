@@ -1243,7 +1243,14 @@ export default function TradeAnalyzer() {
     <>
       {!isPro && (
         <div className="upgrade-banner rounded-none px-6 py-2 text-xs mb-0">
-          💡 Save your settings and track trade history — upgrade to Pro
+          💡 Save your settings and track trade history —{" "}
+          <a
+            href="https://thetradeanalyzer.com/pricing/"
+            className="underline font-semibold"
+            style={{ color: "inherit" }}
+          >
+            upgrade to Pro
+          </a>
         </div>
       )}
       <div className="p-6 max-w-6xl mx-auto">
@@ -2099,7 +2106,7 @@ function UpgradeBanner() {
   return (
     <div className="upgrade-banner mb-5">
       <span>💡 Save your settings and trade history —</span>
-      <a href="#" className="link-primary font-medium">upgrade to Pro</a>
+      <a href="https://thetradeanalyzer.com/pricing/" className="link-primary font-medium">upgrade to Pro</a>
     </div>
   );
 }

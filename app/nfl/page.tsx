@@ -755,7 +755,14 @@ export default function NflTradeAnalyzer() {
     <>
       {!isPro && (
         <div className="upgrade-banner rounded-none px-6 py-2 text-xs mb-0">
-          💡 Save your settings and track trade history — upgrade to Pro
+          💡 Save your settings and track trade history —{" "}
+          <a
+            href="https://thetradeanalyzer.com/pricing/"
+            className="underline font-semibold"
+            style={{ color: "inherit" }}
+          >
+            upgrade to Pro
+          </a>
         </div>
       )}
       <div className="p-6 max-w-6xl mx-auto">
