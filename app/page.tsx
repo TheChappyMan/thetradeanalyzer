@@ -245,7 +245,17 @@ export default function Dashboard() {
           </div>
 
           <div className="upgrade-banner mb-4">
-            <span>💡 Upgrade to Pro to save your settings and track trade history</span>
+            <span>
+              💡{" "}
+              <a
+                href="https://thetradeanalyzer.com/pricing/"
+                className="underline font-semibold"
+                style={{ color: "inherit" }}
+              >
+                Upgrade to Pro
+              </a>{" "}
+              to save your settings and track trade history
+            </span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm">

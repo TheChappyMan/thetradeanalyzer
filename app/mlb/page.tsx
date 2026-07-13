@@ -1115,12 +1115,26 @@ export default function MlbTradeAnalyzer() {
         </div>
 
         {!isPro && (
-          <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
-            <strong style={{ color: "var(--color-text)" }}>To get started</strong>, fill out your league&apos;s settings below.
-            Once you have completed the league information, you can then start analyzing trades in your league.
-            Our analyzer requires this to ensure the score you get is truly accurate. Most trade analyzers use
-            rough estimates, which can be up to 50% off true value, depending on your league settings.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+            <div className="flex-1">
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                <strong style={{ color: "var(--color-text)" }}>To get started</strong>, fill out your league&apos;s settings below.
+                Once you have completed the league information, you can then start analyzing trades in your league.
+                Our analyzer requires this to ensure the score you get is truly accurate. Most trade analyzers use
+                rough estimates, which can be up to 50% off true value, depending on your league settings.
+              </p>
+              <p className="text-sm mt-2" style={{ color: "var(--color-muted)" }}>
+                If you&apos;d like to save your settings and gain access to trade history, upgrade your account
+                for as little as $2.08/month.
+              </p>
+            </div>
+            <a
+              href="https://thetradeanalyzer.com/pricing/"
+              className="btn-accent whitespace-nowrap self-start md:self-center"
+            >
+              Upgrade My Account
+            </a>
+          </div>
         )}
 
         {/* Tier 2: league selector */}
@@ -1529,8 +1543,8 @@ function MlbApiStatus({
   const activeYear = (dataMode === "thisTotal" || dataMode === "thisAvg")
     ? currentSeasonYear : priorSeasonYear;
   return (
-    <div className="text-xs text-right flex items-center gap-3" style={{ color: "var(--color-muted)" }}>
-      <div>
+    <div className="text-xs text-right flex items-center gap-3 shrink-0" style={{ color: "var(--color-muted)" }}>
+      <div className="whitespace-nowrap">
         <div>{playerCount} players loaded</div>
         {activeYear > 0 && <div>Season: {activeYear}</div>}
       </div>
