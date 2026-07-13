@@ -1121,6 +1121,14 @@ export default function MlbTradeAnalyzer() {
           />
         </div>
 
+        {isPro && (
+          <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+            Make sure you have your{" "}
+            <Link href="/settings" className="link-primary font-medium">league settings filled out</Link>{" "}
+            before analyzing trades to ensure accuracy.
+          </p>
+        )}
+
         {!isPro && (
           <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
             <div className="flex-1">
