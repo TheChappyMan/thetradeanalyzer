@@ -771,6 +771,15 @@ export default function NflTradeAnalyzer() {
           />
         </div>
 
+        {!isPro && (
+          <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+            <strong style={{ color: "var(--color-text)" }}>To get started</strong>, fill out your league&apos;s settings below.
+            Once you have completed the league information, you can then start analyzing trades in your league.
+            Our analyzer requires this to ensure the score you get is truly accurate. Most trade analyzers use
+            rough estimates, which can be up to 50% off true value, depending on your league settings.
+          </p>
+        )}
+
         {/* ── Tier 2 league selector ────────────────────────── */}
         {isTier2 && (
           <div className="flex items-center gap-3 mb-4">
