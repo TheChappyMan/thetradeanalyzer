@@ -5,12 +5,14 @@
  *
  * Stripe redirects here after a successful Payment Link checkout.
  *
- * Configure your Stripe Payment Links' "After payment" success URL to:
- *   https://app.thetradeanalyzer.com/payment-success?session_id={CHECKOUT_SESSION_ID}
+ * Configure each Stripe Payment Link's "After payment" success URL to
+ * (tier value must match the link's plan — see TIER_INFO below):
+ *   https://app.thetradeanalyzer.com/payment-success?tier=pro_annual&order_id={CHECKOUT_SESSION_ID}
  * ({CHECKOUT_SESSION_ID} is filled automatically by Stripe.)
  *
- * The session_id query param is accepted but not required — the page renders
- * correctly whether or not it is present.
+ * When both tier and order_id are present, a GA4 "purchase" conversion event
+ * fires once per order_id (deduplicated via sessionStorage). The page renders
+ * correctly whether or not the params are present.
  *
  * ── Signed-out visitor (most common path) ────────────────────────────────
  * Payment succeeded but no Clerk account exists yet.  Prompt the user to
@@ -30,6 +32,51 @@ import { useUser } from "@clerk/nextjs";
 const DASHBOARD_URL  = "https://app.thetradeanalyzer.com";
 const REDIRECT_SECS  = 3;
 const LOGO_URL       = "https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png";
+
+// ── GA4 purchase conversion ────────────────────────────────────────────────
+
+const TIER_INFO: Record<string, { value: number; name: string }> = {
+  pro_annual:      { value: 20,   name: "Pro Annual" },
+  pro_monthly:     { value: 2.99, name: "Pro Monthly" },
+  proplus_annual:  { value: 45,   name: "Pro Plus Annual" },
+  proplus_monthly: { value: 6.99, name: "Pro Plus Monthly" },
+  commissioner:    { value: 200,  name: "Commissioner Annual" },
+};
+
+const FIRED_KEY = "fta-ga4-purchase-fired"; // sessionStorage: JSON array of order_ids
+
+function firePurchaseEvent() {
+  const params  = new URLSearchParams(window.location.search);
+  const tier    = params.get("tier");
+  const orderId = params.get("order_id");
+  if (!tier || !orderId) return;
+
+  const info = TIER_INFO[tier];
+  if (!info) return;
+
+  // Dedupe: skip if this order_id already fired this session (page refresh)
+  let fired: string[] = [];
+  try { fired = JSON.parse(sessionStorage.getItem(FIRED_KEY) ?? "[]"); } catch {}
+  if (fired.includes(orderId)) return;
+
+  // The base gtag script loads afterInteractive and may not be ready when
+  // this effect runs — poll briefly instead of firing into the void.
+  let attempts = 0;
+  const send = () => {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "purchase", {
+        transaction_id: orderId,
+        value: info.value,
+        currency: "CAD",
+        items: [{ item_id: tier, item_name: info.name, price: info.value, quantity: 1 }],
+      });
+      try { sessionStorage.setItem(FIRED_KEY, JSON.stringify([...fired, orderId])); } catch {}
+      return;
+    }
+    if (attempts++ < 25) setTimeout(send, 200); // retry for up to ~5 s
+  };
+  send();
+}
 
 // ── Shared layout shell ────────────────────────────────────────────────────
 
@@ -166,6 +213,12 @@ function UpgradeConfirmation() {
 
 export default function PaymentSuccessPage() {
   const { user, isLoaded } = useUser();
+
+  // Fire the GA4 purchase conversion once on mount — independent of Clerk
+  // state so it isn't lost if the user closes the tab before Clerk resolves.
+  useEffect(() => {
+    firePurchaseEvent();
+  }, []);
 
   // While Clerk resolves, render the shell without content to avoid flash
   if (!isLoaded) {
