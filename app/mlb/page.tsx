@@ -1140,7 +1140,7 @@ export default function MlbTradeAnalyzer() {
               </p>
               <p className="text-sm mt-2" style={{ color: "var(--color-muted)" }}>
                 If you&apos;d like to save your settings and gain access to trade history, upgrade your account
-                for as little as $2.08/month.
+                for as little as $2.08/month. Just want to get rid of ads? Create a free account. It costs nothing!
               </p>
             </div>
             <a

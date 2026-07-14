@@ -78,7 +78,8 @@ export default function Dashboard() {
         <p>
           To get started: click any sport below, configure your league settings, and start
           analyzing trades. Free users can analyze trades right away with no account needed.
-          Sign up to save your league settings and track your trade history.
+          Sign up to save your league settings and track your trade history. Want to get rid
+          of ads? Create a free account! It costs nothing and gets rid of ads.
         </p>
       </div>
 
