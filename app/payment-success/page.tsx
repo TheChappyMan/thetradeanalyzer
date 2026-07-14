@@ -31,7 +31,7 @@ import { useUser } from "@clerk/nextjs";
 
 const DASHBOARD_URL  = "https://app.thetradeanalyzer.com";
 const REDIRECT_SECS  = 3;
-const LOGO_URL       = "https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png";
+const LOGO_URL       = "/logo-white.png";
 
 // ── GA4 purchase conversion ────────────────────────────────────────────────
 

@@ -77,7 +77,7 @@ function SignUpInner() {
       {/* Brand header */}
       <a href="/" className="mb-8 block">
         <img
-          src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png"
+          src="/logo-white.png"
           alt="The Trade Analyzer"
           className="h-10 mx-auto"
         />

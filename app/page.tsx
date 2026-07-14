@@ -46,8 +46,10 @@ export default function Dashboard() {
     });
   }, [isTier2, isSignedIn, isLoaded]);
 
-  if (!isLoaded) return <div className="p-6 max-w-6xl mx-auto" />;
-
+  // NOTE: no early return while Clerk loads — the h1, intro copy, and analyzer
+  // links below must be in the server-rendered HTML for search engines. During
+  // SSR (and until Clerk resolves) tier is "free", so the free view renders;
+  // only the auth-dependent CTAs are gated on isLoaded to avoid a flash.
   function handleLeagueClick(sport: string, leagueId: string, path: string) {
     setSelectedLeague(sport, leagueId);
     router.push(path);
@@ -215,7 +217,7 @@ export default function Dashboard() {
 
           <div className="mt-6 flex justify-center">
             <Link
-              href="https://thetradeanalyzer.com/pricing"
+              href="https://thetradeanalyzer.com/pricing/"
               className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
               style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
             >
@@ -245,44 +247,48 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="upgrade-banner mb-4">
-            <span>
-              💡{" "}
-              <a
-                href="https://thetradeanalyzer.com/pricing/"
-                className="underline font-semibold"
-                style={{ color: "inherit" }}
-              >
-                Upgrade to Pro
-              </a>{" "}
-              to save your settings and track trade history
-            </span>
-          </div>
+          {isLoaded && (
+            <>
+              <div className="upgrade-banner mb-4">
+                <span>
+                  💡{" "}
+                  <a
+                    href="https://thetradeanalyzer.com/pricing/"
+                    className="underline font-semibold"
+                    style={{ color: "inherit" }}
+                  >
+                    Upgrade to Pro
+                  </a>{" "}
+                  to save your settings and track trade history
+                </span>
+              </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-            {!isSignedIn ? (
-              <>
-                <SignInButton mode="modal">
-                  <button className="btn-secondary">Sign In</button>
-                </SignInButton>
-                <Link
-                  href="/sign-up"
-                  className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
-                  style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
-                >
-                  Sign Up Free
-                </Link>
-              </>
-            ) : (
-              <Link
-                href="https://thetradeanalyzer.com/pricing"
-                className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
-                style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
-              >
-                Upgrade Your Plan
-              </Link>
-            )}
-          </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+                {!isSignedIn ? (
+                  <>
+                    <SignInButton mode="modal">
+                      <button className="btn-secondary">Sign In</button>
+                    </SignInButton>
+                    <Link
+                      href="/sign-up"
+                      className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+                      style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+                    >
+                      Sign Up Free
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    href="https://thetradeanalyzer.com/pricing/"
+                    className="rounded-lg px-4 py-1.5 font-semibold text-sm transition-opacity hover:opacity-90 whitespace-nowrap"
+                    style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
+                  >
+                    Upgrade Your Plan
+                  </Link>
+                )}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

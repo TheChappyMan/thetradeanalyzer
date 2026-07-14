@@ -54,8 +54,10 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
         {/* Logo */}
         <Link href="/" className="nav-wordmark" onClick={() => setMenuOpen(false)}>
           <img
-            src="https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Header-Logo-White.png"
+            src="/logo-white.png"
             alt="The Trade Analyzer"
+            width={1516}
+            height={500}
           />
         </Link>
 
@@ -74,7 +76,7 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
           <div className="flex items-center gap-3">
             {showUpgrade && (
               <a
-                href="https://thetradeanalyzer.com/pricing"
+                href="https://thetradeanalyzer.com/pricing/"
                 className="rounded-lg px-3 py-1.5 text-sm font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
                 style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
               >
@@ -146,7 +148,7 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
           {showUpgrade && (
             <div className="pt-4">
               <a
-                href="https://thetradeanalyzer.com/pricing"
+                href="https://thetradeanalyzer.com/pricing/"
                 className="block w-full text-center rounded-lg px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}
                 onClick={() => setMenuOpen(false)}

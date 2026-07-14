@@ -749,8 +749,10 @@ export default function NflTradeAnalyzer() {
     [league.roster]
   );
 
-  if (!clerkLoaded) return <div className="p-6 max-w-6xl mx-auto" />;
-
+  // NOTE: no early return while Clerk loads — the h1 and intro copy must be in
+  // the server-rendered HTML for search engines (NHL and MLB already work this
+  // way). During SSR isPro is false, so the free view renders; Pro users get
+  // their view the moment Clerk resolves, same as on the other analyzers.
   return (
     <>
       {!isPro && (

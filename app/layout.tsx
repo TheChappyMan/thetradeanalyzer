@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import GlobalNav from "./components/GlobalNav";
+import GlobalFooter from "./components/GlobalFooter";
 import { LeagueProvider } from "@/lib/league-context";
 import { isAdminId } from "@/lib/auth";
 import Script from "next/script";
@@ -15,15 +16,25 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'The Trade Analyzer',
-  description: 'The most accurate trade analyzer for fantasy football, hockey, and baseball.',
+  metadataBase: new URL('https://app.thetradeanalyzer.com'),
+  title: {
+    default: 'Fantasy Trade Analyzer for NHL, NFL & MLB | The Trade Analyzer',
+    template: '%s | The Trade Analyzer',
+  },
+  description:
+    'Analyze fantasy hockey, football, and baseball trades using your league’s actual scoring settings. ' +
+    'Instant fairness grades for points, categories, keeper, and dynasty leagues — free, no account needed.',
+  alternates: {
+    canonical: '/',
+  },
   icons: {
-    icon: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/Favicon.png',
-    apple: 'https://thetradeanalyzer.com/wp-content/uploads/2026/05/Favicon.png',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
   },
   openGraph: {
-    title: 'The Trade Analyzer',
-    description: 'The most accurate trade analyzer for fantasy football, hockey, and baseball.',
+    title: 'Fantasy Trade Analyzer for NHL, NFL & MLB | The Trade Analyzer',
+    description:
+      'Analyze fantasy hockey, football, and baseball trades using your league’s actual scoring settings. Free, no account needed.',
     url: 'https://app.thetradeanalyzer.com',
     siteName: 'The Trade Analyzer',
     images: [
@@ -38,9 +49,29 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'The Trade Analyzer',
-    description: 'The most accurate trade analyzer for fantasy football, hockey, and baseball.',
+    title: 'Fantasy Trade Analyzer for NHL, NFL & MLB | The Trade Analyzer',
+    description:
+      'Analyze fantasy hockey, football, and baseball trades using your league’s actual scoring settings. Free, no account needed.',
     images: ['https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Featured-Image.jpg'],
+  },
+};
+
+// JSON-LD structured data for the application (rendered on every page;
+// describes the app itself, so homepage-level scope is correct)
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "The Trade Analyzer",
+  url: "https://app.thetradeanalyzer.com",
+  applicationCategory: "SportsApplication",
+  operatingSystem: "Web",
+  description:
+    "Fantasy trade analyzer for NHL, NFL, and MLB. Instant trade fairness grades based on your league's actual scoring settings.",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "CAD",
+    description: "Free to use — paid plans add saved settings, trade history, and multi-league management.",
   },
 };
 
@@ -56,6 +87,12 @@ export default async function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased">
+        {/* ── Structured data (schema.org WebApplication) ── */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
+
         {/* ── Google Analytics 4 ── */}
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <>
@@ -130,7 +167,9 @@ export default async function RootLayout({
             {/* ── Global top bar — always rendered for all visitors ── */}
             <GlobalNav isAdmin={adminUser} />
 
-            {children}
+            <main>{children}</main>
+
+            <GlobalFooter />
           </LeagueProvider>
         </ClerkProvider>
       </body>
