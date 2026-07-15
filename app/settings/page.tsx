@@ -20,13 +20,19 @@ export default async function SettingsPage() {
   const tier = await getUserTier()
 
   if (tier === 'free') {
+    // Free users get the Manage Subscription tab only — no league settings,
+    // no referral program (referral codes are generated for paid users).
     return (
-      <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Settings</h1>
-        <div className="card text-center" style={{ color: 'var(--color-muted)' }}>
-          <p className="text-sm">This feature requires a Pro subscription.</p>
-        </div>
-      </div>
+      <NhlSettingsForm
+        initialLeague={null}
+        initialNflLeague={null}
+        initialMlbLeague={null}
+        tier="free"
+        allNhlLeagues={[]}
+        allNflLeagues={[]}
+        allMlbLeagues={[]}
+        referralSection={null}
+      />
     )
   }
 
@@ -92,24 +98,22 @@ export default async function SettingsPage() {
     const allMlbLeagues = (mlbResult.data ?? []) as LeagueRow[]
 
     return (
-      <>
-        <NhlSettingsForm
-          initialLeague={(allNhlLeagues[0]?.settings ?? null) as League | null}
-          initialNflLeague={(allNflLeagues[0]?.settings ?? null) as NflLeague | null}
-          initialMlbLeague={(allMlbLeagues[0]?.settings ?? null) as MlbLeague | null}
-          tier={tier}
-          allNhlLeagues={allNhlLeagues}
-          allNflLeagues={allNflLeagues}
-          allMlbLeagues={allMlbLeagues}
-        />
-        {referralCode && (
+      <NhlSettingsForm
+        initialLeague={(allNhlLeagues[0]?.settings ?? null) as League | null}
+        initialNflLeague={(allNflLeagues[0]?.settings ?? null) as NflLeague | null}
+        initialMlbLeague={(allMlbLeagues[0]?.settings ?? null) as MlbLeague | null}
+        tier={tier}
+        allNhlLeagues={allNhlLeagues}
+        allNflLeagues={allNflLeagues}
+        allMlbLeagues={allMlbLeagues}
+        referralSection={referralCode ? (
           <ReferralSection
             code={referralCode}
             etransferEmail={etransferEmail}
             userId={userId}
           />
-        )}
-      </>
+        ) : null}
+      />
     )
   }
 
@@ -140,23 +144,21 @@ export default async function SettingsPage() {
   const initialMlbLeague = (mlbResult.data?.settings ?? null) as MlbLeague | null
 
   return (
-    <>
-      <NhlSettingsForm
-        initialLeague={initialLeague}
-        initialNflLeague={initialNflLeague}
-        initialMlbLeague={initialMlbLeague}
-        tier={tier}
-        allNhlLeagues={[]}
-        allNflLeagues={[]}
-        allMlbLeagues={[]}
-      />
-      {referralCode && (
+    <NhlSettingsForm
+      initialLeague={initialLeague}
+      initialNflLeague={initialNflLeague}
+      initialMlbLeague={initialMlbLeague}
+      tier={tier}
+      allNhlLeagues={[]}
+      allNflLeagues={[]}
+      allMlbLeagues={[]}
+      referralSection={referralCode ? (
         <ReferralSection
           code={referralCode}
           etransferEmail={etransferEmail}
           userId={userId}
         />
-      )}
-    </>
+      ) : null}
+    />
   )
 }

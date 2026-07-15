@@ -3,7 +3,8 @@
 /**
  * ReferralSection
  *
- * Shown inside the Settings page for paid users (tier1/tier2/tier3).
+ * Shown inside the Manage Subscription tab of Settings for paid users
+ * (tier1/tier2/tier3).
  * - Displays the user's referral code with a copy button
  * - Allows updating the e-transfer email for payouts
  * - Shows payout rates
@@ -63,10 +64,7 @@ export default function ReferralSection({ code, etransferEmail: initialEmail, us
   void userId;
 
   return (
-    <div
-      className="p-6 max-w-6xl mx-auto border-t mt-2"
-      style={{ borderColor: "var(--color-border)" }}
-    >
+    <div className="card mb-6">
       <h2
         className="text-lg font-semibold mb-1 tracking-tight"
         style={{ color: "var(--color-text)" }}

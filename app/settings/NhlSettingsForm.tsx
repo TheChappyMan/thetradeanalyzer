@@ -130,9 +130,11 @@ type Props = {
   allNhlLeagues:    LeagueRow[];
   allNflLeagues:    LeagueRow[];
   allMlbLeagues:    LeagueRow[];
+  /** Rendered inside the Manage Subscription tab (paid users only). */
+  referralSection?: React.ReactNode;
 };
 
-type Tab        = "nhl" | "nfl" | "mlb";
+type Tab        = "nhl" | "nfl" | "mlb" | "subscription";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 // ============================================================
@@ -147,10 +149,13 @@ export default function NhlSettingsForm({
   allNhlLeagues: initialNhlLeagues,
   allNflLeagues: initialNflLeagues,
   allMlbLeagues: initialMlbLeagues,
+  referralSection,
 }: Props) {
   const isTier2 = tier === "tier2";
+  const isPaid  = tier === "tier1" || tier === "tier2" || tier === "tier3";
 
-  const [activeTab, setActiveTab] = useState<Tab>("nhl");
+  // Free users only have access to the Manage Subscription tab
+  const [activeTab, setActiveTab] = useState<Tab>(isPaid ? "nhl" : "subscription");
 
   // ── Tier 2 league lists ───────────────────────────────────
   const [nhlLeagues, setNhlLeagues] = useState<LeagueRow[]>(initialNhlLeagues);
@@ -532,7 +537,7 @@ export default function NhlSettingsForm({
         className="flex gap-1 mb-6 border-b"
         style={{ borderColor: "var(--color-border)" }}
       >
-        {(["nhl", "nfl", "mlb"] as Tab[]).map((tab) => (
+        {isPaid && (["nhl", "nfl", "mlb"] as Tab[]).map((tab) => (
           <button
             key={tab}
             className={`tab-btn ${activeTab === tab ? "tab-btn-active" : ""}`}
@@ -541,7 +546,64 @@ export default function NhlSettingsForm({
             {tab.toUpperCase()}
           </button>
         ))}
+        <button
+          className={`tab-btn ${activeTab === "subscription" ? "tab-btn-active" : ""}`}
+          onClick={() => setActiveTab("subscription")}
+        >
+          Manage Subscription
+        </button>
       </div>
+
+      {/* ── Manage Subscription tab ─────────────────────────── */}
+      {activeTab === "subscription" && (
+        <>
+          {referralSection}
+
+          <div className="card">
+            <h2
+              className="text-lg font-semibold mb-1 tracking-tight"
+              style={{ color: "var(--color-text)" }}
+            >
+              Subscription
+            </h2>
+            {isPaid ? (
+              <>
+                <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+                  Current plan:{" "}
+                  <strong style={{ color: "var(--color-text)" }}>
+                    {tier === "tier3" ? "Commissioner" : tier === "tier2" ? "Pro Plus" : "Pro"}
+                  </strong>
+                </p>
+                <a
+                  href="https://billing.stripe.com/p/login/6oU28qcbNdno2nG7HQ3Nm00"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-lg px-4 py-1.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: "var(--color-primary)", color: "#fff" }}
+                >
+                  Manage Subscription
+                </a>
+                <p className="text-xs mt-3" style={{ color: "var(--color-muted)" }}>
+                  Update your payment method, view invoices, or cancel through the
+                  Stripe billing portal. Sign in with the email you used at checkout.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+                  You are currently on the Free plan.
+                </p>
+                <a
+                  href="https://thetradeanalyzer.com/pricing"
+                  className="btn-accent inline-block"
+                >
+                  Upgrade Your Plan
+                </a>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       {/* ── NHL tab ─────────────────────────────────────────── */}
       {activeTab === "nhl" && (
