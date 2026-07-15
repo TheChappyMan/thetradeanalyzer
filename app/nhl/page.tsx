@@ -665,18 +665,36 @@ function normalizePlayerTo82(player: DbPlayer): DbPlayer {
 // MAIN COMPONENT
 // ============================================================
 
-const DEFAULT_LEAGUE: League = {
+/** Standard points-league skater weights — the analyzer works out of the box. */
+function defaultSkaterWeights(): SkaterWeights {
+  return {
+    ...emptySkaterWeights(),
+    G: 3, A: 2, PM: 0.5, PIM: 0,
+    PPG: 1, PPA: 0.5, SHG: 2, SHA: 1,
+    SOG: 0.1, HIT: 0.1, BLK: 0.1, FW: 0,
+  };
+}
+
+/** Standard points-league goalie weights. (Quality starts is not a tracked stat.) */
+function defaultGoalieWeights(): GoalieWeights {
+  return {
+    ...emptyGoalieWeights(),
+    W: 5, SO: 3, GAA: 0, "SV%": 0,
+  };
+}
+
+const DEFAULT_NHL_LEAGUE: League = {
   name: "",
   teams: 12,
   leagueType: "redraft",
   keepersPerTeam: 0,
   roster: {
     C: 2, LW: 2, RW: 2, W: 0, F: 0,
-    D: 4, U: 2, G: 2, B: 4, IR: 1, IRplus: 0,
+    D: 4, U: 1, G: 2, B: 4, IR: 2, IRplus: 0,
   },
   scoringType: "points",
-  skaterWeights: emptySkaterWeights(),
-  goalieWeights: emptyGoalieWeights(),
+  skaterWeights: defaultSkaterWeights(),
+  goalieWeights: defaultGoalieWeights(),
   skaterCategories: emptySkaterCategories(),
   goalieCategories: emptyGoalieCategories(),
 };
@@ -690,25 +708,25 @@ export default function TradeAnalyzer() {
 
   const [league, setLeague] = useState<League>(() => {
     const saved = loadCurrentLeague();
-    if (!saved) return DEFAULT_LEAGUE;
+    if (!saved) return DEFAULT_NHL_LEAGUE;
     // Migration: fill in fields that didn't exist in older saved versions
     const rawWeights = saved.skaterWeights as Record<string, number> | undefined;
     const rawCategories = saved.skaterCategories as Record<string, CategoryConfig | null> | undefined;
     // Migrate PLUS/MINUS → PM
-    const migratedWeights = { ...DEFAULT_LEAGUE.skaterWeights, ...rawWeights };
+    const migratedWeights = { ...DEFAULT_NHL_LEAGUE.skaterWeights, ...rawWeights };
     if (rawWeights && ("PLUS" in rawWeights || "MINUS" in rawWeights)) {
       migratedWeights.PM = (rawWeights.PLUS ?? 0) + Math.abs(rawWeights.MINUS ?? 0);
       delete (migratedWeights as Record<string, number>).PLUS;
       delete (migratedWeights as Record<string, number>).MINUS;
     }
-    const migratedCategories = { ...DEFAULT_LEAGUE.skaterCategories, ...rawCategories };
+    const migratedCategories = { ...DEFAULT_NHL_LEAGUE.skaterCategories, ...rawCategories };
     if (rawCategories && ("PLUS" in rawCategories || "MINUS" in rawCategories)) {
       migratedCategories.PM = rawCategories.PLUS ?? rawCategories.MINUS ?? null;
       delete (migratedCategories as Record<string, CategoryConfig | null>).PLUS;
       delete (migratedCategories as Record<string, CategoryConfig | null>).MINUS;
     }
     return {
-      ...DEFAULT_LEAGUE,
+      ...DEFAULT_NHL_LEAGUE,
       ...saved,
       scoringType: saved.scoringType ?? "points",
       skaterWeights: migratedWeights,
@@ -716,7 +734,7 @@ export default function TradeAnalyzer() {
         ? migratedCategories
         : emptySkaterCategories(),
       goalieCategories: saved.goalieCategories
-        ? { ...DEFAULT_LEAGUE.goalieCategories, ...saved.goalieCategories }
+        ? { ...DEFAULT_NHL_LEAGUE.goalieCategories, ...saved.goalieCategories }
         : emptyGoalieCategories(),
     };
   });
@@ -818,14 +836,14 @@ export default function TradeAnalyzer() {
   // ── Apply saved league settings into component state ────────
   const applyLeagueSettings = useCallback((settings: League) => {
     setLeague({
-      ...DEFAULT_LEAGUE,
+      ...DEFAULT_NHL_LEAGUE,
       ...settings,
       scoringType: settings.scoringType ?? "points",
       skaterCategories: settings.skaterCategories
-        ? { ...DEFAULT_LEAGUE.skaterCategories, ...settings.skaterCategories }
+        ? { ...DEFAULT_NHL_LEAGUE.skaterCategories, ...settings.skaterCategories }
         : emptySkaterCategories(),
       goalieCategories: settings.goalieCategories
-        ? { ...DEFAULT_LEAGUE.goalieCategories, ...settings.goalieCategories }
+        ? { ...DEFAULT_NHL_LEAGUE.goalieCategories, ...settings.goalieCategories }
         : emptyGoalieCategories(),
     });
   }, []);
