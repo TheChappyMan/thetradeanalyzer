@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
 import AccuracyRating from "@/app/components/AccuracyRating";
+import StatHelp from "@/app/components/StatHelp";
+import { NHL_SKATER_DESCRIPTIONS, NHL_GOALIE_DESCRIPTIONS } from "@/lib/stat-descriptions";
 
 /**
  * Fantasy Trade Analyzer – V3 (Next.js 15 / TypeScript)
@@ -683,6 +685,20 @@ function defaultGoalieWeights(): GoalieWeights {
   };
 }
 
+/** Standard categories pre-selected when no league is configured (all "more"). */
+function defaultSkaterCategories(): Record<SkaterStatKey, CategoryConfig | null> {
+  const cats = emptySkaterCategories();
+  const on: SkaterStatKey[] = ["G", "A", "PM", "PIM", "PPP", "GWG", "SOG", "HIT", "BLK", "FW"];
+  on.forEach((k) => { cats[k] = { direction: "more" }; });
+  return cats;
+}
+function defaultGoalieCategories(): Record<GoalieStatKey, CategoryConfig | null> {
+  const cats = emptyGoalieCategories();
+  const on: GoalieStatKey[] = ["W", "L", "SO", "SV"];
+  on.forEach((k) => { cats[k] = { direction: "more" }; });
+  return cats;
+}
+
 const DEFAULT_NHL_LEAGUE: League = {
   name: "",
   teams: 12,
@@ -695,8 +711,8 @@ const DEFAULT_NHL_LEAGUE: League = {
   scoringType: "points",
   skaterWeights: defaultSkaterWeights(),
   goalieWeights: defaultGoalieWeights(),
-  skaterCategories: emptySkaterCategories(),
-  goalieCategories: emptyGoalieCategories(),
+  skaterCategories: defaultSkaterCategories(),
+  goalieCategories: defaultGoalieCategories(),
 };
 
 export default function TradeAnalyzer() {
@@ -1435,8 +1451,9 @@ export default function TradeAnalyzer() {
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
                 {SKATER_STATS.map((stat) => (
                   <div key={stat} className="flex items-center justify-between gap-2">
-                    <label className="text-sm w-16">
+                    <label className="text-sm w-16 flex items-center gap-1">
                       {stat === "PM" ? "+/-" : stat}
+                      <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                     </label>
                     <input
                       type="number"
@@ -1453,7 +1470,10 @@ export default function TradeAnalyzer() {
               <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 {GOALIE_STATS.map((stat) => (
                   <div key={stat} className="flex items-center justify-between gap-2">
-                    <label className="text-sm w-16">{stat}</label>
+                    <label className="text-sm w-16 flex items-center gap-1">
+                      {stat}
+                      <StatHelp text={NHL_GOALIE_DESCRIPTIONS[stat]} />
+                    </label>
                     <input
                       type="number"
                       step="0.1"
@@ -1490,7 +1510,10 @@ export default function TradeAnalyzer() {
                               updateSkaterCategory(stat, e.target.checked ? { direction: "more" } : null)
                             }
                           />
-                          <label htmlFor={`scat-${stat}`} className="w-10 cursor-pointer">{label}</label>
+                          <label htmlFor={`scat-${stat}`} className="w-14 cursor-pointer flex items-center gap-1">
+                            {label}
+                            <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
+                          </label>
                           {cfg && (
                             <div className="flex rounded-lg border overflow-hidden text-xs">
                               <button
@@ -1525,7 +1548,10 @@ export default function TradeAnalyzer() {
                               updateGoalieCategory(stat, e.target.checked ? { direction: "more" } : null)
                             }
                           />
-                          <label htmlFor={`gcat-${stat}`} className="w-10 cursor-pointer">{stat}</label>
+                          <label htmlFor={`gcat-${stat}`} className="w-14 cursor-pointer flex items-center gap-1">
+                            {stat}
+                            <StatHelp text={NHL_GOALIE_DESCRIPTIONS[stat]} />
+                          </label>
                           {cfg && (
                             <div className="flex rounded-lg border overflow-hidden text-xs">
                               <button

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
 import AccuracyRating from "@/app/components/AccuracyRating";
+import StatHelp from "@/app/components/StatHelp";
+import { NFL_WEIGHT_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import nflPlayersJson from "@/lib/nfl-players.json";
 import {
   DEFAULT_NFL_LEAGUE,
@@ -944,8 +946,9 @@ export default function NflTradeAnalyzer() {
                       <div className="space-y-1">
                         {keys.map((key) => (
                           <div key={key} className="flex items-center justify-between gap-2">
-                            <label className="text-xs flex-1" style={{ color: "var(--color-text)" }}>
+                            <label className="text-xs flex-1 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
                               {WEIGHT_LABELS[key]}
+                              <StatHelp text={NFL_WEIGHT_DESCRIPTIONS[key]} />
                             </label>
                             <input
                               type="number"
@@ -971,8 +974,9 @@ export default function NflTradeAnalyzer() {
                       <div className="space-y-1">
                         {keys.map((key) => (
                           <div key={key} className="flex items-center justify-between gap-2">
-                            <label className="text-xs flex-1" style={{ color: "var(--color-text)" }}>
+                            <label className="text-xs flex-1 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
                               {WEIGHT_LABELS[key]}
+                              <StatHelp text={NFL_WEIGHT_DESCRIPTIONS[key]} />
                             </label>
                             <input
                               type="number"

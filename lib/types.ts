@@ -107,6 +107,20 @@ export function defaultGoalieWeights(): GoalieWeights {
   };
 }
 
+/** Standard categories pre-selected when no league is configured (all "more"). */
+export function defaultSkaterCategories(): Record<SkaterStatKey, CategoryConfig | null> {
+  const cats = emptySkaterCategories();
+  const on: SkaterStatKey[] = ["G", "A", "PM", "PIM", "PPP", "GWG", "SOG", "HIT", "BLK", "FW"];
+  on.forEach((k) => { cats[k] = { direction: "more" }; });
+  return cats;
+}
+export function defaultGoalieCategories(): Record<GoalieStatKey, CategoryConfig | null> {
+  const cats = emptyGoalieCategories();
+  const on: GoalieStatKey[] = ["W", "L", "SO", "SV"];
+  on.forEach((k) => { cats[k] = { direction: "more" }; });
+  return cats;
+}
+
 export const DEFAULT_NHL_LEAGUE: League = {
   name: "",
   teams: 12,
@@ -119,8 +133,8 @@ export const DEFAULT_NHL_LEAGUE: League = {
   scoringType: "points",
   skaterWeights: defaultSkaterWeights(),
   goalieWeights: defaultGoalieWeights(),
-  skaterCategories: emptySkaterCategories(),
-  goalieCategories: emptyGoalieCategories(),
+  skaterCategories: defaultSkaterCategories(),
+  goalieCategories: defaultGoalieCategories(),
 };
 
 /** Back-compat alias — existing imports use this name. */

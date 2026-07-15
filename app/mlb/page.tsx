@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
 import AccuracyRating from "@/app/components/AccuracyRating";
+import StatHelp from "@/app/components/StatHelp";
+import { MLB_HITTER_DESCRIPTIONS, MLB_PITCHER_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
   type HitterStatKey,
   type PitcherStatKey,
@@ -1276,7 +1278,10 @@ export default function MlbTradeAnalyzer() {
                                   updateHitterCategory(stat, e.target.checked ? { direction: "more" } : null)
                                 }
                               />
-                              <label htmlFor={`hcat-${stat}`} className="w-10 cursor-pointer text-xs">{stat}</label>
+                              <label htmlFor={`hcat-${stat}`} className="w-14 cursor-pointer text-xs flex items-center gap-1">
+                                {stat}
+                                <StatHelp text={MLB_HITTER_DESCRIPTIONS[stat]} />
+                              </label>
                               {cfg && (
                                 <div className="flex rounded-lg border overflow-hidden text-xs">
                                   <button
@@ -1310,7 +1315,10 @@ export default function MlbTradeAnalyzer() {
                                   updatePitcherCategory(stat, e.target.checked ? { direction: "more" } : null)
                                 }
                               />
-                              <label htmlFor={`pcat-${stat}`} className="w-10 cursor-pointer text-xs">{stat}</label>
+                              <label htmlFor={`pcat-${stat}`} className="w-14 cursor-pointer text-xs flex items-center gap-1">
+                                {stat}
+                                <StatHelp text={MLB_PITCHER_DESCRIPTIONS[stat]} />
+                              </label>
                               {cfg && (
                                 <div className="flex rounded-lg border overflow-hidden text-xs">
                                   <button
@@ -1344,7 +1352,10 @@ export default function MlbTradeAnalyzer() {
                       <div className="space-y-1">
                         {HITTER_STATS.map((stat) => (
                           <div key={stat} className="flex items-center justify-between gap-2">
-                            <label className="text-xs w-10" style={{ color: "var(--color-muted)" }}>{stat}</label>
+                            <label className="text-xs w-14 flex items-center gap-1" style={{ color: "var(--color-muted)" }}>
+                              {stat}
+                              <StatHelp text={MLB_HITTER_DESCRIPTIONS[stat]} />
+                            </label>
                             <input
                               type="number" step="0.5" className="form-input text-xs" style={{ padding: "0.25rem" }}
                               value={league.hitterWeights[stat]}
@@ -1359,7 +1370,10 @@ export default function MlbTradeAnalyzer() {
                       <div className="space-y-1">
                         {PITCHER_STATS.map((stat) => (
                           <div key={stat} className="flex items-center justify-between gap-2">
-                            <label className="text-xs w-10" style={{ color: "var(--color-muted)" }}>{stat}</label>
+                            <label className="text-xs w-14 flex items-center gap-1" style={{ color: "var(--color-muted)" }}>
+                              {stat}
+                              <StatHelp text={MLB_PITCHER_DESCRIPTIONS[stat]} />
+                            </label>
                             <input
                               type="number" step="0.5" className="form-input text-xs" style={{ padding: "0.25rem" }}
                               value={league.pitcherWeights[stat]}
