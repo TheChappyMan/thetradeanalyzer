@@ -7,6 +7,7 @@
  * Developers → Webhooks → Add endpoint:
  *   URL:    https://app.thetradeanalyzer.com/api/payments/subscription
  *   Events: checkout.session.completed
+ *           customer.subscription.updated
  *           customer.subscription.deleted
  *           invoice.payment_failed
  *
@@ -23,6 +24,15 @@
  * For tier3: commissioner_groups row is created/refreshed.
  * For annual plans: if session.metadata.referral_code is present, a
  * referral_payouts row is recorded.
+ *
+ * ── customer.subscription.updated ─────────────────────────────────────────
+ * Fired when a subscription changes (plan upgrade/downgrade in the billing
+ * portal, renewal, etc.). The current price ID is read from
+ * subscription.items and mapped to a tier; the Clerk user's tier is updated.
+ *   upgrade to tier3    → commissioner_groups row created if missing
+ *                         (expires_at = now + 1 year)
+ *   downgrade from tier3 → grace_until = now + 7 days on commissioner_groups
+ *                          instead of immediate removal
  *
  * ── customer.subscription.deleted ─────────────────────────────────────────
  * Fired when a subscription is cancelled and the billing period ends.
@@ -127,6 +137,9 @@ export async function POST(request: Request) {
   // 3. Route by event type
   if (event.type === "checkout.session.completed") {
     await handleCheckoutSessionCompleted(event);
+
+  } else if (event.type === "customer.subscription.updated") {
+    await handleSubscriptionUpdated(event);
 
   } else if (event.type === "customer.subscription.deleted") {
     await handleSubscriptionDeleted(event);
@@ -246,6 +259,104 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
       console.log(`[stripe webhook] Recorded referral payout — code=${referralCode} plan=${planCode}`);
     } else {
       console.warn(`[stripe webhook] Referral code not found: ${referralCode}`);
+    }
+  }
+}
+
+// ── customer.subscription.updated ─────────────────────────────────────────
+
+async function handleSubscriptionUpdated(event: Stripe.Event) {
+  const subscription = event.data.object as Stripe.Subscription;
+  const customerId   = subscription.customer as string;
+
+  // 1. Current price ID → tier
+  const priceId = subscription.items?.data[0]?.price?.id ?? "";
+  const newTier = PRICE_TIER[priceId];
+  if (!newTier) {
+    console.warn(`[stripe webhook] subscription.updated — unknown price ID: "${priceId}"`);
+    return;
+  }
+
+  // 2. Customer email (subscription objects don't carry it — fetch the customer)
+  let customerEmail = "";
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    if ((customer as Stripe.DeletedCustomer).deleted) {
+      console.warn(`[stripe webhook] subscription.updated — customer ${customerId} already deleted`);
+      return;
+    }
+    customerEmail = ((customer as Stripe.Customer).email ?? "").trim().toLowerCase();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[stripe webhook] Failed to retrieve customer ${customerId}: ${msg}`);
+    return;
+  }
+
+  if (!customerEmail) {
+    console.warn(`[stripe webhook] subscription.updated — no email for customer ${customerId}`);
+    return;
+  }
+
+  // 3. Find the Clerk user by email
+  const clerk = await clerkClient();
+  const { data: userList } = await clerk.users.getUserList({ emailAddress: [customerEmail] });
+  const clerkUser = userList?.[0];
+
+  if (!clerkUser) {
+    console.warn(`[stripe webhook] subscription.updated — no Clerk user for ${customerEmail}`);
+    return;
+  }
+
+  const userId      = clerkUser.id;
+  const currentTier = (clerkUser.publicMetadata?.tier as string | undefined) ?? "free";
+
+  if (currentTier === newTier) {
+    console.log(`[stripe webhook] subscription.updated — tier unchanged (${newTier}) for ${customerEmail}`);
+    return;
+  }
+
+  // 4. Update Clerk tier
+  await clerk.users.updateUser(userId, {
+    publicMetadata: { ...clerkUser.publicMetadata, tier: newTier },
+  });
+  console.log(
+    `[stripe webhook] subscription.updated — tier ${currentTier} → ${newTier} for ${customerEmail} (${userId})`
+  );
+
+  // 5. Upgrading to tier3: create commissioner_groups row only if missing
+  if (newTier === "tier3") {
+    const { data: existingGroup } = await supabase
+      .from("commissioner_groups")
+      .select("id")
+      .eq("commissioner_user_id", userId)
+      .maybeSingle();
+
+    if (!existingGroup) {
+      const expiresAt = new Date();
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      const { error: insertErr } = await supabase
+        .from("commissioner_groups")
+        .insert({ commissioner_user_id: userId, expires_at: expiresAt.toISOString(), grace_until: null });
+      if (insertErr) {
+        console.error("[stripe webhook] Failed to create commissioner_groups:", insertErr.message);
+      } else {
+        console.log(`[stripe webhook] subscription.updated — created commissioner group for ${userId}`);
+      }
+    }
+  }
+
+  // 6. Downgrading from tier3: 7-day grace period instead of immediate removal
+  if (currentTier === "tier3" && newTier !== "tier3") {
+    const graceUntil = new Date();
+    graceUntil.setDate(graceUntil.getDate() + 7);
+    const { error: graceErr } = await supabase
+      .from("commissioner_groups")
+      .update({ grace_until: graceUntil.toISOString() })
+      .eq("commissioner_user_id", userId);
+    if (graceErr) {
+      console.error("[stripe webhook] Failed to set grace_until:", graceErr.message);
+    } else {
+      console.log(`[stripe webhook] subscription.updated — set grace_until for former commissioner ${userId}`);
     }
   }
 }
