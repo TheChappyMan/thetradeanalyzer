@@ -1288,7 +1288,7 @@ export default function TradeAnalyzer() {
         </div>
       )}
       <div className="p-6 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
           <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>NHL Trade Analyzer</h1>
           <ApiStatus
             status={dbStatus}
@@ -1309,26 +1309,12 @@ export default function TradeAnalyzer() {
         )}
 
         {!isPro && (
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-            <div className="flex-1">
-              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                <strong style={{ color: "var(--color-text)" }}>To get started</strong>, fill out your league&apos;s settings below.
-                Once you have completed the league information, you can then start analyzing trades in your league.
-                Our analyzer requires this to ensure the score you get is truly accurate. Most trade analyzers use
-                rough estimates, which can be up to 50% off true value, depending on your league settings.
-              </p>
-              <p className="text-sm mt-2" style={{ color: "var(--color-muted)" }}>
-                If you&apos;d like to save your settings and gain access to trade history, upgrade your account
-                for as little as $2.08/month. Just want to get rid of ads? Create a free account. It costs nothing!
-              </p>
-            </div>
-            <a
-              href="https://thetradeanalyzer.com/pricing/"
-              className="btn-accent whitespace-nowrap self-start md:self-center"
-            >
-              Upgrade My Account
-            </a>
-          </div>
+          <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+            <strong style={{ color: "var(--color-text)" }}>To get started</strong>, fill out your league&apos;s settings below.
+            Once you have completed the league information, you can then start analyzing trades in your league.
+            Our analyzer requires this to ensure the score you get is truly accurate. Most trade analyzers use
+            rough estimates, which can be up to 50% off true value, depending on your league settings.
+          </p>
         )}
 
         {/* ── Tier 2: league selector ──────────────────────── */}
@@ -1736,7 +1722,7 @@ function ApiStatus({
     ? `${activeId.slice(0, 4)}-${activeId.slice(6)}`
     : "";
   return (
-    <div className="text-xs text-right flex items-center gap-3 shrink-0" style={{ color: "var(--color-muted)" }}>
+    <div className="text-xs text-left sm:text-right flex items-center gap-3 shrink-0" style={{ color: "var(--color-muted)" }}>
       <div className="whitespace-nowrap">
         <div>{playerCount} players loaded</div>
         {seasonDisplay && <div>Season: {seasonDisplay}</div>}
