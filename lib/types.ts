@@ -23,6 +23,7 @@ export type SkaterStatKey =
   | "G" | "A" | "P" | "PM" | "PIM"
   | "PPG" | "PPA" | "PPP"
   | "SHG" | "SHA" | "SHP"
+  | "STP"
   | "GWG" | "SOG" | "HIT" | "BLK" | "FW" | "FL"
   | "TOI" | "ATOI";
 
@@ -58,6 +59,7 @@ export const SKATER_STATS: SkaterStatKey[] = [
   "G", "A", "P", "PM", "PIM",
   "PPG", "PPA", "PPP",
   "SHG", "SHA", "SHP",
+  "STP",
   "GWG", "SOG", "HIT", "BLK", "FW", "FL",
   "TOI", "ATOI",
 ];

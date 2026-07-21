@@ -15,6 +15,7 @@ export const NHL_SKATER_DESCRIPTIONS: Record<string, string> = {
   SHG:  "Short-handed goals.",
   SHA:  "Short-handed assists.",
   SHP:  "Short-handed points: SHG plus SHA.",
+  STP:  "Special teams points: all power-play and short-handed points combined (PPP + SHP). Use this only if your league scores special teams as one stat — leave PPP, SHP, PPG, PPA, SHG, and SHA at 0 or unchecked, or you'll double count. These points also count toward G and A, so make sure your league actually awards them separately.",
   GWG:  "Game-winning goals.",
   SOG:  "Shots on goal.",
   HIT:  "Hits: body checks delivered.",

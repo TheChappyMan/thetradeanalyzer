@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import { saveLeagueSettings, saveNflLeagueSettings, saveMlbLeagueSettings } from "./actions";
+import StatHelp from "@/app/components/StatHelp";
+import { NHL_SKATER_DESCRIPTIONS, NHL_GOALIE_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
   DEFAULT_LEAGUE,
   GOALIE_STATS,
@@ -752,7 +754,9 @@ export default function NhlSettingsForm({
                 <>
                   <p className="text-xs mb-2" style={{ color: "var(--color-muted)" }}>
                     If your league scores both G+A and P, you&apos;re counting goals twice. Set G/A to 0
-                    if you only score P, or leave P at 0 if you score G and A separately.
+                    if you only score P, or leave P at 0 if you score G and A separately. Same idea for
+                    special teams: use STP only if your league scores special teams as a single stat,
+                    and leave PPP/SHP/PPG/PPA/SHG/SHA at 0.
                   </p>
                   <h3 className="text-sm font-semibold mt-1 mb-1" style={{ color: "var(--color-text)" }}>
                     Skaters
@@ -760,8 +764,9 @@ export default function NhlSettingsForm({
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
                     {SKATER_STATS.map((stat) => (
                       <div key={stat} className="flex items-center justify-between gap-2">
-                        <label className="text-sm w-16" style={{ color: "var(--color-text)" }}>
+                        <label className="text-sm w-16 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
                           {stat === "PM" ? "+/-" : stat}
+                          <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                         </label>
                         <input
                           type="number" step="0.1"
@@ -778,8 +783,9 @@ export default function NhlSettingsForm({
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {GOALIE_STATS.map((stat) => (
                       <div key={stat} className="flex items-center justify-between gap-2">
-                        <label className="text-sm w-16" style={{ color: "var(--color-text)" }}>
+                        <label className="text-sm w-16 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
                           {stat}
+                          <StatHelp text={NHL_GOALIE_DESCRIPTIONS[stat]} />
                         </label>
                         <input
                           type="number" step="0.1"
@@ -794,7 +800,9 @@ export default function NhlSettingsForm({
               ) : (
                 <>
                   <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
-                    Check each category your league uses. Set direction to &ldquo;less&rdquo; for
+                    Check each category your league uses. If your league has both G+A and P as
+                    categories, you&apos;re counting goals twice — the same goes for STP alongside
+                    PPP/SHP or the individual special-teams stats. Set direction to &ldquo;less&rdquo; for
                     stats where lower is better (PIM, GAA, L, GA).
                   </p>
                   <div className="grid grid-cols-2 gap-4">
@@ -818,10 +826,11 @@ export default function NhlSettingsForm({
                               />
                               <label
                                 htmlFor={`scat-${stat}`}
-                                className="w-10 cursor-pointer"
+                                className="w-14 cursor-pointer flex items-center gap-1"
                                 style={{ color: "var(--color-text)" }}
                               >
                                 {label}
+                                <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                               </label>
                               {cfg && (
                                 <div
@@ -870,10 +879,11 @@ export default function NhlSettingsForm({
                               />
                               <label
                                 htmlFor={`gcat-${stat}`}
-                                className="w-10 cursor-pointer"
+                                className="w-14 cursor-pointer flex items-center gap-1"
                                 style={{ color: "var(--color-text)" }}
                               >
                                 {stat}
+                                <StatHelp text={NHL_GOALIE_DESCRIPTIONS[stat]} />
                               </label>
                               {cfg && (
                                 <div

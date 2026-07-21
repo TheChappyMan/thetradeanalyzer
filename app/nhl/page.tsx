@@ -24,6 +24,7 @@ type SkaterStatKey =
   | "G" | "A" | "P" | "PM" | "PIM"
   | "PPG" | "PPA" | "PPP"
   | "SHG" | "SHA" | "SHP"
+  | "STP"
   | "GWG" | "SOG" | "HIT" | "BLK" | "FW" | "FL"
   | "TOI" | "ATOI";
 
@@ -215,6 +216,7 @@ function buildPlayerDatabase(args: {
         SHG: shGoals,
         SHA: shPoints - shGoals,
         SHP: shPoints,
+        STP: ppPoints + shPoints,
         GWG: asNumber(s.gameWinningGoals),
         SOG: asNumber(s.shots),
         TOI: asNumber(s.timeOnIce),
@@ -621,6 +623,7 @@ const SKATER_STATS: SkaterStatKey[] = [
   "G", "A", "P", "PM", "PIM",
   "PPG", "PPA", "PPP",
   "SHG", "SHA", "SHP",
+  "STP",
   "GWG", "SOG", "HIT", "BLK", "FW", "FL",
   "TOI", "ATOI",
 ];
@@ -1431,7 +1434,9 @@ export default function TradeAnalyzer() {
             <>
               <p className="text-xs mb-2" style={{ color: "var(--color-muted)" }}>
                 If your league scores both G+A and P, you&apos;re counting goals twice. Set G/A to 0
-                if you only score P, or leave P at 0 if you score G and A separately.
+                if you only score P, or leave P at 0 if you score G and A separately. Same idea for
+                special teams: use STP only if your league scores special teams as a single stat,
+                and leave PPP/SHP/PPG/PPA/SHG/SHA at 0.
               </p>
               <h3 className="text-sm font-semibold mt-1 mb-1">Skaters</h3>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
@@ -1476,8 +1481,9 @@ export default function TradeAnalyzer() {
             <>
               <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
                 Check each category your league uses. If your league has both G+A and P as
-                categories, you&apos;re counting goals twice. Set direction to &ldquo;less&rdquo; for stats where
-                lower is better (PIM, GAA, L, GA).
+                categories, you&apos;re counting goals twice — the same goes for STP alongside
+                PPP/SHP or the individual special-teams stats. Set direction to &ldquo;less&rdquo; for
+                stats where lower is better (PIM, GAA, L, GA).
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
