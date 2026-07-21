@@ -27,15 +27,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'The Trade Analyzer',
-  },
   icons: {
     icon: '/favicon.png',
-    apple: '/icons/icon-192.png',
+    apple: '/favicon.png',
   },
   openGraph: {
     title: 'Fantasy Trade Analyzer for NHL, NFL & MLB | The Trade Analyzer',
@@ -60,10 +54,6 @@ export const metadata: Metadata = {
       'Analyze fantasy hockey, football, and baseball trades using your league’s actual scoring settings. Free, no account needed.',
     images: ['https://thetradeanalyzer.com/wp-content/uploads/2026/05/The-Trade-Analyzer-Featured-Image.jpg'],
   },
-};
-
-export const viewport = {
-  themeColor: '#0F4C5C',
 };
 
 // JSON-LD structured data for the application (rendered on every page;

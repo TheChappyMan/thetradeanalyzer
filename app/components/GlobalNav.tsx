@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import InstallAppMenuItem from "./InstallAppMenuItem";
 
 /**
  * Global top navigation — always rendered for every visitor.
@@ -144,9 +143,6 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
               {label}
             </Link>
           ))}
-
-          {/* Install-as-app (PWA) — mobile drawer only */}
-          <InstallAppMenuItem onNavigate={() => setMenuOpen(false)} />
 
           {/* Upgrade CTA in drawer — signed-in free/tier1 mobile only */}
           {showUpgrade && (
