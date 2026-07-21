@@ -8,6 +8,7 @@ import {
   DEFAULT_LEAGUE,
   GOALIE_STATS,
   SKATER_STATS,
+  emptyPositionBonuses,
 } from "@/lib/types";
 import type {
   CategoryConfig,
@@ -96,6 +97,7 @@ function mergeLeague(saved: League): League {
     goalieWeights:    { ...DEFAULT_LEAGUE.goalieWeights,    ...saved.goalieWeights },
     skaterCategories: { ...DEFAULT_LEAGUE.skaterCategories, ...saved.skaterCategories },
     goalieCategories: { ...DEFAULT_LEAGUE.goalieCategories, ...saved.goalieCategories },
+    positionBonuses:  saved.positionBonuses ?? emptyPositionBonuses(),
   };
 }
 
@@ -238,6 +240,11 @@ export default function NhlSettingsForm({
     setLeague((p) => ({ ...p, skaterWeights: { ...p.skaterWeights, [stat]: val } }));
   const updateGoalieWeight   = (stat: GoalieStatKey, val: number) =>
     setLeague((p) => ({ ...p, goalieWeights: { ...p.goalieWeights, [stat]: val } }));
+  const updatePositionBonus  = (grp: "forwards" | "defenders", stat: "G" | "A" | "P", val: number) =>
+    setLeague((p) => {
+      const pb = p.positionBonuses ?? emptyPositionBonuses();
+      return { ...p, positionBonuses: { ...pb, [grp]: { ...pb[grp], [stat]: val } } };
+    });
   const updateSkaterCategory = (stat: SkaterStatKey, cfg: CategoryConfig | null) =>
     setLeague((p) => ({ ...p, skaterCategories: { ...p.skaterCategories, [stat]: cfg } }));
   const updateGoalieCategory = (stat: GoalieStatKey, cfg: CategoryConfig | null) =>
@@ -793,6 +800,40 @@ export default function NhlSettingsForm({
                           value={league.goalieWeights[stat]}
                           onChange={(e) => updateGoalieWeight(stat, parseFloat(e.target.value || "0"))}
                         />
+                      </div>
+                    ))}
+                  </div>
+
+                  <h3 className="text-sm font-semibold mt-3 mb-1" style={{ color: "var(--color-text)" }}>
+                    Positional Bonus Points
+                  </h3>
+                  <p className="text-xs mb-2" style={{ color: "var(--color-muted)" }}>
+                    If a position in your league gets extra points for goals, assists, or points
+                    (e.g. defensemen earn +1 per goal), enter the bonus here. It&apos;s added on top of
+                    the skater weights above. Leave at 0 if your league doesn&apos;t use positional bonuses.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {(["forwards", "defenders"] as const).map((grp) => (
+                      <div key={grp}>
+                        <h4 className="text-xs font-semibold mb-1" style={{ color: "var(--color-muted)" }}>
+                          {grp === "forwards" ? "Forwards" : "Defenders"}
+                        </h4>
+                        <div className="space-y-1">
+                          {(["G", "A", "P"] as const).map((stat) => (
+                            <div key={stat} className="flex items-center justify-between gap-2">
+                              <label className="text-sm w-16 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
+                                {stat}
+                                <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
+                              </label>
+                              <input
+                                type="number" step="0.1"
+                                className="form-input p-1"
+                                value={league.positionBonuses?.[grp]?.[stat] ?? 0}
+                                onChange={(e) => updatePositionBonus(grp, stat, parseFloat(e.target.value || "0"))}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

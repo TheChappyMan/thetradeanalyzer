@@ -38,6 +38,13 @@ export type RosterKey =
   | "C" | "LW" | "RW" | "W" | "F" | "D" | "U" | "G" | "B" | "IR" | "IRplus";
 export type Roster = Record<RosterKey, number>;
 
+/** Extra points per G/A/P awarded to a position group (points leagues only). */
+export type PositionBonusStats = { G: number; A: number; P: number };
+export type PositionBonuses = {
+  forwards:  PositionBonusStats;
+  defenders: PositionBonusStats;
+};
+
 export type League = {
   name: string;
   teams: number;
@@ -49,6 +56,7 @@ export type League = {
   goalieWeights: GoalieWeights;
   skaterCategories: Record<SkaterStatKey, CategoryConfig | null>;
   goalieCategories: Record<GoalieStatKey, CategoryConfig | null>;
+  positionBonuses: PositionBonuses;
 };
 
 // ============================================================
@@ -87,6 +95,12 @@ export function emptyGoalieCategories(): Record<GoalieStatKey, CategoryConfig | 
     (acc, s) => ({ ...acc, [s]: null }),
     {} as Record<GoalieStatKey, CategoryConfig | null>
   );
+}
+export function emptyPositionBonuses(): PositionBonuses {
+  return {
+    forwards:  { G: 0, A: 0, P: 0 },
+    defenders: { G: 0, A: 0, P: 0 },
+  };
 }
 
 /** Standard points-league skater weights — applied when no league is configured. */
@@ -137,6 +151,7 @@ export const DEFAULT_NHL_LEAGUE: League = {
   goalieWeights: defaultGoalieWeights(),
   skaterCategories: defaultSkaterCategories(),
   goalieCategories: defaultGoalieCategories(),
+  positionBonuses: emptyPositionBonuses(),
 };
 
 /** Back-compat alias — existing imports use this name. */

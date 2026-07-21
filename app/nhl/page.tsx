@@ -39,6 +39,13 @@ type RosterKey =
   | "C" | "LW" | "RW" | "W" | "F" | "D" | "U" | "G" | "B" | "IR" | "IRplus";
 type Roster = Record<RosterKey, number>;
 
+/** Extra points per G/A/P awarded to a position group (points leagues only). */
+type PositionBonusStats = { G: number; A: number; P: number };
+type PositionBonuses = {
+  forwards:  PositionBonusStats;
+  defenders: PositionBonusStats;
+};
+
 type League = {
   name: string;
   teams: number;
@@ -50,6 +57,7 @@ type League = {
   goalieWeights: GoalieWeights;
   skaterCategories: Record<SkaterStatKey, CategoryConfig | null>;
   goalieCategories: Record<GoalieStatKey, CategoryConfig | null>;
+  positionBonuses: PositionBonuses;
 };
 
 // ============================================================
@@ -353,15 +361,25 @@ function projectedSeasonValue(
   player: DbPlayer,
   skaterWeights: SkaterWeights,
   goalieWeights: GoalieWeights,
-  useRates: boolean = true
+  useRates: boolean = true,
+  positionBonuses?: PositionBonuses
 ): number {
   const gp = player.gamesPlayed;
   if (gp === 0) return 0;
   const weights: Record<string, number> = player.isGoalie ? goalieWeights : skaterWeights;
+
+  // Positional bonus points (points leagues): extra weight on G/A/P for the
+  // player's position group. Defensemen use `defenders`; C/LW/RW use `forwards`.
+  const bonus = !player.isGoalie && positionBonuses
+    ? (player.position === "D" ? positionBonuses.defenders : positionBonuses.forwards)
+    : null;
+  const bonusFor = (stat: string): number =>
+    bonus && (stat === "G" || stat === "A" || stat === "P") ? (bonus[stat] || 0) : 0;
+
   if (!useRates) {
     let total = 0;
     Object.keys(weights).forEach((stat) => {
-      const weight = weights[stat] || 0;
+      const weight = (weights[stat] || 0) + bonusFor(stat);
       const value = player.stats[stat as SkaterStatKey | GoalieStatKey] || 0;
       total += value * weight;
     });
@@ -369,7 +387,7 @@ function projectedSeasonValue(
   }
   let perGame = 0;
   Object.keys(weights).forEach((stat) => {
-    const weight = weights[stat] || 0;
+    const weight = (weights[stat] || 0) + bonusFor(stat);
     const value = player.stats[stat as SkaterStatKey | GoalieStatKey] || 0;
     const isRateStat = stat === "ATOI" || stat === "GAA" || stat === "SV%";
     const rate = isRateStat ? value : value / gp;
@@ -437,7 +455,8 @@ function buildTalentRanking(
   poolStats?: PoolStats | null,
   skaterStatKeys?: SkaterStatKey[],
   goalieStatKeys?: GoalieStatKey[],
-  useRates?: boolean
+  useRates?: boolean,
+  positionBonuses?: PositionBonuses
 ): number[] {
   return playerDb
     .map((p) => {
@@ -448,7 +467,7 @@ function buildTalentRanking(
       ) {
         return zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys, useRates ?? true);
       }
-      return projectedSeasonValue(p, skaterWeights, goalieWeights, useRates ?? true);
+      return projectedSeasonValue(p, skaterWeights, goalieWeights, useRates ?? true, positionBonuses);
     })
     .sort((a, b) => b - a);
 }
@@ -702,6 +721,13 @@ function defaultGoalieCategories(): Record<GoalieStatKey, CategoryConfig | null>
   return cats;
 }
 
+function emptyPositionBonuses(): PositionBonuses {
+  return {
+    forwards:  { G: 0, A: 0, P: 0 },
+    defenders: { G: 0, A: 0, P: 0 },
+  };
+}
+
 const DEFAULT_NHL_LEAGUE: League = {
   name: "",
   teams: 12,
@@ -716,6 +742,7 @@ const DEFAULT_NHL_LEAGUE: League = {
   goalieWeights: defaultGoalieWeights(),
   skaterCategories: defaultSkaterCategories(),
   goalieCategories: defaultGoalieCategories(),
+  positionBonuses: emptyPositionBonuses(),
 };
 
 export default function TradeAnalyzer() {
@@ -954,10 +981,12 @@ export default function TradeAnalyzer() {
       poolStats,
       SKATER_STATS,
       GOALIE_STATS,
-      useRates
+      useRates,
+      league.positionBonuses
     );
   }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
-      league.skaterCategories, league.goalieCategories, poolStats, useRates]);
+      league.skaterCategories, league.goalieCategories, poolStats, useRates,
+      league.positionBonuses]);
 
   // League ranking: playerId → 1-based rank by projected points value.
   // Recomputes only when the DB or scoring weights change.
@@ -985,8 +1014,8 @@ export default function TradeAnalyzer() {
       } else {
         // Points mode with weights: rank by projected value, gamesPlayed as tiebreaker
         sorted = [...playerDb].sort((a, b) => {
-          const va = projectedSeasonValue(a, league.skaterWeights, league.goalieWeights, useRates);
-          const vb = projectedSeasonValue(b, league.skaterWeights, league.goalieWeights, useRates);
+          const va = projectedSeasonValue(a, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+          const vb = projectedSeasonValue(b, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
           return vb - va || b.gamesPlayed - a.gamesPlayed;
         });
       }
@@ -995,7 +1024,8 @@ export default function TradeAnalyzer() {
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
   }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
-      league.skaterCategories, league.goalieCategories, poolStats, useRates]);
+      league.skaterCategories, league.goalieCategories, poolStats, useRates,
+      league.positionBonuses]);
 
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
@@ -1016,7 +1046,7 @@ export default function TradeAnalyzer() {
       if (!dbEntry) return sum;
       const base = isCatMode && poolStats
         ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
-        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates);
+        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
@@ -1037,7 +1067,7 @@ export default function TradeAnalyzer() {
       if (!dbEntry) return sum;
       const base = isCatMode && poolStats
         ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
-        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates);
+        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
@@ -1178,6 +1208,11 @@ export default function TradeAnalyzer() {
     setLeague((prev) => ({ ...prev, roster: { ...prev.roster, [pos]: val } }));
   const updateSkaterWeight = (stat: SkaterStatKey, val: number) =>
     setLeague((prev) => ({ ...prev, skaterWeights: { ...prev.skaterWeights, [stat]: val } }));
+  const updatePositionBonus = (grp: "forwards" | "defenders", stat: "G" | "A" | "P", val: number) =>
+    setLeague((prev) => {
+      const pb = prev.positionBonuses ?? emptyPositionBonuses();
+      return { ...prev, positionBonuses: { ...pb, [grp]: { ...pb[grp], [stat]: val } } };
+    });
   const updateGoalieWeight = (stat: GoalieStatKey, val: number) =>
     setLeague((prev) => ({ ...prev, goalieWeights: { ...prev.goalieWeights, [stat]: val } }));
   const updateSkaterCategory = (stat: SkaterStatKey, cfg: CategoryConfig | null) =>
@@ -1476,6 +1511,40 @@ export default function TradeAnalyzer() {
                   </div>
                 ))}
               </div>
+
+              <h3 className="text-sm font-semibold mt-3 mb-1">Positional Bonus Points</h3>
+              <p className="text-xs mb-2" style={{ color: "var(--color-muted)" }}>
+                If a position in your league gets extra points for goals, assists, or points
+                (e.g. defensemen earn +1 per goal), enter the bonus here. It&apos;s added on top of
+                the skater weights above. Leave at 0 if your league doesn&apos;t use positional bonuses.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {(["forwards", "defenders"] as const).map((grp) => (
+                  <div key={grp}>
+                    <h4 className="text-xs font-semibold mb-1" style={{ color: "var(--color-muted)" }}>
+                      {grp === "forwards" ? "Forwards" : "Defenders"}
+                    </h4>
+                    <div className="space-y-1">
+                      {(["G", "A", "P"] as const).map((stat) => (
+                        <div key={stat} className="flex items-center justify-between gap-2">
+                          <label className="text-sm w-16 flex items-center gap-1">
+                            {stat}
+                            <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            className="form-input"
+                            style={{ padding: "0.25rem" }}
+                            value={league.positionBonuses?.[grp]?.[stat] ?? 0}
+                            onChange={(e) => updatePositionBonus(grp, stat, parseFloat(e.target.value || "0"))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </>
           ) : (
             <>
@@ -1586,6 +1655,7 @@ export default function TradeAnalyzer() {
             dbStatus={dbStatus}
             roster={league.roster}
             skaterWeights={league.skaterWeights}
+            positionBonuses={league.positionBonuses}
             goalieWeights={league.goalieWeights}
             rankMap={rankMap}
             injuryMap={injuryMap}
@@ -1609,6 +1679,7 @@ export default function TradeAnalyzer() {
             dbStatus={dbStatus}
             roster={league.roster}
             skaterWeights={league.skaterWeights}
+            positionBonuses={league.positionBonuses}
             goalieWeights={league.goalieWeights}
             rankMap={rankMap}
             injuryMap={injuryMap}
@@ -1762,6 +1833,7 @@ type TradeSideProps = {
   roster: Roster;
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  positionBonuses: PositionBonuses | undefined;
   rankMap: Map<number, number>;
   injuryMap: Record<number, string>;
   isRedraft: boolean;
@@ -1775,7 +1847,7 @@ type TradeSideProps = {
 function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
-  roster, skaterWeights, goalieWeights, rankMap,
+  roster, skaterWeights, goalieWeights, positionBonuses, rankMap,
   injuryMap, isRedraft,
   onAdd, onRemove, onTogglePos, onToggleKeeper, useRates,
 }: TradeSideProps) {
@@ -1797,6 +1869,7 @@ function TradeSide({
             roster={roster}
             skaterWeights={skaterWeights}
             goalieWeights={goalieWeights}
+            positionBonuses={positionBonuses}
             rank={rankMap.get(p.id) ?? null}
             totalPlayers={playerDb.length}
             injuryStatus={injuryMap[p.id]}
@@ -2039,6 +2112,7 @@ type PlayerRowProps = {
   roster: Roster;
   skaterWeights: SkaterWeights;
   goalieWeights: GoalieWeights;
+  positionBonuses: PositionBonuses | undefined;
   rank: number | null;
   totalPlayers: number;
   injuryStatus: string | undefined;
@@ -2050,13 +2124,13 @@ type PlayerRowProps = {
 };
 
 function PlayerRow({
-  player, dbEntry, roster, skaterWeights, goalieWeights, rank, totalPlayers,
+  player, dbEntry, roster, skaterWeights, goalieWeights, positionBonuses, rank, totalPlayers,
   injuryStatus, isRedraft,
   onRemove, onTogglePos, onToggleKeeper, useRates,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
   const mult      = positionMultiplier(player.positions, roster);
-  const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights, useRates);
+  const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights, useRates, positionBonuses);
   const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
   const iMult     = nhlInjuryMultiplier(injuryStatus, isRedraft);
   const adjValue  = baseValue * mult * kMult * iMult;
