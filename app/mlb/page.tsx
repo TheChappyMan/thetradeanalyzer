@@ -1479,15 +1479,15 @@ export default function MlbTradeAnalyzer() {
             </div>
             <div className="relative my-2">
               <div className="h-6 rounded-full overflow-hidden flex">
-                <div style={{ width: "10.5%", background: "#000000" }} />
-                <div style={{ width: "10%",   background: "#cc0000" }} />
-                <div style={{ width: "10%",   background: "#ff6600" }} />
-                <div style={{ width: "10%",   background: "#ffcc00" }} />
-                <div style={{ width: "19%",   background: "#33aa33" }} />
-                <div style={{ width: "10%",   background: "#ffcc00" }} />
-                <div style={{ width: "10%",   background: "#ff6600" }} />
-                <div style={{ width: "10%",   background: "#cc0000" }} />
-                <div style={{ width: "10.5%", background: "#000000" }} />
+                <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
+                <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
+                <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
+                <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
+                <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
+                <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
+                <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
+                <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
+                <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
               </div>
               {/* Marker — overhangs the bar top and bottom so it stands out */}
               <div
