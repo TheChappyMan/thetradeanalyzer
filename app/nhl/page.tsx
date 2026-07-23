@@ -1737,21 +1737,27 @@ export default function TradeAnalyzer() {
             <span>You Win</span>
           </div>
           {/* Segmented bar — all zones always visible, marker moves */}
-          <div className="relative h-3 rounded-full overflow-hidden flex">
-            {/* Each width = segment range / 100 * 100% */}
-            <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-            <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-            <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-            <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-            <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
-            <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-            <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-            <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-            <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-            {/* Marker */}
+          <div className="relative my-2">
+            <div className="h-6 rounded-full overflow-hidden flex">
+              {/* Each width = segment range / 100 * 100% */}
+              <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
+              <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
+              <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
+              <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
+            </div>
+            {/* Marker — overhangs the bar top and bottom so it stands out */}
             <div
-              className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
-              style={{ left: `${safeDisplayScore}%` }}
+              className="absolute -top-1.5 -bottom-1.5 w-1.5 -translate-x-1/2 rounded-full pointer-events-none"
+              style={{
+                left: `${safeDisplayScore}%`,
+                background: "#fff",
+                boxShadow: "0 0 0 1.5px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.45)",
+              }}
             />
           </div>
         </div>

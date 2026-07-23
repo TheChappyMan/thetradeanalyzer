@@ -1477,19 +1477,26 @@ export default function MlbTradeAnalyzer() {
               <span className="absolute left-1/2 -translate-x-1/2 font-medium">Fairness Scale</span>
               <span>You Win</span>
             </div>
-            <div className="relative h-3 rounded-full overflow-hidden flex">
-              <div style={{ width: "10.5%", background: "#000000" }} />
-              <div style={{ width: "10%",   background: "#cc0000" }} />
-              <div style={{ width: "10%",   background: "#ff6600" }} />
-              <div style={{ width: "10%",   background: "#ffcc00" }} />
-              <div style={{ width: "19%",   background: "#33aa33" }} />
-              <div style={{ width: "10%",   background: "#ffcc00" }} />
-              <div style={{ width: "10%",   background: "#ff6600" }} />
-              <div style={{ width: "10%",   background: "#cc0000" }} />
-              <div style={{ width: "10.5%", background: "#000000" }} />
+            <div className="relative my-2">
+              <div className="h-6 rounded-full overflow-hidden flex">
+                <div style={{ width: "10.5%", background: "#000000" }} />
+                <div style={{ width: "10%",   background: "#cc0000" }} />
+                <div style={{ width: "10%",   background: "#ff6600" }} />
+                <div style={{ width: "10%",   background: "#ffcc00" }} />
+                <div style={{ width: "19%",   background: "#33aa33" }} />
+                <div style={{ width: "10%",   background: "#ffcc00" }} />
+                <div style={{ width: "10%",   background: "#ff6600" }} />
+                <div style={{ width: "10%",   background: "#cc0000" }} />
+                <div style={{ width: "10.5%", background: "#000000" }} />
+              </div>
+              {/* Marker — overhangs the bar top and bottom so it stands out */}
               <div
-                className="absolute top-0 h-full w-1 -translate-x-1/2 bg-white shadow pointer-events-none"
-                style={{ left: `${safeScore}%` }}
+                className="absolute -top-1.5 -bottom-1.5 w-1.5 -translate-x-1/2 rounded-full pointer-events-none"
+                style={{
+                  left: `${safeScore}%`,
+                  background: "#fff",
+                  boxShadow: "0 0 0 1.5px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.45)",
+                }}
               />
             </div>
           </div>
