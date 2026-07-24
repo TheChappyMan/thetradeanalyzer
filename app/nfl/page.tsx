@@ -89,21 +89,11 @@ type LeagueRow = { id: string; name: string; sport: string; settings: unknown };
 // PERSISTENCE – localStorage helpers
 // ============================================================
 
-const LS_NFL_CURRENT   = "fta-nfl-current-league";
+// NOTE: league settings are deliberately NOT persisted for free users —
+// saved settings are a paid (tier1+) feature stored in Supabase.
 const LS_NFL_HISTORY   = "fta-nfl-trade-history";
 const LS_NFL_DATA_MODE = "fta-nfl-data-mode";
 const MAX_HISTORY = 50;
-
-function loadNflLeague(): NflLeague | null {
-  try {
-    const raw = localStorage.getItem(LS_NFL_CURRENT);
-    return raw ? (JSON.parse(raw) as NflLeague) : null;
-  } catch { return null; }
-}
-
-function saveNflLeague(league: NflLeague) {
-  try { localStorage.setItem(LS_NFL_CURRENT, JSON.stringify(league)); } catch {}
-}
 
 function loadNflHistory(): HistoryEntry[] {
   try {
@@ -296,19 +286,9 @@ export default function NflTradeAnalyzer() {
   const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
   // ── League state ──────────────────────────────────────────
-  const [league, setLeague] = useState<NflLeague>(() => {
-    const saved = loadNflLeague();
-    if (!saved) return DEFAULT_NFL_LEAGUE;
-    return {
-      ...DEFAULT_NFL_LEAGUE,
-      ...saved,
-      roster:         { ...DEFAULT_NFL_LEAGUE.roster,         ...saved.roster },
-      scoringWeights: { ...DEFAULT_NFL_LEAGUE.scoringWeights, ...saved.scoringWeights },
-    };
-  });
-
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Free users always start from the defaults — settings persistence is a
+  // paid feature (Supabase settings are applied below once Clerk resolves).
+  const [league, setLeague] = useState<NflLeague>(DEFAULT_NFL_LEAGUE);
 
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saved">("idle");
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -397,15 +377,6 @@ export default function NflTradeAnalyzer() {
   }, [dataMode, currentSeasonDb, priorSeasonDb]);
 
   const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
-
-  // ── Auto-save league settings to localStorage (free only) ─
-  useEffect(() => {
-    if (isPro) return;
-    saveNflLeague(league);
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    setSaveStatus("saved");
-    saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
-  }, [league, isPro]);
 
   // ── Apply saved NFL league settings into component state ────
   const applyLeagueSettings = useCallback((settings: NflLeague) => {
@@ -909,9 +880,6 @@ export default function NflTradeAnalyzer() {
                 Total roster size: <span className="font-semibold" style={{ color: "var(--color-text)" }}>{totalRosterSize}</span>
               </div>
 
-              {isPro && saveStatus === "saved" && (
-                <div className="text-xs mt-2" style={{ color: "var(--color-success)" }}>✓ Auto-saved</div>
-              )}
             </div>
 
             {/* Scoring */}

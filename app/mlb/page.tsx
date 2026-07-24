@@ -43,7 +43,8 @@ import {
 // PERSISTENCE – localStorage helpers
 // ============================================================
 
-const LS_CURRENT  = "fta-mlb-current-league";
+// NOTE: league settings are deliberately NOT persisted for free users —
+// saved settings are a paid (tier1+) feature stored in Supabase.
 const LS_PROFILES = "fta-mlb-saved-profiles";
 const LS_HISTORY  = "fta-mlb-trade-history";
 const LS_DATA_MODE = "fta-mlb-data-mode";
@@ -67,15 +68,6 @@ type HistoryEntry = {
   verdict: string;
 };
 
-function loadCurrentLeague(): MlbLeague | null {
-  try {
-    const raw = localStorage.getItem(LS_CURRENT);
-    return raw ? (JSON.parse(raw) as MlbLeague) : null;
-  } catch { return null; }
-}
-function saveCurrentLeague(league: MlbLeague) {
-  try { localStorage.setItem(LS_CURRENT, JSON.stringify(league)); } catch {}
-}
 function loadProfiles(): SavedProfile[] {
   try {
     const raw = localStorage.getItem(LS_PROFILES);
@@ -674,25 +666,11 @@ export default function MlbTradeAnalyzer() {
   const isTier2 = tier === "tier2" || tier === "tier3";
   const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
-  const [league, setLeague] = useState<MlbLeague>(() => {
-    const saved = loadCurrentLeague();
-    if (!saved) return DEFAULT_MLB_LEAGUE;
-    return {
-      ...DEFAULT_MLB_LEAGUE,
-      ...saved,
-      format: saved.format ?? "5x5",
-      hitterCategories:  saved.hitterCategories
-        ? { ...DEFAULT_MLB_LEAGUE.hitterCategories,  ...saved.hitterCategories  }
-        : emptyHitterCategories(),
-      pitcherCategories: saved.pitcherCategories
-        ? { ...DEFAULT_MLB_LEAGUE.pitcherCategories, ...saved.pitcherCategories }
-        : emptyPitcherCategories(),
-    };
-  });
+  // Free users always start from the defaults — settings persistence is a
+  // paid feature (Supabase settings are applied below once Clerk resolves).
+  const [league, setLeague] = useState<MlbLeague>(DEFAULT_MLB_LEAGUE);
 
   const [profiles,   setProfiles]   = useState<SavedProfile[]>(() => loadProfiles());
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saved">("idle");
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -765,15 +743,6 @@ export default function MlbTradeAnalyzer() {
     }
     return base;
   }, [dataMode, currentSeasonDb, priorSeasonDb]);
-
-  // ── Auto-save league (free users) ─────────────────────────────
-  useEffect(() => {
-    if (isPro) return;
-    saveCurrentLeague(league);
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    setSaveStatus("saved");
-    saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
-  }, [league, isPro]);
 
   const applyLeagueSettings = useCallback((settings: MlbLeague) => {
     setLeague({
@@ -1088,7 +1057,7 @@ export default function MlbTradeAnalyzer() {
   const hasAnything = sendPlayers.length > 0 || recvPlayers.length > 0 ||
                       sendPicks.trim() !== "" || recvPicks.trim() !== "";
   void hasAnything; void saveProfile; void loadProfile; void deleteProfile;
-  void saveStatus; void tradeRatingLabel; void barColor;
+  void tradeRatingLabel; void barColor;
 
   // ============================================================
   // RENDER

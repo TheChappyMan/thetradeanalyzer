@@ -64,25 +64,11 @@ type League = {
 // PERSISTENCE – localStorage helpers
 // ============================================================
 
-const LS_CURRENT = "fta-current-league";
+// NOTE: league settings are deliberately NOT persisted for free users —
+// saved settings are a paid (tier1+) feature stored in Supabase.
 const LS_PROFILES = "fta-saved-profiles";
 
 type SavedProfile = { name: string; savedAt: string; league: League };
-
-function loadCurrentLeague(): League | null {
-  try {
-    const raw = localStorage.getItem(LS_CURRENT);
-    return raw ? (JSON.parse(raw) as League) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveCurrentLeague(league: League) {
-  try {
-    localStorage.setItem(LS_CURRENT, JSON.stringify(league));
-  } catch {}
-}
 
 function loadProfiles(): SavedProfile[] {
   try {
@@ -752,41 +738,10 @@ export default function TradeAnalyzer() {
   const isTier2 = tier === "tier2" || tier === "tier3";
   const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
-  const [league, setLeague] = useState<League>(() => {
-    const saved = loadCurrentLeague();
-    if (!saved) return DEFAULT_NHL_LEAGUE;
-    // Migration: fill in fields that didn't exist in older saved versions
-    const rawWeights = saved.skaterWeights as Record<string, number> | undefined;
-    const rawCategories = saved.skaterCategories as Record<string, CategoryConfig | null> | undefined;
-    // Migrate PLUS/MINUS → PM
-    const migratedWeights = { ...DEFAULT_NHL_LEAGUE.skaterWeights, ...rawWeights };
-    if (rawWeights && ("PLUS" in rawWeights || "MINUS" in rawWeights)) {
-      migratedWeights.PM = (rawWeights.PLUS ?? 0) + Math.abs(rawWeights.MINUS ?? 0);
-      delete (migratedWeights as Record<string, number>).PLUS;
-      delete (migratedWeights as Record<string, number>).MINUS;
-    }
-    const migratedCategories = { ...DEFAULT_NHL_LEAGUE.skaterCategories, ...rawCategories };
-    if (rawCategories && ("PLUS" in rawCategories || "MINUS" in rawCategories)) {
-      migratedCategories.PM = rawCategories.PLUS ?? rawCategories.MINUS ?? null;
-      delete (migratedCategories as Record<string, CategoryConfig | null>).PLUS;
-      delete (migratedCategories as Record<string, CategoryConfig | null>).MINUS;
-    }
-    return {
-      ...DEFAULT_NHL_LEAGUE,
-      ...saved,
-      scoringType: saved.scoringType ?? "points",
-      skaterWeights: migratedWeights,
-      skaterCategories: rawCategories
-        ? migratedCategories
-        : emptySkaterCategories(),
-      goalieCategories: saved.goalieCategories
-        ? { ...DEFAULT_NHL_LEAGUE.goalieCategories, ...saved.goalieCategories }
-        : emptyGoalieCategories(),
-    };
-  });
+  // Free users always start from the defaults — settings persistence is a
+  // paid feature (Supabase settings are applied below once Clerk resolves).
+  const [league, setLeague] = useState<League>(DEFAULT_NHL_LEAGUE);
   const [profiles, setProfiles] = useState<SavedProfile[]>(() => loadProfiles());
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saved">("idle");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-save state for Pro users (replaces the manual "Save to History" button)
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saved">("idle");
@@ -869,15 +824,6 @@ export default function TradeAnalyzer() {
       ? base.map(normalizePlayerTo82)
       : base;
   }, [dataMode, currentSeasonDb, priorSeasonDb]);
-
-  // Auto-save current league settings whenever they change (free users only)
-  useEffect(() => {
-    if (isPro) return;
-    saveCurrentLeague(league);
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    setSaveStatus("saved");
-    saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 1500);
-  }, [league, isPro]);
 
   // ── Apply saved league settings into component state ────────
   const applyLeagueSettings = useCallback((settings: League) => {
