@@ -914,7 +914,7 @@ export default function NflTradeAnalyzer() {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {/* Left column */}
-                <div>
+                <div className="min-w-0">
                   {LEFT_WEIGHT_GROUPS.map(({ heading, keys, bonusCat }) => (
                     <div key={heading} className="mb-3">
                       <h3 className="text-sm font-semibold mt-2 mb-1" style={{ color: "var(--color-text)" }}>
@@ -950,7 +950,7 @@ export default function NflTradeAnalyzer() {
                   ))}
                 </div>
                 {/* Right column */}
-                <div>
+                <div className="min-w-0">
                   {RIGHT_WEIGHT_GROUPS.map(({ heading, keys, bonusCat }) => (
                     <div key={heading} className="mb-3">
                       <h3 className="text-sm font-semibold mt-2 mb-1" style={{ color: "var(--color-text)" }}>

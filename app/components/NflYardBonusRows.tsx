@@ -74,9 +74,9 @@ export default function NflYardBonusRows({ category, weights, onChange, resetKey
         const thr = thresholds[slot];
         const key = nflYardBonusKey(category, thr);
         return (
-          <div key={slot} className="flex items-center justify-between gap-2">
+          <div key={slot} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
             <label
-              className="text-xs flex-1 flex items-center gap-1 whitespace-nowrap"
+              className="text-xs flex-1 flex items-center gap-1"
               style={{ color: "var(--color-text)" }}
             >
               Yards Bonus {slot + 1}
@@ -85,7 +85,7 @@ export default function NflYardBonusRows({ category, weights, onChange, resetKey
               />
             </label>
             <select
-              className="form-input w-20 shrink-0 text-sm"
+              className="form-input w-16 shrink-0 text-sm"
               style={{ padding: "0.25rem" }}
               value={thr}
               onChange={(e) =>
