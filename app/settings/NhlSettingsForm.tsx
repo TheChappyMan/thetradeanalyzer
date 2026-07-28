@@ -3,7 +3,14 @@
 import React, { useMemo, useState } from "react";
 import { saveLeagueSettings, saveNflLeagueSettings, saveMlbLeagueSettings } from "./actions";
 import StatHelp from "@/app/components/StatHelp";
-import { NHL_SKATER_DESCRIPTIONS, NHL_GOALIE_DESCRIPTIONS } from "@/lib/stat-descriptions";
+import NflYardBonusRows from "@/app/components/NflYardBonusRows";
+import {
+  NHL_SKATER_DESCRIPTIONS,
+  NHL_GOALIE_DESCRIPTIONS,
+  NFL_WEIGHT_DESCRIPTIONS,
+  MLB_HITTER_DESCRIPTIONS,
+  MLB_PITCHER_DESCRIPTIONS,
+} from "@/lib/stat-descriptions";
 import {
   DEFAULT_LEAGUE,
   GOALIE_STATS,
@@ -23,6 +30,7 @@ import {
   type NflLeague,
   type NflScoringWeights,
   type NflRoster,
+  type NflYardBonusCategory,
 } from "@/lib/nfl-types";
 import {
   DEFAULT_MLB_LEAGUE,
@@ -42,11 +50,10 @@ import {
 
 type NflWeightKey = keyof NflScoringWeights;
 
-const NFL_WEIGHT_GROUPS: { heading: string; keys: NflWeightKey[] }[] = [
-  { heading: "Passing",    keys: ["passYds", "passTDs", "passInt"] },
-  { heading: "Rushing",    keys: ["rushYds", "rushTDs", "rushAtt"] },
-  { heading: "Receiving",  keys: ["rec", "recYds", "recTDs"] },
-  { heading: "Yard Bonuses", keys: ["bonusRushYd100", "bonusRushYd200", "bonusRecYd100", "bonusPassYd300"] },
+const NFL_WEIGHT_GROUPS: { heading: string; keys: NflWeightKey[]; bonusCat?: NflYardBonusCategory }[] = [
+  { heading: "Passing",    keys: ["passYds", "passTDs", "passInt", "pass2pt"], bonusCat: "pass" },
+  { heading: "Rushing",    keys: ["rushYds", "rushTDs", "rushAtt", "rush2pt"], bonusCat: "rush" },
+  { heading: "Receiving",  keys: ["rec", "recYds", "recTDs", "rec2pt"], bonusCat: "rec" },
   { heading: "Misc",       keys: ["fumblesLost"] },
   { heading: "Kicker",     keys: ["fgMade0to39", "fgMade40to49", "fgMade50plus", "fgMissed", "patMade", "patMissed"] },
   { heading: "DST Counting", keys: ["sacks", "ints", "fumbRec", "defTDs"] },
@@ -60,16 +67,32 @@ const NFL_WEIGHT_LABELS: Record<NflWeightKey, string> = {
   passYds:          "Pass Yds (per yd)",
   passTDs:          "Pass TDs",
   passInt:          "Pass INTs",
+  pass2pt:          "2-Pt Conversions (Pass)",
   rushYds:          "Rush Yds (per yd)",
   rushTDs:          "Rush TDs",
   rushAtt:          "Rush Attempts (per carry)",
+  rush2pt:          "2-Pt Conversions (Rush)",
   rec:              "Reception",
   recYds:           "Rec Yds (per yd)",
   recTDs:           "Rec TDs",
-  bonusRushYd100:   "100+ Rush Yds Game",
-  bonusRushYd200:   "200+ Rush Yds Game",
-  bonusRecYd100:    "100+ Rec Yds Game",
+  rec2pt:           "2-Pt Conversions (Rec)",
+  // Yard-bonus keys are edited via the dropdown rows (NflYardBonusRows),
+  // not rendered from the generic groups; labels exist for type completeness.
+  bonusPassYd100:   "100+ Pass Yds Game",
+  bonusPassYd150:   "150+ Pass Yds Game",
+  bonusPassYd200:   "200+ Pass Yds Game",
+  bonusPassYd250:   "250+ Pass Yds Game",
   bonusPassYd300:   "300+ Pass Yds Game",
+  bonusRushYd100:   "100+ Rush Yds Game",
+  bonusRushYd150:   "150+ Rush Yds Game",
+  bonusRushYd200:   "200+ Rush Yds Game",
+  bonusRushYd250:   "250+ Rush Yds Game",
+  bonusRushYd300:   "300+ Rush Yds Game",
+  bonusRecYd100:    "100+ Rec Yds Game",
+  bonusRecYd150:    "150+ Rec Yds Game",
+  bonusRecYd200:    "200+ Rec Yds Game",
+  bonusRecYd250:    "250+ Rec Yds Game",
+  bonusRecYd300:    "300+ Rec Yds Game",
   fumblesLost:      "Fumbles Lost",
   fgMade0to39:      "FG 0–39 yds",
   fgMade40to49:     "FG 40–49 yds",
@@ -1124,19 +1147,23 @@ export default function NhlSettingsForm({
                 Changing PPR Format above auto-updates the Reception weight.
                 Adjust any weight to match your league exactly.
               </p>
-              {NFL_WEIGHT_GROUPS.map(({ heading, keys }) => (
+              {NFL_WEIGHT_GROUPS.map(({ heading, keys, bonusCat }) => (
                 <div key={heading} className="mb-3">
                   <h3
-                    className="text-xs font-semibold uppercase tracking-wide mb-1"
-                    style={{ color: "var(--color-muted)" }}
+                    className="text-sm font-semibold mt-2 mb-1"
+                    style={{ color: "var(--color-text)" }}
                   >
                     {heading}
                   </h3>
                   <div className="grid grid-cols-1 gap-y-1">
                     {keys.map((key) => (
                       <div key={key} className="flex items-center justify-between gap-2">
-                        <label className="text-xs flex-1" style={{ color: "var(--color-text)" }}>
+                        <label
+                          className="text-xs flex-1 flex items-center gap-1"
+                          style={{ color: "var(--color-text)" }}
+                        >
                           {NFL_WEIGHT_LABELS[key]}
+                          <StatHelp text={NFL_WEIGHT_DESCRIPTIONS[key]} />
                         </label>
                         <input
                           type="number"
@@ -1147,6 +1174,14 @@ export default function NhlSettingsForm({
                         />
                       </div>
                     ))}
+                    {bonusCat && (
+                      <NflYardBonusRows
+                        category={bonusCat}
+                        weights={nflLeague.scoringWeights}
+                        onChange={updateNflWeight}
+                        resetKey={selectedNflId}
+                      />
+                    )}
                   </div>
                 </div>
               ))}
@@ -1302,9 +1337,12 @@ export default function NhlSettingsForm({
                               />
                               <label
                                 htmlFor={`hcat-${stat}`}
-                                className="w-10 cursor-pointer"
+                                className="w-10 cursor-pointer flex items-center gap-1"
                                 style={{ color: "var(--color-text)" }}
-                              >{stat}</label>
+                              >
+                                {stat}
+                                <StatHelp text={MLB_HITTER_DESCRIPTIONS[stat]} />
+                              </label>
                               {cfg && (
                                 <div
                                   className="flex rounded-lg border overflow-hidden text-xs"
@@ -1348,9 +1386,12 @@ export default function NhlSettingsForm({
                               />
                               <label
                                 htmlFor={`pcat-${stat}`}
-                                className="w-10 cursor-pointer"
+                                className="w-10 cursor-pointer flex items-center gap-1"
                                 style={{ color: "var(--color-text)" }}
-                              >{stat}</label>
+                              >
+                                {stat}
+                                <StatHelp text={MLB_PITCHER_DESCRIPTIONS[stat]} />
+                              </label>
                               {cfg && (
                                 <div
                                   className="flex rounded-lg border overflow-hidden text-xs"
@@ -1389,7 +1430,10 @@ export default function NhlSettingsForm({
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-3">
                     {HITTER_STATS.map((stat) => (
                       <div key={stat} className="flex items-center justify-between gap-2">
-                        <label className="text-sm w-12" style={{ color: "var(--color-text)" }}>{stat}</label>
+                        <label className="text-sm w-12 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
+                          {stat}
+                          <StatHelp text={MLB_HITTER_DESCRIPTIONS[stat]} />
+                        </label>
                         <input
                           type="number" step="0.1"
                           className="form-input p-1"
@@ -1403,7 +1447,10 @@ export default function NhlSettingsForm({
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     {PITCHER_STATS.map((stat) => (
                       <div key={stat} className="flex items-center justify-between gap-2">
-                        <label className="text-sm w-12" style={{ color: "var(--color-text)" }}>{stat}</label>
+                        <label className="text-sm w-12 flex items-center gap-1" style={{ color: "var(--color-text)" }}>
+                          {stat}
+                          <StatHelp text={MLB_PITCHER_DESCRIPTIONS[stat]} />
+                        </label>
                         <input
                           type="number" step="0.1"
                           className="form-input p-1"

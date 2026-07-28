@@ -19,22 +19,38 @@ export type NflScoringWeights = {
   passYds: number;       // per yard (e.g. 0.04 = 1pt/25yds)
   passTDs: number;       // per TD
   passInt: number;       // per INT (negative)
+  pass2pt: number;       // per passing 2-pt conversion
 
   // ── Rushing ──────────────────────────────────────────────
   rushYds: number;       // per yard (e.g. 0.1 = 1pt/10yds)
   rushTDs: number;       // per TD
   rushAtt: number;       // per rushing attempt (carry)
+  rush2pt: number;       // per rushing 2-pt conversion
 
   // ── Receiving ────────────────────────────────────────────
   rec: number;           // per reception (0 std / 0.5 half / 1 full PPR)
   recYds: number;        // per yard
   recTDs: number;        // per TD
+  rec2pt: number;        // per receiving 2-pt conversion
 
-  // ── Yard bonuses (per game hitting the threshold) ────────
-  bonusRushYd100: number;  // per game with 100+ rush yds
-  bonusRushYd200: number;  // per game with 200+ rush yds
-  bonusRecYd100: number;   // per game with 100+ rec yds
-  bonusPassYd300: number;  // per game with 300+ pass yds
+  // ── Yard bonuses (points per game hitting the threshold) ─
+  // The UI exposes two configurable bonus slots per category;
+  // each slot picks one of these threshold keys to hold points.
+  bonusPassYd100: number;
+  bonusPassYd150: number;
+  bonusPassYd200: number;
+  bonusPassYd250: number;
+  bonusPassYd300: number;
+  bonusRushYd100: number;
+  bonusRushYd150: number;
+  bonusRushYd200: number;
+  bonusRushYd250: number;
+  bonusRushYd300: number;
+  bonusRecYd100: number;
+  bonusRecYd150: number;
+  bonusRecYd200: number;
+  bonusRecYd250: number;
+  bonusRecYd300: number;
 
   // ── Turnovers ────────────────────────────────────────────
   fumblesLost: number;   // per fumble lost (negative)
@@ -76,11 +92,25 @@ export type NflPlayerStats = {
   recYds?: number;
   recTDs?: number;
   fumblesLost?: number;
+  pass2pt?: number;
+  rush2pt?: number;
+  rec2pt?: number;
   // Season counts of games hitting each yardage threshold
-  bonusRushYd100?: number;
-  bonusRushYd200?: number;
-  bonusRecYd100?: number;
+  bonusPassYd100?: number;
+  bonusPassYd150?: number;
+  bonusPassYd200?: number;
+  bonusPassYd250?: number;
   bonusPassYd300?: number;
+  bonusRushYd100?: number;
+  bonusRushYd150?: number;
+  bonusRushYd200?: number;
+  bonusRushYd250?: number;
+  bonusRushYd300?: number;
+  bonusRecYd100?: number;
+  bonusRecYd150?: number;
+  bonusRecYd200?: number;
+  bonusRecYd250?: number;
+  bonusRecYd300?: number;
   // Kicker
   fgMade0to39?: number;
   fgMade40to49?: number;
@@ -120,6 +150,29 @@ export type NflLeague = {
 };
 
 // ============================================================
+// YARD BONUS HELPERS
+// ============================================================
+
+/** Threshold options offered in the yard-bonus dropdowns */
+export const NFL_YARD_BONUS_THRESHOLDS = [100, 150, 200, 250, 300] as const;
+export type NflYardBonusThreshold = (typeof NFL_YARD_BONUS_THRESHOLDS)[number];
+export type NflYardBonusCategory = "pass" | "rush" | "rec";
+
+/** Scoring-weight key for a category + threshold, e.g. nflYardBonusKey("rec", 150) → "bonusRecYd150" */
+export function nflYardBonusKey(
+  cat: NflYardBonusCategory,
+  thr: NflYardBonusThreshold
+): keyof NflScoringWeights {
+  const c = cat === "pass" ? "Pass" : cat === "rush" ? "Rush" : "Rec";
+  return `bonus${c}Yd${thr}` as keyof NflScoringWeights;
+}
+
+/** All 15 yard-bonus weight keys (also valid NflPlayerStats keys) */
+export const NFL_YARD_BONUS_KEYS = (["pass", "rush", "rec"] as const).flatMap((cat) =>
+  NFL_YARD_BONUS_THRESHOLDS.map((thr) => nflYardBonusKey(cat, thr))
+) as (keyof NflScoringWeights & keyof NflPlayerStats)[];
+
+// ============================================================
 // DEFAULTS
 // ============================================================
 
@@ -138,10 +191,24 @@ export const DEFAULT_NFL_SCORING_WEIGHTS: NflScoringWeights = {
   rec:             0.5,   // half PPR
   recYds:          0.1,   // 1 pt / 10 yds
   recTDs:          6,
-  bonusRushYd100:  0,
-  bonusRushYd200:  0,
-  bonusRecYd100:   0,
+  pass2pt:         0,
+  rush2pt:         0,
+  rec2pt:          0,
+  bonusPassYd100:  0,
+  bonusPassYd150:  0,
+  bonusPassYd200:  0,
+  bonusPassYd250:  0,
   bonusPassYd300:  0,
+  bonusRushYd100:  0,
+  bonusRushYd150:  0,
+  bonusRushYd200:  0,
+  bonusRushYd250:  0,
+  bonusRushYd300:  0,
+  bonusRecYd100:   0,
+  bonusRecYd150:   0,
+  bonusRecYd200:   0,
+  bonusRecYd250:   0,
+  bonusRecYd300:   0,
   fumblesLost:    -2,
   fgMade0to39:     3,
   fgMade40to49:    4,

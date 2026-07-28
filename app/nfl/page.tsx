@@ -6,6 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import NflYardBonusRows from "@/app/components/NflYardBonusRows";
 import { NFL_WEIGHT_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import nflPlayersJson from "@/lib/nfl-players.json";
 import {
@@ -15,6 +16,7 @@ import {
   type NflPlayerPosition,
   type NflScoringWeights,
   type NflRoster,
+  type NflYardBonusCategory,
 } from "@/lib/nfl-types";
 import {
   projectedNflValue,
@@ -211,18 +213,17 @@ const NFL_POSITIONS: NflPlayerPosition[] = ["QB", "RB", "WR", "TE", "K", "DST"];
 
 type WeightKey = keyof NflScoringWeights;
 
-type WeightGroup = { heading: string; keys: WeightKey[] };
+type WeightGroup = { heading: string; keys: WeightKey[]; bonusCat?: NflYardBonusCategory };
 
 const LEFT_WEIGHT_GROUPS: WeightGroup[] = [
-  { heading: "Passing",   keys: ["passYds", "passTDs", "passInt"] },
-  { heading: "Rushing",   keys: ["rushYds", "rushTDs", "rushAtt"] },
-  { heading: "Receiving", keys: ["rec", "recYds", "recTDs"] },
+  { heading: "Passing",   keys: ["passYds", "passTDs", "passInt", "pass2pt"], bonusCat: "pass" },
+  { heading: "Rushing",   keys: ["rushYds", "rushTDs", "rushAtt", "rush2pt"], bonusCat: "rush" },
+  { heading: "Receiving", keys: ["rec", "recYds", "recTDs", "rec2pt"], bonusCat: "rec" },
   { heading: "Misc",      keys: ["fumblesLost"] },
   { heading: "Kicker",    keys: ["fgMade0to39", "fgMade40to49", "fgMade50plus", "fgMissed", "patMade", "patMissed"] },
 ];
 
 const RIGHT_WEIGHT_GROUPS: WeightGroup[] = [
-  { heading: "Yard Bonuses", keys: ["bonusRushYd100", "bonusRushYd200", "bonusRecYd100", "bonusPassYd300"] },
   { heading: "Defense / ST", keys: ["sacks", "ints", "fumbRec", "defTDs"] },
   { heading: "DST Pts Allowed", keys: [
     "ptsAllowed0", "ptsAllowed1to6", "ptsAllowed7to13",
@@ -234,16 +235,32 @@ const WEIGHT_LABELS: Record<WeightKey, string> = {
   passYds:          "Pass Yds (per yd)",
   passTDs:          "Pass TDs",
   passInt:          "Pass INTs",
+  pass2pt:          "2-Pt Conversions (Pass)",
   rushYds:          "Rush Yds (per yd)",
   rushTDs:          "Rush TDs",
   rushAtt:          "Rush Attempts (per carry)",
+  rush2pt:          "2-Pt Conversions (Rush)",
   rec:              "Reception",
   recYds:           "Rec Yds (per yd)",
   recTDs:           "Rec TDs",
-  bonusRushYd100:   "100+ Rush Yds Game",
-  bonusRushYd200:   "200+ Rush Yds Game",
-  bonusRecYd100:    "100+ Rec Yds Game",
+  rec2pt:           "2-Pt Conversions (Rec)",
+  // Yard-bonus keys are edited via the dropdown rows (NflYardBonusRows),
+  // not rendered from the generic groups; labels exist for type completeness.
+  bonusPassYd100:   "100+ Pass Yds Game",
+  bonusPassYd150:   "150+ Pass Yds Game",
+  bonusPassYd200:   "200+ Pass Yds Game",
+  bonusPassYd250:   "250+ Pass Yds Game",
   bonusPassYd300:   "300+ Pass Yds Game",
+  bonusRushYd100:   "100+ Rush Yds Game",
+  bonusRushYd150:   "150+ Rush Yds Game",
+  bonusRushYd200:   "200+ Rush Yds Game",
+  bonusRushYd250:   "250+ Rush Yds Game",
+  bonusRushYd300:   "300+ Rush Yds Game",
+  bonusRecYd100:    "100+ Rec Yds Game",
+  bonusRecYd150:    "150+ Rec Yds Game",
+  bonusRecYd200:    "200+ Rec Yds Game",
+  bonusRecYd250:    "250+ Rec Yds Game",
+  bonusRecYd300:    "300+ Rec Yds Game",
   fumblesLost:      "Fumbles Lost",
   fgMade0to39:      "FG 0–39 yds",
   fgMade40to49:     "FG 40–49 yds",
@@ -898,9 +915,9 @@ export default function NflTradeAnalyzer() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Left column */}
                 <div>
-                  {LEFT_WEIGHT_GROUPS.map(({ heading, keys }) => (
+                  {LEFT_WEIGHT_GROUPS.map(({ heading, keys, bonusCat }) => (
                     <div key={heading} className="mb-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-muted)" }}>
+                      <h3 className="text-sm font-semibold mt-2 mb-1" style={{ color: "var(--color-text)" }}>
                         {heading}
                       </h3>
                       <div className="space-y-1">
@@ -920,15 +937,23 @@ export default function NflTradeAnalyzer() {
                             />
                           </div>
                         ))}
+                        {bonusCat && (
+                          <NflYardBonusRows
+                            category={bonusCat}
+                            weights={league.scoringWeights}
+                            onChange={updateWeight}
+                            resetKey={activeLeagueId}
+                          />
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
                 {/* Right column */}
                 <div>
-                  {RIGHT_WEIGHT_GROUPS.map(({ heading, keys }) => (
+                  {RIGHT_WEIGHT_GROUPS.map(({ heading, keys, bonusCat }) => (
                     <div key={heading} className="mb-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-muted)" }}>
+                      <h3 className="text-sm font-semibold mt-2 mb-1" style={{ color: "var(--color-text)" }}>
                         {heading}
                       </h3>
                       <div className="space-y-1">
@@ -948,6 +973,14 @@ export default function NflTradeAnalyzer() {
                             />
                           </div>
                         ))}
+                        {bonusCat && (
+                          <NflYardBonusRows
+                            category={bonusCat}
+                            weights={league.scoringWeights}
+                            onChange={updateWeight}
+                            resetKey={activeLeagueId}
+                          />
+                        )}
                       </div>
                     </div>
                   ))}

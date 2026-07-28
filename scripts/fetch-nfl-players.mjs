@@ -103,6 +103,23 @@ async function fetchSeasonStats(season) {
           totals[pid][key] = (totals[pid][key] ?? 0) + val
         }
       }
+
+      // Yard-bonus game counts: derived from this week's yardage so every
+      // threshold is covered (Sleeper only pre-computes a few of them).
+      for (const [statKey, calcPrefix] of [
+        ['pass_yd', 'calc_bonus_pass_yd'],
+        ['rush_yd', 'calc_bonus_rush_yd'],
+        ['rec_yd',  'calc_bonus_rec_yd'],
+      ]) {
+        const yds = stats[statKey]
+        if (typeof yds !== 'number') continue
+        for (const thr of [100, 150, 200, 250, 300]) {
+          if (yds >= thr) {
+            const k = `${calcPrefix}_${thr}`
+            totals[pid][k] = (totals[pid][k] ?? 0) + 1
+          }
+        }
+      }
       count++
     }
     process.stdout.write(`  Week ${week}: ${count} entries\n`)
@@ -114,23 +131,33 @@ async function fetchSeasonStats(season) {
 // ── Stat mapping: Sleeper keys → NflPlayerStats ────────────────────────────
 
 function mapSkillStats(s) {
-  return {
+  const out = {
     passYds:     round(s.pass_yd  ?? 0),
     passTDs:     round(s.pass_td  ?? 0),
     passInt:     round(s.pass_int ?? 0),
+    pass2pt:     round(s.pass_2pt ?? 0),
     rushYds:     round(s.rush_yd  ?? 0),
     rushTDs:     round(s.rush_td  ?? 0),
     rushAtt:     round(s.rush_att ?? 0),
+    rush2pt:     round(s.rush_2pt ?? 0),
     rec:         round(s.rec      ?? 0),
     recYds:      round(s.rec_yd   ?? 0),
     recTDs:      round(s.rec_td   ?? 0),
+    rec2pt:      round(s.rec_2pt  ?? 0),
     fumblesLost: round(s.fum_lost ?? 0),
-    // Season counts of games hitting each yardage threshold
-    bonusRushYd100: round(s.bonus_rush_yd_100 ?? 0),
-    bonusRushYd200: round(s.bonus_rush_yd_200 ?? 0),
-    bonusRecYd100:  round(s.bonus_rec_yd_100  ?? 0),
-    bonusPassYd300: round(s.bonus_pass_yd_300 ?? 0),
   }
+  // Season counts of games hitting each yardage threshold
+  // (calc_* keys are derived per-week in fetchSeasonStats)
+  for (const [cat, calcPrefix] of [
+    ['Pass', 'calc_bonus_pass_yd'],
+    ['Rush', 'calc_bonus_rush_yd'],
+    ['Rec',  'calc_bonus_rec_yd'],
+  ]) {
+    for (const thr of [100, 150, 200, 250, 300]) {
+      out[`bonus${cat}Yd${thr}`] = round(s[`${calcPrefix}_${thr}`] ?? 0)
+    }
+  }
+  return out
 }
 
 function mapKickerStats(s) {

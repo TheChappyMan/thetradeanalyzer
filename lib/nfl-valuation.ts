@@ -4,6 +4,7 @@ import type {
   NflScoringWeights,
   NflRoster,
 } from './nfl-types'
+import { NFL_YARD_BONUS_KEYS } from './nfl-types'
 
 // ============================================================
 // PROJECTED SEASON VALUE
@@ -55,21 +56,25 @@ export function projectedNflValue(
   }
 
   // ── Skill positions (QB / RB / WR / TE) ───────────────────
-  const skillTotal =
-    (s.passYds        ?? 0) * weights.passYds        +
-    (s.passTDs        ?? 0) * weights.passTDs        +
-    (s.passInt        ?? 0) * weights.passInt        +
-    (s.rushYds        ?? 0) * weights.rushYds        +
-    (s.rushTDs        ?? 0) * weights.rushTDs        +
-    (s.rushAtt        ?? 0) * weights.rushAtt        +
-    (s.rec            ?? 0) * weights.rec            +
-    (s.recYds         ?? 0) * weights.recYds         +
-    (s.recTDs         ?? 0) * weights.recTDs         +
-    (s.fumblesLost    ?? 0) * weights.fumblesLost    +
-    (s.bonusRushYd100 ?? 0) * weights.bonusRushYd100 +
-    (s.bonusRushYd200 ?? 0) * weights.bonusRushYd200 +
-    (s.bonusRecYd100  ?? 0) * weights.bonusRecYd100  +
-    (s.bonusPassYd300 ?? 0) * weights.bonusPassYd300
+  let skillTotal =
+    (s.passYds     ?? 0) * weights.passYds     +
+    (s.passTDs     ?? 0) * weights.passTDs     +
+    (s.passInt     ?? 0) * weights.passInt     +
+    (s.pass2pt     ?? 0) * weights.pass2pt     +
+    (s.rushYds     ?? 0) * weights.rushYds     +
+    (s.rushTDs     ?? 0) * weights.rushTDs     +
+    (s.rushAtt     ?? 0) * weights.rushAtt     +
+    (s.rush2pt     ?? 0) * weights.rush2pt     +
+    (s.rec         ?? 0) * weights.rec         +
+    (s.recYds      ?? 0) * weights.recYds      +
+    (s.recTDs      ?? 0) * weights.recTDs      +
+    (s.rec2pt      ?? 0) * weights.rec2pt      +
+    (s.fumblesLost ?? 0) * weights.fumblesLost
+
+  // Yard bonuses: stats hold season counts of games hitting each threshold
+  for (const key of NFL_YARD_BONUS_KEYS) {
+    skillTotal += (s[key] ?? 0) * weights[key]
+  }
 
   return useRates ? (skillTotal / gp) * 17 : skillTotal
 }
