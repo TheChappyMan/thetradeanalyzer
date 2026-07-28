@@ -76,7 +76,7 @@ export default function NflYardBonusRows({ category, weights, onChange, resetKey
         return (
           <div key={slot} className="flex items-center justify-between gap-2">
             <label
-              className="text-xs flex-1 flex items-center gap-1"
+              className="text-xs flex-1 flex items-center gap-1 whitespace-nowrap"
               style={{ color: "var(--color-text)" }}
             >
               Yards Bonus {slot + 1}
@@ -85,7 +85,7 @@ export default function NflYardBonusRows({ category, weights, onChange, resetKey
               />
             </label>
             <select
-              className="form-input text-sm"
+              className="form-input w-20 shrink-0 text-sm"
               style={{ padding: "0.25rem" }}
               value={thr}
               onChange={(e) =>
