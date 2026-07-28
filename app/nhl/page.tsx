@@ -446,14 +446,15 @@ function buildTalentRanking(
 ): number[] {
   return playerDb
     .map((p) => {
-      if (
+      const v =
         scoringType === "categories" &&
         skaterCategories && goalieCategories && poolStats &&
         skaterStatKeys && goalieStatKeys
-      ) {
-        return zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys, useRates ?? true);
-      }
-      return projectedSeasonValue(p, skaterWeights, goalieWeights, useRates ?? true, positionBonuses);
+          ? zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys, useRates ?? true)
+          : projectedSeasonValue(p, skaterWeights, goalieWeights, useRates ?? true, positionBonuses);
+      // Trade value is floored at zero — below-average players are worth
+      // a free replacement, not negative value
+      return Math.max(0, v);
     })
     .sort((a, b) => b - a);
 }
@@ -996,7 +997,10 @@ export default function TradeAnalyzer() {
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
-      return sum + base * mult * kMult * iMult;
+      // Floor at zero before multipliers — a below-average player is worth
+      // a free replacement, never negative, and boosts/discounts must not
+      // invert on negative values. (Same fix as the MLB analyzer.)
+      return sum + Math.max(0, base) * mult * kMult * iMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = sendPicksParsed.reduce(
@@ -1017,7 +1021,8 @@ export default function TradeAnalyzer() {
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
-      return sum + base * mult * kMult * iMult;
+      // Floor at zero before multipliers — see sendValue comment
+      return sum + Math.max(0, base) * mult * kMult * iMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = recvPicksParsed.reduce(
@@ -2085,7 +2090,8 @@ function PlayerRow({
   const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights, useRates, positionBonuses);
   const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
   const iMult     = nhlInjuryMultiplier(injuryStatus, isRedraft);
-  const adjValue  = baseValue * mult * kMult * iMult;
+  // Floor before multipliers — must match the trade-total math exactly
+  const adjValue  = Math.max(0, baseValue) * mult * kMult * iMult;
 
   const unusedFlagged = player.positions.filter((p) => {
     if (p === "G") return false;
