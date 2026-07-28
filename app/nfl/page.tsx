@@ -912,7 +912,7 @@ export default function NflTradeAnalyzer() {
                 Changing PPR Format above auto-updates the Reception weight.
                 Adjust any weight to match your league exactly.
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Left column */}
                 <div className="min-w-0">
                   {LEFT_WEIGHT_GROUPS.map(({ heading, keys, bonusCat }) => (
