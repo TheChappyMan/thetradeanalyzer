@@ -38,16 +38,16 @@ export const NHL_GOALIE_DESCRIPTIONS: Record<string, string> = {
 };
 
 export const NFL_WEIGHT_DESCRIPTIONS: Record<string, string> = {
-  passYds:          "Points per passing yard. 0.04 = 1 point per 25 yards.",
+  passYds:          "Points per passing yard. Divide 1 by your league's yards-per-point: 1 ÷ 25 yds = 0.04, 1 ÷ 20 yds = 0.05, 1 ÷ 10 yds = 0.1.",
   passTDs:          "Points per passing touchdown.",
   passInt:          "Points per interception thrown: usually negative.",
   pass2pt:          "Points per successful 2-point conversion pass thrown.",
-  rushYds:          "Points per rushing yard. 0.1 = 1 point per 10 yards.",
+  rushYds:          "Points per rushing yard. Divide 1 by your league's yards-per-point: 1 ÷ 10 yds = 0.1, 1 ÷ 20 yds = 0.05.",
   rushTDs:          "Points per rushing touchdown.",
   rushAtt:          "Points per rushing attempt (carry). Most leagues use 0.",
   rush2pt:          "Points per successful 2-point conversion rush.",
   rec:              "Points per reception: 0 for standard, 0.5 for half-PPR, 1 for full PPR.",
-  recYds:           "Points per receiving yard. 0.1 = 1 point per 10 yards.",
+  recYds:           "Points per receiving yard. Divide 1 by your league's yards-per-point: 1 ÷ 10 yds = 0.1, 1 ÷ 20 yds = 0.05.",
   recTDs:           "Points per receiving touchdown.",
   rec2pt:           "Points per successful 2-point conversion reception.",
   fumblesLost:      "Points per fumble lost: usually negative.",
