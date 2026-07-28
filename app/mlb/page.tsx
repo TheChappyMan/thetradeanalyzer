@@ -229,7 +229,10 @@ function buildPlayerDatabase(args: {
         CS:  asNumber(s.caughtStealing),
         AB:  asNumber(s.atBats),
         SF:  asNumber(s.sacFlies),
+        SH:  asNumber(s.sacBunts),
         HBP: asNumber(s.hitByPitch),
+        GIDP: asNumber(s.groundIntoDoublePlay),
+        PA:  asNumber(s.plateAppearances),
       },
     });
   }
@@ -272,7 +275,15 @@ function buildPlayerDatabase(args: {
         IP:   ip,
         OUTS: asNumber(s.outs),
         QS:   asNumber(s.qualityStarts),
+        CG:   asNumber(s.completeGames),
+        NH:   asNumber(s.noHitters),     // injected by /api/mlb from game logs
+        PG:   asNumber(s.perfectGames),  // injected by /api/mlb from game logs
+        H:    asNumber(s.hits),
+        ER:   asNumber(s.earnedRuns),
+        HR:   asNumber(s.homeRuns),
         BB:   asNumber(s.baseOnBalls),
+        HBP:  asNumber(s.hitBatsmen),
+        BLK:  asNumber(s.balks),
         HR9:  hr9,
       },
     });

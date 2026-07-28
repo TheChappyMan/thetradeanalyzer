@@ -90,7 +90,10 @@ export const MLB_HITTER_DESCRIPTIONS: Record<string, string> = {
   CS:  "Caught stealing.",
   AB:  "At-bats.",
   SF:  "Sacrifice flies.",
+  SH:  "Sacrifice hits (bunts).",
   HBP: "Hit by pitch.",
+  GIDP: "Grounded into double play: usually scored negative.",
+  PA:  "Plate appearances.",
 };
 
 export const MLB_PITCHER_DESCRIPTIONS: Record<string, string> = {
@@ -105,6 +108,14 @@ export const MLB_PITCHER_DESCRIPTIONS: Record<string, string> = {
   IP:   "Innings pitched.",
   OUTS: "Outs recorded while pitching: 3 per full inning.",
   QS:   "Quality starts: 6+ innings with 3 or fewer earned runs.",
+  CG:   "Complete games.",
+  NH:   "No-hitters thrown (complete game, 9+ innings, zero hits).",
+  PG:   "Perfect games thrown (no-hitter with no baserunners at all).",
+  H:    "Hits allowed: usually scored negative.",
+  ER:   "Earned runs allowed: usually scored negative.",
+  HR:   "Home runs allowed: usually scored negative.",
   BB:   "Walks issued.",
+  HBP:  "Batters hit by pitch: usually scored negative.",
+  BLK:  "Balks: usually scored negative.",
   HR9:  "Home runs allowed per 9 innings. Lower is better.",
 };

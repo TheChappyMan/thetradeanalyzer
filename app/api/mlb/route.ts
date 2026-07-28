@@ -142,11 +142,67 @@ async function fetchMlbInjuries(season: number): Promise<Record<number, string>>
   return injuryMap;
 }
 
+// ── No-hitters / perfect games ───────────────────────────────
+// The season stats endpoint does not expose noHitters/perfectGames.
+// Both require a complete game, so only pitchers with CG >= 1 (about
+// 25 league-wide) need a game-log lookup. Counts are injected into
+// each pitcher's stat object as noHitters / perfectGames.
+
+type GameLogSplit = { stat?: Record<string, unknown> };
+
+function ipToNumber(v: unknown): number {
+  const parts = String(v ?? "0").split(".");
+  return (parseInt(parts[0], 10) || 0) + (parseInt(parts[1] || "0", 10)) / 3;
+}
+
+async function addNoHitterCounts(season: number, pitchers: MlbStatSplit[]) {
+  const candidates = pitchers.filter(
+    (sp) => Number(sp.stat?.completeGames ?? 0) >= 1
+  );
+
+  await Promise.allSettled(
+    candidates.map(async (sp) => {
+      const res = await fetch(
+        `${MLB_BASE}/people/${sp.player.id}/stats?stats=gameLog&season=${season}&group=pitching&gameType=R`,
+        { next: { revalidate: 3600 } }
+      );
+      if (!res.ok) return;
+      const json = (await res.json()) as {
+        stats?: Array<{ splits?: GameLogSplit[] }>;
+      };
+      let noHitters = 0;
+      let perfectGames = 0;
+      for (const game of json.stats?.[0]?.splits ?? []) {
+        const st = game.stat ?? {};
+        const isNoHitter =
+          Number(st.completeGames ?? 0) >= 1 &&
+          Number(st.hits ?? 1) === 0 &&
+          ipToNumber(st.inningsPitched) >= 9;
+        if (isNoHitter) {
+          noHitters++;
+          // Perfect game: no baserunners at all. battersFaced === 27 alone
+          // is not enough — a walked runner erased on a double play still
+          // yields 27 BF (e.g. Valdez's 2023 no-hitter).
+          const perfect =
+            Number(st.battersFaced ?? 0) === 27 &&
+            Number(st.baseOnBalls ?? 0) === 0 &&
+            Number(st.hitBatsmen ?? 0) === 0;
+          if (perfect) perfectGames++;
+        }
+      }
+      sp.stat.noHitters = noHitters;
+      sp.stat.perfectGames = perfectGames;
+    })
+  );
+}
+
 async function fetchOneSeason(season: number, includeSupplemental: boolean) {
   const [hitters, pitchers] = await Promise.all([
     fetchStats(season, "hitting"),
     fetchStats(season, "pitching"),
   ]);
+
+  await addNoHitterCounts(season, pitchers);
 
   let ageMap:    Record<number, number> = {};
   let injuryMap: Record<number, string> = {};

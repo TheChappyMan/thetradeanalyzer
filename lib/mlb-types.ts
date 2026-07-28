@@ -11,12 +11,15 @@
 export type HitterStatKey =
   | "G" | "R" | "HR" | "RBI" | "SB" | "AVG" | "OBP" | "SLG"
   | "H" | "1B" | "2B" | "3B" | "BB" | "K" | "XBH" | "TB" | "CS" | "AB"
-  | "SF" | "HBP";
+  | "SF" | "SH" | "HBP" | "GIDP" | "PA";
 
 // Derived from buildPlayerDatabase() stats object in app/mlb/page.tsx
+// H = hits allowed, ER = earned runs, HR = home runs allowed,
+// HBP = hit batters, NH/PG = no-hitters / perfect games
 export type PitcherStatKey =
   | "W" | "L" | "SV" | "BS" | "HLD" | "K" | "ERA" | "WHIP"
-  | "IP" | "OUTS" | "QS" | "BB" | "HR9";
+  | "IP" | "OUTS" | "QS" | "CG" | "NH" | "PG"
+  | "H" | "ER" | "HR" | "BB" | "HBP" | "BLK" | "HR9";
 
 export type HitterWeights  = Record<HitterStatKey,  number>;
 export type PitcherWeights = Record<PitcherStatKey, number>;
@@ -68,11 +71,12 @@ export type MlbLeague = {
 export const HITTER_STATS: HitterStatKey[] = [
   "G", "R", "HR", "RBI", "SB", "AVG", "OBP", "SLG",
   "H", "1B", "2B", "3B", "BB", "K", "XBH", "TB", "CS", "AB",
-  "SF", "HBP",
+  "SF", "SH", "HBP", "GIDP", "PA",
 ];
 
 export const PITCHER_STATS: PitcherStatKey[] = [
-  "W", "L", "SV", "BS", "HLD", "K", "ERA", "WHIP", "IP", "OUTS", "QS", "BB", "HR9",
+  "W", "L", "SV", "BS", "HLD", "K", "ERA", "WHIP", "IP", "OUTS",
+  "QS", "CG", "NH", "PG", "H", "ER", "HR", "BB", "HBP", "BLK", "HR9",
 ];
 
 // ============================================================
