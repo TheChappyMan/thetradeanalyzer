@@ -431,33 +431,8 @@ function parsePicks(text: string, teams: number): ParsedPick[] {
 // Build a league-specific talent ranking: all players sorted by projected
 // value descending, using the user's scoring weights. Returns values only
 // (not player objects) since that's all pick valuation needs.
-function buildTalentRanking(
-  playerDb: DbPlayer[],
-  skaterWeights: SkaterWeights,
-  goalieWeights: GoalieWeights,
-  scoringType: "points" | "categories" = "points",
-  skaterCategories?: Record<SkaterStatKey, CategoryConfig | null>,
-  goalieCategories?: Record<GoalieStatKey, CategoryConfig | null>,
-  poolStats?: PoolStats | null,
-  skaterStatKeys?: SkaterStatKey[],
-  goalieStatKeys?: GoalieStatKey[],
-  useRates?: boolean,
-  positionBonuses?: PositionBonuses
-): number[] {
-  return playerDb
-    .map((p) => {
-      const v =
-        scoringType === "categories" &&
-        skaterCategories && goalieCategories && poolStats &&
-        skaterStatKeys && goalieStatKeys
-          ? zScoreValue(p, skaterCategories, goalieCategories, poolStats, skaterStatKeys, goalieStatKeys, useRates ?? true)
-          : projectedSeasonValue(p, skaterWeights, goalieWeights, useRates ?? true, positionBonuses);
-      // Trade value is floored at zero — below-average players are worth
-      // a free replacement, not negative value
-      return Math.max(0, v);
-    })
-    .sort((a, b) => b - a);
-}
+// (Talent ranking for pick valuation is built inline in the component from
+// the same replacement-adjusted values used for trade math.)
 
 // Given a parsed pick and league config, compute its projected value.
 // Returns 0 if the pick has an error or if the ranking lookup fails.
@@ -496,7 +471,19 @@ type StatPoolStats = { mean: number; stddev: number; avgVolume?: number };
 type PoolStats = {
   skaterStats: Record<SkaterStatKey, StatPoolStats>;
   goalieStats: Record<GoalieStatKey, StatPoolStats>;
+  /** League-adjusted pool sizes — replacement level is rank N+1 */
+  skaterN: number;
+  goalieN: number;
+  /** Median games played among pool members (thin-sample fallback threshold) */
+  skaterMedianGp: number;
+  goalieMedianGp: number;
 };
+
+function _median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor(s.length / 2)];
+}
 
 // Stats where we use the raw value directly (already a per-game rate).
 const RATE_SKATER = new Set<SkaterStatKey>(["ATOI"]);
@@ -566,7 +553,14 @@ function computePoolStats(
     }
   }
 
-  return { skaterStats: skaterPoolStats, goalieStats: goaliePoolStats };
+  return {
+    skaterStats: skaterPoolStats,
+    goalieStats: goaliePoolStats,
+    skaterN,
+    goalieN,
+    skaterMedianGp: _median(topSkaters.map((p) => p.gamesPlayed)),
+    goalieMedianGp: _median(topGoalies.map((p) => p.gamesPlayed)),
+  };
 }
 
 function _skaterZ(player: DbPlayer, stat: SkaterStatKey, ps: StatPoolStats, useRates: boolean): number {
@@ -795,7 +789,14 @@ export default function TradeAnalyzer() {
         setPriorSeasonDb(priPlayers);
         setCurrentSeasonIdStr(currentSeason.seasonId);
         setPriorSeasonIdStr(priorSeason.seasonId);
-        setInjuryMap(currentSeason.injuryMap ?? {});
+        const im = currentSeason.injuryMap ?? {};
+        if (Object.keys(im).length === 0) {
+          console.warn(
+            "[NHL injuries] injury map is EMPTY — no injury data was returned by /api/nhl, " +
+            "so every player is being valued as healthy. Injury discounts will not apply."
+          );
+        }
+        setInjuryMap(im);
         // Auto-detect: if user has no saved preference and current season is sparse,
         // default to last year's data.
         const savedMode = (() => { try { return localStorage.getItem(LS_DATA_MODE); } catch { return null; } })();
@@ -914,65 +915,152 @@ export default function TradeAnalyzer() {
     return computePoolStats(playerDb, league.teams, league.roster, SKATER_STATS, GOALIE_STATS, useRates);
   }, [playerDb, league.teams, league.roster, useRates]);
 
-  // League-specific talent ranking — sorted projected values for every NHL player.
-  // Branches on scoringType so pick valuation works in both modes.
+  // ── Thin-sample fallback (per player) ─────────────────────────
+  // Players far below the pool's median games played (below 25% of median,
+  // with absolute floors of 15 GP for skaters / 10 GP for goalies) are
+  // valued from prior-season data on a per-game projected basis, scaled to
+  // the pool's typical volume. Only in this-season modes.
+  const thinSampleFallback = useMemo(() => {
+    const map = new Map<number, DbPlayer>();
+    const lowConfidence = new Set<number>();
+    const usingThisSeason = dataMode === "thisTotal" || dataMode === "thisAvg";
+    // Categories mode only — points-mode results must not change at all.
+    if (league.scoringType !== "categories" || !usingThisSeason || !poolStats || priorSeasonDb.length === 0) {
+      return { map, lowConfidence };
+    }
+    // Thresholds must use REAL current-season games played. In Per-Game
+    // Projected modes playerDb is normalized (everyone reads 82 GP), which
+    // would make the threshold never fire — so read from the raw season DB.
+    const realById = new Map(currentSeasonDb.map((x) => [x.id, x]));
+    const realSkaterMedianGp = _median(
+      currentSeasonDb.filter((x) => !x.isGoalie && x.gamesPlayed > 0).map((x) => x.gamesPlayed));
+    const realGoalieMedianGp = _median(
+      currentSeasonDb.filter((x) =>  x.isGoalie && x.gamesPlayed > 0).map((x) => x.gamesPlayed));
+    for (const p of playerDb) {
+      const real      = realById.get(p.id) ?? p;
+      const medianGp  = p.isGoalie ? realGoalieMedianGp : realSkaterMedianGp;
+      const floor     = p.isGoalie ? 10 : 15;
+      const threshold = Math.max(floor, 0.25 * medianGp);
+      if (real.gamesPlayed >= threshold) continue;
+
+      const prior = priorSeasonDb.find((x) => x.id === p.id);
+      // The prior season must itself be a meaningful sample — extrapolating
+      // per-game rates from a handful of prior games explodes just as badly.
+      if (!prior || prior.gamesPlayed < floor) {
+        lowConfidence.add(p.id);
+        continue;
+      }
+
+      let pseudo: DbPlayer;
+      if (useRates) {
+        // Per-game projected modes: normalize prior season like the pool
+        pseudo = normalizePlayerTo82(prior);
+      } else {
+        // Total modes: prior per-game rates × pool median volume so the
+        // pseudo totals live on the current pool's scale
+        const scaleGp = p.isGoalie ? poolStats.goalieMedianGp : poolStats.skaterMedianGp;
+        const gp = prior.gamesPlayed;
+        const stats: PlayerStats = {};
+        for (const [k, v] of Object.entries(prior.stats) as [string, number | undefined][]) {
+          if (v === undefined) continue;
+          (stats as Record<string, number>)[k] = RATE_STAT_KEYS.has(k)
+            ? v
+            : (v / gp) * scaleGp;
+        }
+        pseudo = { ...prior, gamesPlayed: scaleGp, stats };
+      }
+      map.set(p.id, { ...pseudo, id: p.id, name: p.name, team: p.team });
+    }
+    return { map, lowConfidence };
+  }, [playerDb, priorSeasonDb, currentSeasonDb, poolStats, dataMode, useRates, league.scoringType]);
+
+  /** Entry used for valuation — prior-season pseudo entry for thin samples */
+  const effectiveEntry = useCallback(
+    (dbEntry: DbPlayer): DbPlayer => thinSampleFallback.map.get(dbEntry.id) ?? dbEntry,
+    [thinSampleFallback]
+  );
+
+  // ── Replacement level (categories mode ONLY) ──────────────────
+  // Summed z-scores are measured against the pool mean, so most rostered
+  // players are negative. Value is measured against the first player
+  // OUTSIDE the league-adjusted pool (rank N+1) instead:
+  //   value = z_player − z_replacement, clamped at 0 below replacement.
+  // Points mode is untouched — its values are positive by construction.
+  // The shift is applied AFTER volume-weighted z (SV%/GAA) is computed.
+  const replacementZ = useMemo(() => {
+    if (!poolStats || league.scoringType !== "categories") return { skater: 0, goalie: 0 };
+    const zOf = (p: DbPlayer) =>
+      zScoreValue(effectiveEntry(p), league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
+    const skaterZs = playerDb.filter((p) => !p.isGoalie && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
+    const goalieZs = playerDb.filter((p) =>  p.isGoalie && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
+    return {
+      skater: skaterZs[Math.min(poolStats.skaterN, Math.max(0, skaterZs.length - 1))] ?? 0,
+      goalie: goalieZs[Math.min(poolStats.goalieN, Math.max(0, goalieZs.length - 1))] ?? 0,
+    };
+  }, [poolStats, league.scoringType, league.skaterCategories, league.goalieCategories,
+      playerDb, useRates, effectiveEntry]);
+
+  // ── Replacement-adjusted base value ───────────────────────────
+  // Categories: z − z_replacement, clamped at 0 (below-replacement players
+  // have no realistic trade value). Points mode: raw projected points,
+  // unshifted and unclamped — points-mode results must not change.
+  const adjustedBase = useCallback((dbEntry: DbPlayer): number => {
+    const eff = effectiveEntry(dbEntry);
+    if (league.scoringType === "categories" && poolStats) {
+      const z    = zScoreValue(eff, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
+      const repl = eff.isGoalie ? replacementZ.goalie : replacementZ.skater;
+      return Math.max(0, z - repl);
+    }
+    return projectedSeasonValue(eff, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+  }, [effectiveEntry, league.scoringType, league.skaterCategories, league.goalieCategories,
+      league.skaterWeights, league.goalieWeights, league.positionBonuses, poolStats,
+      useRates, replacementZ]);
+
+  // Card note for players valued on fallback / low-confidence data.
+  // Uses REAL current-season games (playerDb is normalized in Avg modes).
+  const fallbackLabel = useCallback((id: number, gamesPlayed: number): string | null => {
+    if (thinSampleFallback.map.has(id)) {
+      const realGp = currentSeasonDb.find((x) => x.id === id)?.gamesPlayed ?? gamesPlayed;
+      const seasonLabel = priorSeasonIdStr
+        ? `${priorSeasonIdStr.slice(0, 4)}-${priorSeasonIdStr.slice(6)}`
+        : "prior-season";
+      return `Valued on ${seasonLabel} data (${realGp} GP this season)`;
+    }
+    if (thinSampleFallback.lowConfidence.has(id)) {
+      return "Low-confidence valuation — thin sample and no prior-season data.";
+    }
+    return null;
+  }, [thinSampleFallback, priorSeasonIdStr, currentSeasonDb]);
+
+  // League-specific talent ranking — sorted replacement-adjusted values, the
+  // same basis as trade math, so pick values shift with the baseline.
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
-    return buildTalentRanking(
-      playerDb,
-      league.skaterWeights,
-      league.goalieWeights,
-      league.scoringType,
-      league.skaterCategories,
-      league.goalieCategories,
-      poolStats,
-      SKATER_STATS,
-      GOALIE_STATS,
-      useRates,
-      league.positionBonuses
-    );
-  }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
-      league.skaterCategories, league.goalieCategories, poolStats, useRates,
-      league.positionBonuses]);
+    return playerDb.map(adjustedBase).sort((a, b) => b - a);
+  }, [playerDb, adjustedBase]);
 
-  // League ranking: playerId → 1-based rank by projected points value.
-  // Recomputes only when the DB or scoring weights change.
+  // League ranking: playerId → 1-based rank on the same valuation basis as
+  // player value (incl. the prior-season fallback), so a star with a
+  // collapsed current-season rank still gets the right keeper multiplier.
   const rankMap = useMemo(() => {
     const map = new Map<number, number>();
     if (playerDb.length === 0) return map;
 
-    let sorted: DbPlayer[];
+    const allZero =
+      league.scoringType !== "categories" &&
+      Object.values(league.skaterWeights).every((v) => v === 0) &&
+      Object.values(league.goalieWeights).every((v) => v === 0);
 
-    if (league.scoringType === "categories" && poolStats) {
-      // Categories mode: rank by z-score value
-      sorted = [...playerDb].sort((a, b) => {
-        const va = zScoreValue(a, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
-        const vb = zScoreValue(b, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
-        return vb - va || b.gamesPlayed - a.gamesPlayed;
-      });
-    } else {
-      const allZero =
-        Object.values(league.skaterWeights).every((v) => v === 0) &&
-        Object.values(league.goalieWeights).every((v) => v === 0);
-
-      if (allZero) {
-        // No weights set: fall back to gamesPlayed descending
-        sorted = [...playerDb].sort((a, b) => b.gamesPlayed - a.gamesPlayed);
-      } else {
-        // Points mode with weights: rank by projected value, gamesPlayed as tiebreaker
-        sorted = [...playerDb].sort((a, b) => {
-          const va = projectedSeasonValue(a, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
-          const vb = projectedSeasonValue(b, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
-          return vb - va || b.gamesPlayed - a.gamesPlayed;
-        });
-      }
-    }
+    const sorted = allZero
+      ? [...playerDb].sort((a, b) => b.gamesPlayed - a.gamesPlayed)
+      : [...playerDb].sort(
+          (a, b) => adjustedBase(b) - adjustedBase(a) || b.gamesPlayed - a.gamesPlayed
+        );
 
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
-  }, [playerDb, league.skaterWeights, league.goalieWeights, league.scoringType,
-      league.skaterCategories, league.goalieCategories, poolStats, useRates,
-      league.positionBonuses]);
+  }, [playerDb, league.scoringType, league.skaterWeights, league.goalieWeights, adjustedBase]);
+
 
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
@@ -991,16 +1079,14 @@ export default function TradeAnalyzer() {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      const base = isCatMode && poolStats
-        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
-        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+      // Replacement-adjusted (clamped) in categories mode; raw projected
+      // points in points mode. Multipliers never touch a signed z-score.
+      // Order: positional flex coverage → keeper rank → injury (redraft only)
+      const base  = adjustedBase(dbEntry);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
-      // Floor at zero before multipliers — a below-average player is worth
-      // a free replacement, never negative, and boosts/discounts must not
-      // invert on negative values. (Same fix as the MLB analyzer.)
-      return sum + Math.max(0, base) * mult * kMult * iMult;
+      return sum + base * mult * kMult * iMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = sendPicksParsed.reduce(
@@ -1015,14 +1101,12 @@ export default function TradeAnalyzer() {
     const playerTotal = recvPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      const base = isCatMode && poolStats
-        ? zScoreValue(dbEntry, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates)
-        : projectedSeasonValue(dbEntry, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+      // Replacement-adjusted base — see sendValue comment
+      const base  = adjustedBase(dbEntry);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
-      // Floor at zero before multipliers — see sendValue comment
-      return sum + Math.max(0, base) * mult * kMult * iMult;
+      return sum + base * mult * kMult * iMult;
     }, 0);
     const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
     const pickTotal = recvPicksParsed.reduce(
@@ -1040,7 +1124,16 @@ export default function TradeAnalyzer() {
 
   // Shift both values so the minimum is 0 before computing ratios.
   // This prevents negative z-scores (categories mode) from inverting the ratio.
+  // Defensive safety net: values are replacement-adjusted and non-negative,
+  // so this offset should always resolve to 0. A non-zero value means a
+  // negative value leaked through — warn loudly.
   const offset = Math.min(0, sendValue, recvValue);
+  if (offset < 0) {
+    console.warn(
+      `[NHL fairness] negative trade value leaked through the replacement adjustment: ` +
+      `offset=${offset.toFixed(3)} (send=${sendValue.toFixed(3)}, recv=${recvValue.toFixed(3)})`
+    );
+  }
   const adjustedSend = sendValue - offset;
   const adjustedRecv = recvValue - offset;
   const minVal = Math.min(adjustedSend, adjustedRecv);
@@ -1611,6 +1704,8 @@ export default function TradeAnalyzer() {
             rankMap={rankMap}
             injuryMap={injuryMap}
             isRedraft={league.leagueType === "redraft"}
+            effectiveEntryOf={effectiveEntry}
+            fallbackNoteOf={fallbackLabel}
             onAdd={(p) => addPlayer("send", p)}
             onRemove={(id) => removePlayer("send", id)}
             onTogglePos={(id, pos) => togglePosition("send", id, pos)}
@@ -1635,6 +1730,8 @@ export default function TradeAnalyzer() {
             rankMap={rankMap}
             injuryMap={injuryMap}
             isRedraft={league.leagueType === "redraft"}
+            effectiveEntryOf={effectiveEntry}
+            fallbackNoteOf={fallbackLabel}
             onAdd={(p) => addPlayer("recv", p)}
             onRemove={(id) => removePlayer("recv", id)}
             onTogglePos={(id, pos) => togglePosition("recv", id, pos)}
@@ -1794,6 +1891,10 @@ type TradeSideProps = {
   rankMap: Map<number, number>;
   injuryMap: Record<number, string>;
   isRedraft: boolean;
+  /** Entry used for valuation — prior-season pseudo entry for thin samples */
+  effectiveEntryOf: (db: DbPlayer) => DbPlayer;
+  /** Prior-season fallback / low-confidence card note, or null */
+  fallbackNoteOf: (id: number, gamesPlayed: number) => string | null;
   onAdd: (p: DbPlayer) => void;
   onRemove: (id: number) => void;
   onTogglePos: (id: number, pos: string) => void;
@@ -1805,7 +1906,7 @@ function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
   roster, skaterWeights, goalieWeights, positionBonuses, rankMap,
-  injuryMap, isRedraft,
+  injuryMap, isRedraft, effectiveEntryOf, fallbackNoteOf,
   onAdd, onRemove, onTogglePos, onToggleKeeper, useRates,
 }: TradeSideProps) {
   return (
@@ -1818,25 +1919,29 @@ function TradeSide({
         onSelect={onAdd}
       />
       <div className="mt-2 space-y-2">
-        {players.map((p) => (
-          <PlayerRow
-            key={p.id}
-            player={p}
-            dbEntry={playerDb.find((x) => x.id === p.id)}
-            roster={roster}
-            skaterWeights={skaterWeights}
-            goalieWeights={goalieWeights}
-            positionBonuses={positionBonuses}
-            rank={rankMap.get(p.id) ?? null}
-            totalPlayers={playerDb.length}
-            injuryStatus={injuryMap[p.id]}
-            isRedraft={isRedraft}
-            onRemove={() => onRemove(p.id)}
-            onTogglePos={(pos) => onTogglePos(p.id, pos)}
-            onToggleKeeper={() => onToggleKeeper(p.id)}
-            useRates={useRates}
-          />
-        ))}
+        {players.map((p) => {
+          const raw = playerDb.find((x) => x.id === p.id);
+          return (
+            <PlayerRow
+              key={p.id}
+              player={p}
+              dbEntry={raw ? effectiveEntryOf(raw) : undefined}
+              roster={roster}
+              skaterWeights={skaterWeights}
+              goalieWeights={goalieWeights}
+              positionBonuses={positionBonuses}
+              rank={rankMap.get(p.id) ?? null}
+              totalPlayers={playerDb.length}
+              injuryStatus={injuryMap[p.id]}
+              isRedraft={isRedraft}
+              fallbackNote={raw ? fallbackNoteOf(raw.id, raw.gamesPlayed) : null}
+              onRemove={() => onRemove(p.id)}
+              onTogglePos={(pos) => onTogglePos(p.id, pos)}
+              onToggleKeeper={() => onToggleKeeper(p.id)}
+              useRates={useRates}
+            />
+          );
+        })}
       </div>
 
       <h3 className="text-sm font-semibold mt-4 mb-1" style={{ color: "var(--color-text)" }}>{label} — Picks</h3>
@@ -2074,6 +2179,8 @@ type PlayerRowProps = {
   totalPlayers: number;
   injuryStatus: string | undefined;
   isRedraft: boolean;
+  /** Prior-season fallback / low-confidence note, or null */
+  fallbackNote?: string | null;
   onRemove: () => void;
   onTogglePos: (pos: string) => void;
   onToggleKeeper: () => void;
@@ -2082,7 +2189,7 @@ type PlayerRowProps = {
 
 function PlayerRow({
   player, dbEntry, roster, skaterWeights, goalieWeights, positionBonuses, rank, totalPlayers,
-  injuryStatus, isRedraft,
+  injuryStatus, isRedraft, fallbackNote,
   onRemove, onTogglePos, onToggleKeeper, useRates,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
@@ -2090,8 +2197,7 @@ function PlayerRow({
   const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights, useRates, positionBonuses);
   const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
   const iMult     = nhlInjuryMultiplier(injuryStatus, isRedraft);
-  // Floor before multipliers — must match the trade-total math exactly
-  const adjValue  = Math.max(0, baseValue) * mult * kMult * iMult;
+  const adjValue  = baseValue * mult * kMult * iMult;
 
   const unusedFlagged = player.positions.filter((p) => {
     if (p === "G") return false;
@@ -2143,6 +2249,11 @@ function PlayerRow({
       {unusedFlagged.length > 0 && (
         <div className="text-[10px] mt-1" style={{ color: "var(--color-warning)" }}>
           Note: your league has no {unusedFlagged.join("/")} slots.
+        </div>
+      )}
+      {fallbackNote && (
+        <div className="text-[10px] mt-1 text-amber-700">
+          ⚠ {fallbackNote}
         </div>
       )}
       <div className="mt-1 flex items-center gap-3">

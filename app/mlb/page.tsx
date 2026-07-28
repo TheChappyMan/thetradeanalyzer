@@ -472,7 +472,19 @@ type StatPoolStats  = { mean: number; stddev: number; avgVolume?: number };
 type MlbPoolStats   = {
   hitterStats:  Partial<Record<HitterStatKey,  StatPoolStats>>;
   pitcherStats: Partial<Record<PitcherStatKey, StatPoolStats>>;
+  /** League-adjusted pool sizes — replacement level is rank N+1 */
+  hitterN:  number;
+  pitcherN: number;
+  /** Median games played among pool members (thin-sample fallback threshold) */
+  hitterMedianGp:  number;
+  pitcherMedianGp: number;
 };
+
+function _median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor(s.length / 2)];
+}
 
 // Volume-weighted pitcher rate stats — longer stints count more than short ones.
 const VOL_PITCHER_RATES = new Set<PitcherStatKey>(["ERA", "WHIP"]);
@@ -625,7 +637,14 @@ function computeMlbPoolStats(
     }
   }
 
-  return { hitterStats: hitterPoolStats, pitcherStats: pitcherPoolStats };
+  return {
+    hitterStats:  hitterPoolStats,
+    pitcherStats: pitcherPoolStats,
+    hitterN,
+    pitcherN: spN + rpN,
+    hitterMedianGp:  _median(topHitters.map((p) => p.gamesPlayed)),
+    pitcherMedianGp: _median(topPitchers.map((p) => p.gamesPlayed)),
+  };
 }
 
 function _hitterZ(
@@ -718,26 +737,8 @@ function parsePicks(text: string, teams: number): ParsedPick[] {
   });
 }
 
-function buildTalentRanking(
-  playerDb: MlbDbPlayer[],
-  league: MlbLeague,
-  poolStats: MlbPoolStats | null,
-  useRates: boolean
-): number[] {
-  return playerDb
-    .map((p) => {
-      const v = league.format !== "points" && poolStats
-        ? mlbZScoreValue(
-            p, league.hitterCategories, league.pitcherCategories,
-            poolStats, HITTER_STATS, PITCHER_STATS, useRates
-          )
-        : projectedSeasonValue(p, league.hitterWeights, league.pitcherWeights, useRates);
-      // Trade value is floored at zero — below-average players are worth
-      // a free replacement, not negative value
-      return Math.max(0, v);
-    })
-    .sort((a, b) => b - a);
-}
+// (Talent ranking for pick valuation is built inline in the component from
+// the same replacement-adjusted values used for trade math.)
 
 function valueForPick(
   pick: ParsedPick, talentRanking: number[], teams: number, keepersPerTeam: number
@@ -929,50 +930,190 @@ export default function MlbTradeAnalyzer() {
     );
   }, [playerDb, league.teams, league.roster, useRates, isRotoMode]);
 
+  // ── Thin-sample fallback (per player) ─────────────────────────
+  // A player far below the pool's median games played is undervalued in any
+  // Total mode — low totals reflect availability, not ability. For those
+  // players (below 25% of pool median GP, with absolute floors), value the
+  // individual player from prior-season data on a per-game projected basis,
+  // scaled to the pool's typical volume so the scales match. Only applies
+  // in this-season modes; last-season modes already ARE the prior season.
+  const thinSampleFallback = useMemo(() => {
+    const map = new Map<number, MlbDbPlayer>();          // current id → pseudo entry
+    const lowConfidence = new Set<number>();             // thin sample, no prior data
+    const usingThisSeason = dataMode === "thisTotal" || dataMode === "thisAvg";
+    if (!usingThisSeason || !poolStats || priorSeasonDb.length === 0) {
+      return { map, lowConfidence };
+    }
+    // Thresholds must use REAL current-season games played. In Projected
+    // (Avg) modes playerDb is normalized (everyone reads 162/32/70 G), which
+    // would make the threshold never fire — so read from the raw season DB.
+    const realByld = new Map(currentSeasonDb.map((x) => [x.id, x]));
+    const realHitterMedianGp = _median(
+      currentSeasonDb.filter((x) => !x.isPitcher && x.gamesPlayed > 0).map((x) => x.gamesPlayed));
+    const realPitcherMedianGp = _median(
+      currentSeasonDb.filter((x) =>  x.isPitcher && x.gamesPlayed > 0).map((x) => x.gamesPlayed));
+    for (const p of playerDb) {
+      const real = realByld.get(p.id) ?? p;
+      const isSp     = p.isPitcher && p.position === "SP";
+      const medianGp = p.isPitcher ? realPitcherMedianGp : realHitterMedianGp;
+      const sample   = isSp ? real.gamesStarted : real.gamesPlayed;
+      const floor    = !p.isPitcher ? 15 : isSp ? 5 : 10;
+      const threshold = Math.max(floor, 0.25 * medianGp);
+      if (sample >= threshold) continue;
+
+      const prior = priorSeasonDb.find(
+        (x) => x.mlbId === p.mlbId && x.isPitcher === p.isPitcher
+      );
+      // The prior season must itself be a meaningful sample — extrapolating
+      // per-game rates from a handful of prior games explodes just as badly.
+      const priorSample = prior
+        ? (prior.isPitcher && prior.position === "SP" ? prior.gamesStarted : prior.gamesPlayed)
+        : 0;
+      if (!prior || priorSample < floor) {
+        lowConfidence.add(p.id);
+        continue;
+      }
+
+      let pseudo: MlbDbPlayer;
+      if (useRates) {
+        // Projected modes: normalize the prior season the same way the
+        // rest of the pool is normalized (162 G / 32 GS / 70 G).
+        pseudo = prior.isPitcher
+          ? prior.position === "SP" ? normalizeSpTo32(prior) : normalizeRpTo70(prior)
+          : normalizeHitterTo162(prior);
+      } else {
+        // Total modes: prior per-game rates × the pool's median volume,
+        // so the pseudo totals live on the current pool's scale.
+        const scaleGp = p.isPitcher ? poolStats.pitcherMedianGp : poolStats.hitterMedianGp;
+        const gp = prior.gamesPlayed;
+        const rateKeys: Set<string> = prior.isPitcher
+          ? (RATE_PITCHER as Set<string>)
+          : (RATE_HITTER as Set<string>);
+        const stats: MlbPlayerStats = {};
+        for (const [k, v] of Object.entries(prior.stats) as [string, number | undefined][]) {
+          if (v === undefined) continue;
+          (stats as Record<string, number>)[k] = rateKeys.has(k) ? v : (v / gp) * scaleGp;
+        }
+        pseudo = {
+          ...prior,
+          gamesPlayed:  scaleGp,
+          gamesStarted: prior.isPitcher ? Math.round((prior.gamesStarted / gp) * scaleGp) : 0,
+          stats,
+        };
+      }
+      // Keep current identity/team/age so badges and lookups stay correct
+      map.set(p.id, {
+        ...pseudo,
+        id: p.id, mlbId: p.mlbId, name: p.name, team: p.team,
+        position: p.position, age: p.age,
+      });
+    }
+    return { map, lowConfidence };
+  }, [playerDb, priorSeasonDb, currentSeasonDb, poolStats, dataMode, useRates]);
+
+  /** Entry used for valuation — prior-season pseudo entry for thin samples */
+  const effectiveEntry = useCallback(
+    (dbEntry: MlbDbPlayer): MlbDbPlayer => thinSampleFallback.map.get(dbEntry.id) ?? dbEntry,
+    [thinSampleFallback]
+  );
+
+  // ── Replacement level (roto mode) ─────────────────────────────
+  // The z-score pool mean sits around the 65th–80th ranked player, so most
+  // rostered players sum to a NEGATIVE z. Trade value is therefore measured
+  // against the first player OUTSIDE the league-adjusted pool (rank N+1):
+  //   value = z_player − z_replacement, clamped at 0 below replacement.
+  // Raw z-scores are still shown on player cards.
+  const replacementZ = useMemo(() => {
+    if (!poolStats || !isRotoMode) return { hitter: 0, pitcher: 0 };
+    const zOf = (p: MlbDbPlayer) =>
+      mlbZScoreValue(effectiveEntry(p), league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates);
+    const hitterZs  = playerDb.filter((p) => !p.isPitcher && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
+    const pitcherZs = playerDb.filter((p) =>  p.isPitcher && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
+    return {
+      hitter:  hitterZs[Math.min(poolStats.hitterN,  Math.max(0, hitterZs.length - 1))]  ?? 0,
+      pitcher: pitcherZs[Math.min(poolStats.pitcherN, Math.max(0, pitcherZs.length - 1))] ?? 0,
+    };
+  }, [poolStats, isRotoMode, playerDb, league.hitterCategories, league.pitcherCategories, useRates, effectiveEntry]);
+
+  // ── Replacement-adjusted base value ───────────────────────────
+  // Roto: z − z_replacement, clamped at 0 (below-replacement players have no
+  // realistic trade value; relative spacing above replacement is preserved).
+  // Points mode: raw projected points, unshifted and unclamped — points
+  // values are positive by construction and must not change.
+  const adjustedBase = useCallback((dbEntry: MlbDbPlayer): number => {
+    const eff = effectiveEntry(dbEntry);
+    if (isRotoMode && poolStats) {
+      const z    = mlbZScoreValue(eff, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates);
+      const repl = eff.isPitcher ? replacementZ.pitcher : replacementZ.hitter;
+      return Math.max(0, z - repl);
+    }
+    return projectedSeasonValue(eff, league.hitterWeights, league.pitcherWeights, useRates);
+  }, [effectiveEntry, isRotoMode, poolStats, league.hitterCategories, league.pitcherCategories,
+      league.hitterWeights, league.pitcherWeights, useRates, replacementZ]);
+
   // ── Talent ranking for pick valuation ─────────────────────────
+  // Built from the same replacement-adjusted values as trade math, so pick
+  // values (capped relative to the player at that rank) shift with them.
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
-    return buildTalentRanking(playerDb, league, poolStats, useRates);
-  }, [playerDb, league, poolStats, useRates]);
+    return playerDb.map(adjustedBase).sort((a, b) => b - a);
+  }, [playerDb, adjustedBase]);
 
   // ── League ranking map ────────────────────────────────────────
+  // Ranks use the same valuation basis as player value (incl. the
+  // prior-season fallback), so a star with a collapsed current-season rank
+  // still receives the right keeper multiplier.
   const rankMap = useMemo(() => {
     const map = new Map<number, number>();
     if (playerDb.length === 0) return map;
-    const sorted = [...playerDb].sort((a, b) => {
-      const va = isRotoMode && poolStats
-        ? mlbZScoreValue(a, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
-        : projectedSeasonValue(a, league.hitterWeights, league.pitcherWeights, useRates);
-      const vb = isRotoMode && poolStats
-        ? mlbZScoreValue(b, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
-        : projectedSeasonValue(b, league.hitterWeights, league.pitcherWeights, useRates);
-      return vb - va || b.gamesPlayed - a.gamesPlayed;
-    });
+    const sorted = [...playerDb].sort(
+      (a, b) => adjustedBase(b) - adjustedBase(a) || b.gamesPlayed - a.gamesPlayed
+    );
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
-  }, [playerDb, league, poolStats, isRotoMode, useRates]);
+  }, [playerDb, adjustedBase]);
+
+  // Raw (unshifted, unclamped) base for card display transparency
+  const rawBase = useCallback((dbEntry: MlbDbPlayer): number => {
+    const eff = effectiveEntry(dbEntry);
+    return isRotoMode && poolStats
+      ? mlbZScoreValue(eff, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
+      : projectedSeasonValue(eff, league.hitterWeights, league.pitcherWeights, useRates);
+  }, [effectiveEntry, isRotoMode, poolStats, league.hitterCategories, league.pitcherCategories,
+      league.hitterWeights, league.pitcherWeights, useRates]);
+
+  // Card note for players valued on fallback / low-confidence data.
+  // Uses REAL current-season games (playerDb is normalized in Avg modes).
+  const fallbackLabel = useCallback((dbEntry: MlbDbPlayer): string | null => {
+    if (thinSampleFallback.map.has(dbEntry.id)) {
+      const real = currentSeasonDb.find((x) => x.id === dbEntry.id) ?? dbEntry;
+      const sampleLabel = real.isPitcher && real.position === "SP"
+        ? `${real.gamesStarted} GS` : `${real.gamesPlayed} G`;
+      return `Valued on ${priorSeasonYear} data (${sampleLabel} this season)`;
+    }
+    if (thinSampleFallback.lowConfidence.has(dbEntry.id)) {
+      return "Low-confidence valuation — thin sample and no prior-season data.";
+    }
+    return null;
+  }, [thinSampleFallback, priorSeasonYear, currentSeasonDb]);
+
 
   // ── Parsed picks ──────────────────────────────────────────────
   const sendPicksParsed = useMemo(() => parsePicks(sendPicks, league.teams), [sendPicks, league.teams]);
   const recvPicksParsed = useMemo(() => parsePicks(recvPicks, league.teams), [recvPicks, league.teams]);
 
   // ── Per-player value helper ───────────────────────────────────
-  // A player can never have negative trade value — the alternative is
-  // dropping him for a free replacement. Floor the raw z/points value at
-  // zero FIRST, then apply multipliers, so a boost (keeper ×1.32) always
+  // Multipliers only ever operate on the replacement-adjusted (clamped)
+  // value, never a signed z-score, so a boost (keeper ×1.32) always
   // increases value and a discount (injury ×0.35) always decreases it.
-  // The raw signed z-score is still shown on the player card.
   function playerValue(p: TradePlayer, dbEntry: MlbDbPlayer): number {
-    const base = isRotoMode && poolStats
-      ? mlbZScoreValue(dbEntry, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
-      : projectedSeasonValue(dbEntry, league.hitterWeights, league.pitcherWeights, useRates);
-    const floored  = Math.max(0, base);
+    const base     = adjustedBase(dbEntry);
     const scarcity = positionScarcityMultiplier(dbEntry.position);
     const ageMult  = ageMultiplier(dbEntry.age, league.leagueType === "keeper");
     const kMult    = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
     const iMult    = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], league.leagueType === "redraft");
     // Order: scarcity → age curve (keeper only) → keeper rank → injury (redraft only)
-    return floored * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
+    return base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
   }
 
   const keepersPerTeam = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
@@ -1003,7 +1144,16 @@ export default function MlbTradeAnalyzer() {
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
+  // Defensive safety net: values are replacement-adjusted and non-negative,
+  // so this offset should always resolve to 0. A non-zero value means a
+  // negative value leaked through — warn loudly.
   const offset       = Math.min(0, sendValue, recvValue);
+  if (offset < 0) {
+    console.warn(
+      `[MLB fairness] negative trade value leaked through the replacement adjustment: ` +
+      `offset=${offset.toFixed(3)} (send=${sendValue.toFixed(3)}, recv=${recvValue.toFixed(3)})`
+    );
+  }
   const adjSend      = sendValue - offset;
   const adjRecv      = recvValue - offset;
   const minVal       = Math.min(adjSend, adjRecv);
@@ -1500,6 +1650,9 @@ export default function MlbTradeAnalyzer() {
               useRates={useRates}
               poolMedianGp={poolMedianGp}
               injuryMap={injuryMap}
+              adjustedBaseOf={adjustedBase}
+              rawBaseOf={rawBase}
+              fallbackLabelOf={fallbackLabel}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
               onToggleKeeper={(id) => toggleKeeper("send", id)}
@@ -1526,6 +1679,9 @@ export default function MlbTradeAnalyzer() {
               useRates={useRates}
               poolMedianGp={poolMedianGp}
               injuryMap={injuryMap}
+              adjustedBaseOf={adjustedBase}
+              rawBaseOf={rawBase}
+              fallbackLabelOf={fallbackLabel}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
               onToggleKeeper={(id) => toggleKeeper("recv", id)}
@@ -1762,6 +1918,12 @@ type MlbTradeSideProps = {
   useRates: boolean;
   poolMedianGp: { hitter: number; pitcher: number };
   injuryMap: Record<number, string>;
+  /** Replacement-adjusted base value — must match the trade-total math */
+  adjustedBaseOf: (dbEntry: MlbDbPlayer) => number;
+  /** Raw signed z-score (or raw points) for transparency display */
+  rawBaseOf: (dbEntry: MlbDbPlayer) => number;
+  /** Prior-season fallback / low-confidence note for the card, or null */
+  fallbackLabelOf: (dbEntry: MlbDbPlayer) => string | null;
   onAdd: (p: MlbDbPlayer) => void;
   onRemove: (id: number) => void;
   onToggleKeeper: (id: number) => void;
@@ -1772,7 +1934,7 @@ function MlbTradeSide({
   playerDb, dbStatus, isKeeperLeague, rankMap,
   poolStats, isRotoMode, hitterCategories, pitcherCategories,
   hitterWeights, pitcherWeights, useRates, poolMedianGp,
-  injuryMap,
+  injuryMap, adjustedBaseOf, rawBaseOf, fallbackLabelOf,
   onAdd, onRemove, onToggleKeeper,
 }: MlbTradeSideProps) {
 
@@ -1801,16 +1963,16 @@ function MlbTradeSide({
         {players.map((p) => {
           const dbEntry = playerDb.find((x) => x.id === p.id);
           if (!dbEntry) return null;
-          const base = isRotoMode && poolStats
-            ? mlbZScoreValue(dbEntry, hitterCategories, pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
-            : projectedSeasonValue(dbEntry, hitterWeights, pitcherWeights, useRates);
+          // Raw signed z (or points) for transparency; replacement-adjusted
+          // base for the value math — must match playerValue() exactly
+          const base = rawBaseOf(dbEntry);
           const scarcity    = positionScarcityMultiplier(dbEntry.position);
           const ageMult     = ageMultiplier(dbEntry.age, isKeeperLeague);
           const kMult       = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
           const iMult       = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], !isKeeperLeague);
-          // Floor before multipliers — must match playerValue() exactly
-          const adjusted    = Math.max(0, base) * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
+          const adjusted    = adjustedBaseOf(dbEntry) * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
           const rank        = rankMap.get(p.id) ?? null;
+          const fallbackNote = fallbackLabelOf(dbEntry);
 
           // Warnings
           const isEarlySeason = !dbEntry.isPitcher
@@ -1820,10 +1982,11 @@ function MlbTradeSide({
               : dbEntry.gamesPlayed < 10;
 
           // Total mode undervalues players who missed significant time —
-          // low raw totals reflect availability, not ability.
+          // low raw totals reflect availability, not ability. Suppressed
+          // when the prior-season fallback already covers the player.
           const medianGp = dbEntry.isPitcher ? poolMedianGp.pitcher : poolMedianGp.hitter;
           const missedTime = !useRates && medianGp > 0 &&
-            dbEntry.gamesPlayed < medianGp * 0.6 && !isEarlySeason;
+            dbEntry.gamesPlayed < medianGp * 0.6 && !isEarlySeason && !fallbackNote;
 
           return (
             <div key={p.id} className="card text-xs" style={{ padding: "0.5rem" }}>
@@ -1873,6 +2036,12 @@ function MlbTradeSide({
                 <div className="text-[10px] text-amber-700 mb-1">
                   ⚠ Missed time — Total mode reflects this partial season, not ability.
                   Try a &quot;Projected&quot; data mode for a fairer keeper comparison.
+                </div>
+              )}
+
+              {fallbackNote && (
+                <div className="text-[10px] text-amber-700 mb-1">
+                  ⚠ {fallbackNote}
                 </div>
               )}
 
