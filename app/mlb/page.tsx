@@ -470,18 +470,58 @@ function projectedSeasonValue(
 
 type StatPoolStats  = { mean: number; stddev: number; avgVolume?: number };
 type MlbPoolStats   = {
-  hitterStats:  Record<HitterStatKey,  StatPoolStats>;
-  pitcherStats: Record<PitcherStatKey, StatPoolStats>;
+  hitterStats:  Partial<Record<HitterStatKey,  StatPoolStats>>;
+  pitcherStats: Partial<Record<PitcherStatKey, StatPoolStats>>;
 };
 
 // Volume-weighted pitcher rate stats — longer stints count more than short ones.
 const VOL_PITCHER_RATES = new Set<PitcherStatKey>(["ERA", "WHIP"]);
 
-function _meanStddev(values: number[]): { mean: number; stddev: number } {
-  if (values.length === 0) return { mean: 0, stddev: 1 };
+// A category with (near-)zero spread, or where almost nobody in the pool
+// registers the stat, produces meaningless exploding z-scores. Skip it.
+const MIN_STAT_STDDEV   = 1e-6;
+const MIN_NONZERO_SHARE = 0.2;
+
+/**
+ * Mean/stddev over a sample, excluding null/undefined entries entirely
+ * (a missing stat must not drag the mean toward zero — only real values,
+ * including real zeros, belong in the distribution).
+ */
+function _meanStddevFiltered(sample: Array<number | null | undefined>): {
+  mean: number; stddev: number; count: number; nonZero: number;
+} {
+  const values = sample.filter(
+    (v): v is number => typeof v === "number" && !Number.isNaN(v)
+  );
+  if (values.length === 0) return { mean: 0, stddev: 0, count: 0, nonZero: 0 };
   const mean     = values.reduce((a, b) => a + b, 0) / values.length;
   const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
-  return { mean, stddev: Math.sqrt(variance) || 1 };
+  return {
+    mean,
+    stddev: Math.sqrt(variance),
+    count: values.length,
+    nonZero: values.filter((v) => v !== 0).length,
+  };
+}
+
+/**
+ * Pool stats for one category, or null (with a console warning) when the
+ * category has no usable signal in the pool.
+ */
+function _statPoolOrSkip(
+  stat: string,
+  sample: Array<number | null | undefined>,
+  extra?: { avgVolume: number }
+): StatPoolStats | null {
+  const { mean, stddev, count, nonZero } = _meanStddevFiltered(sample);
+  if (count === 0 || stddev < MIN_STAT_STDDEV || nonZero / count < MIN_NONZERO_SHARE) {
+    console.warn(
+      `[MLB pool] skipping category ${stat}: stddev=${stddev.toFixed(6)}, ` +
+      `nonZero=${nonZero}/${count} — not enough signal in the pool for a meaningful z-score`
+    );
+    return null;
+  }
+  return extra ? { mean, stddev, ...extra } : { mean, stddev };
 }
 
 function computeMlbPoolStats(
@@ -500,14 +540,22 @@ function computeMlbPoolStats(
   const pitcherSlots = (["SP", "RP", "P"] as MlbRosterKey[])
     .reduce((s, k) => s + (roster[k] || 0), 0);
 
-  const hitterN  = Math.max(60, teams * hitterSlots);
-  const pitcherN = Math.max(30, teams * pitcherSlots);
+  const hitterN = Math.max(60, teams * hitterSlots);
+
+  // Pitcher pool mirrors roster construction: starters and relievers are
+  // drafted from different distributions (closers are rostered for saves
+  // despite low IP). Selecting the pool purely by IP fills it with starters,
+  // which collapses the SV distribution and explodes every closer's z-score.
+  // P flex slots are split evenly between the two groups.
+  const flexP = teams * (roster.P || 0);
+  const spN = Math.max(20, teams * (roster.SP || 0) + Math.ceil(flexP / 2));
+  const rpN = Math.max(10, teams * (roster.RP || 0) + Math.floor(flexP / 2));
 
   // DEBUG — verify pool sizes are league-adjusted, not full database
   console.log(
     "[MLB pool]",
     `hitters in DB: ${hitters.length}  →  pool hitterN: ${hitterN}  (${teams} teams × ${hitterSlots} slots, min 60)`,
-    `| pitchers in DB: ${pitchers.length}  →  pool pitcherN: ${pitcherN}  (${teams} teams × ${pitcherSlots} slots, min 30)`,
+    `| pitchers in DB: ${pitchers.length}  →  pool ${spN} SP + ${rpN} RP  (${teams} teams × ${pitcherSlots} slots)`,
     "| z-scores computed against top-N pool, not full DB"
   );
 
@@ -515,41 +563,55 @@ function computeMlbPoolStats(
   const topHitters  = [...hitters]
     .sort((a, b) => b.gamesPlayed - a.gamesPlayed)
     .slice(0, hitterN);
-  const topPitchers = [...pitchers]
-    .sort((a, b) => (b.stats.IP || 0) - (a.stats.IP || 0))
-    .slice(0, pitcherN);
+  const byIp = (a: MlbDbPlayer, b: MlbDbPlayer) => (b.stats.IP || 0) - (a.stats.IP || 0);
+  // Relievers are rostered for leverage (saves and holds), not innings —
+  // selecting RPs by IP fills the pool with long relievers and leaves the
+  // actual closers out, which shrinks the SV stddev and inflates closer z.
+  const byLeverage = (a: MlbDbPlayer, b: MlbDbPlayer) =>
+    ((b.stats.SV ?? 0) + (b.stats.HLD ?? 0)) - ((a.stats.SV ?? 0) + (a.stats.HLD ?? 0)) ||
+    byIp(a, b);
+  const topPitchers = [
+    ...pitchers.filter((p) => p.position === "SP").sort(byIp).slice(0, spN),
+    ...pitchers.filter((p) => p.position === "RP").sort(byLeverage).slice(0, rpN),
+  ];
 
-  const hitterPoolStats  = {} as Record<HitterStatKey,  StatPoolStats>;
-  const pitcherPoolStats = {} as Record<PitcherStatKey, StatPoolStats>;
+  const hitterPoolStats:  Partial<Record<HitterStatKey,  StatPoolStats>> = {};
+  const pitcherPoolStats: Partial<Record<PitcherStatKey, StatPoolStats>> = {};
 
   for (const stat of hitterStats) {
-    const values = topHitters.map((p) => {
-      const raw = p.stats[stat] ?? 0;
+    // null/undefined entries stay nullish so the pool excludes them
+    const sample = topHitters.map((p) => {
+      const raw = p.stats[stat];
+      if (raw === null || raw === undefined) return raw;
       if (!useRates || RATE_HITTER.has(stat)) return raw;
       return raw / (p.gamesPlayed || 1);
     });
-    hitterPoolStats[stat] = _meanStddev(values);
+    const ps = _statPoolOrSkip(stat, sample);
+    if (ps) hitterPoolStats[stat] = ps;
   }
 
   for (const stat of pitcherStats) {
-    if (useRates && VOL_PITCHER_RATES.has(stat)) {
-      const values  = topPitchers.map((p) => p.stats[stat] ?? 0);
+    if (VOL_PITCHER_RATES.has(stat)) {
+      // ERA/WHIP: volume-weighted by IP in BOTH modes — a 45 IP reliever's
+      // rate must not carry the same weight as a 190 IP starter's.
+      const sample  = topPitchers.map((p) => p.stats[stat]);
       const volumes = topPitchers.map((p) => p.stats.IP ?? 0);
-      const { mean, stddev } = _meanStddev(values);
       const avgVolume = volumes.reduce((a, b) => a + b, 0) / (volumes.length || 1);
-      pitcherPoolStats[stat] = { mean, stddev, avgVolume };
-    } else if (useRates && RATE_PITCHER.has(stat)) {
-      const values = topPitchers.map((p) => p.stats[stat] ?? 0);
-      pitcherPoolStats[stat] = _meanStddev(values);
-    } else if (useRates) {
-      const values = topPitchers.map((p) => {
-        const gp = p.gamesPlayed || 1;
-        return (p.stats[stat] ?? 0) / gp;
-      });
-      pitcherPoolStats[stat] = _meanStddev(values);
+      const ps = _statPoolOrSkip(stat, sample, { avgVolume });
+      if (ps) pitcherPoolStats[stat] = ps;
+    } else if (RATE_PITCHER.has(stat) || !useRates) {
+      // Rate stats compare raw values; totals mode compares raw totals
+      const ps = _statPoolOrSkip(stat, topPitchers.map((p) => p.stats[stat]));
+      if (ps) pitcherPoolStats[stat] = ps;
     } else {
-      const values = topPitchers.map((p) => p.stats[stat] ?? 0);
-      pitcherPoolStats[stat] = _meanStddev(values);
+      // Rates mode counting stats: per-game
+      const sample = topPitchers.map((p) => {
+        const raw = p.stats[stat];
+        if (raw === null || raw === undefined) return raw;
+        return raw / (p.gamesPlayed || 1);
+      });
+      const ps = _statPoolOrSkip(stat, sample);
+      if (ps) pitcherPoolStats[stat] = ps;
     }
   }
 
@@ -574,11 +636,13 @@ function _pitcherZ(
 ): number {
   if (ps.stddev === 0) return 0;
   const raw = player.stats[stat] ?? 0;
-  if (!useRates) return (raw - ps.mean) / ps.stddev;
+  // ERA/WHIP: volume-weighted by IP in both modes — same pattern as the
+  // NHL SV%/GAA handling. Low-IP arms move the number less.
   if (VOL_PITCHER_RATES.has(stat) && ps.avgVolume !== undefined && ps.avgVolume > 0) {
     const ip = player.stats.IP ?? 0;
     return (raw - ps.mean) * (ip / ps.avgVolume) / ps.stddev;
   }
+  if (!useRates) return (raw - ps.mean) / ps.stddev;
   // Other rate stats or counting stats divided by games
   const value = RATE_PITCHER.has(stat) ? raw : raw / (player.gamesPlayed || 1);
   return (value - ps.mean) / ps.stddev;
@@ -598,15 +662,17 @@ function mlbZScoreValue(
   if (player.isPitcher) {
     for (const stat of pitcherStats) {
       const cfg = pitcherCategories[stat];
-      if (!cfg || !poolStats.pitcherStats[stat]) continue;
-      const z = _pitcherZ(player, stat, poolStats.pitcherStats[stat], useRates);
+      const ps  = poolStats.pitcherStats[stat];
+      if (!cfg || !ps) continue;
+      const z = _pitcherZ(player, stat, ps, useRates);
       total += cfg.direction === "less" ? -z : z;
     }
   } else {
     for (const stat of hitterStats) {
       const cfg = hitterCategories[stat];
-      if (!cfg || !poolStats.hitterStats[stat]) continue;
-      const z = _hitterZ(player, stat, poolStats.hitterStats[stat], useRates);
+      const ps  = poolStats.hitterStats[stat];
+      if (!cfg || !ps) continue;
+      const z = _hitterZ(player, stat, ps, useRates);
       total += cfg.direction === "less" ? -z : z;
     }
   }
