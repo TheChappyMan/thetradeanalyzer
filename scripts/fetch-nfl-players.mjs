@@ -120,10 +120,16 @@ function mapSkillStats(s) {
     passInt:     round(s.pass_int ?? 0),
     rushYds:     round(s.rush_yd  ?? 0),
     rushTDs:     round(s.rush_td  ?? 0),
+    rushAtt:     round(s.rush_att ?? 0),
     rec:         round(s.rec      ?? 0),
     recYds:      round(s.rec_yd   ?? 0),
     recTDs:      round(s.rec_td   ?? 0),
     fumblesLost: round(s.fum_lost ?? 0),
+    // Season counts of games hitting each yardage threshold
+    bonusRushYd100: round(s.bonus_rush_yd_100 ?? 0),
+    bonusRushYd200: round(s.bonus_rush_yd_200 ?? 0),
+    bonusRecYd100:  round(s.bonus_rec_yd_100  ?? 0),
+    bonusPassYd300: round(s.bonus_pass_yd_300 ?? 0),
   }
 }
 

@@ -23,11 +23,18 @@ export type NflScoringWeights = {
   // ── Rushing ──────────────────────────────────────────────
   rushYds: number;       // per yard (e.g. 0.1 = 1pt/10yds)
   rushTDs: number;       // per TD
+  rushAtt: number;       // per rushing attempt (carry)
 
   // ── Receiving ────────────────────────────────────────────
   rec: number;           // per reception (0 std / 0.5 half / 1 full PPR)
   recYds: number;        // per yard
   recTDs: number;        // per TD
+
+  // ── Yard bonuses (per game hitting the threshold) ────────
+  bonusRushYd100: number;  // per game with 100+ rush yds
+  bonusRushYd200: number;  // per game with 200+ rush yds
+  bonusRecYd100: number;   // per game with 100+ rec yds
+  bonusPassYd300: number;  // per game with 300+ pass yds
 
   // ── Turnovers ────────────────────────────────────────────
   fumblesLost: number;   // per fumble lost (negative)
@@ -64,10 +71,16 @@ export type NflPlayerStats = {
   passInt?: number;
   rushYds?: number;
   rushTDs?: number;
+  rushAtt?: number;
   rec?: number;
   recYds?: number;
   recTDs?: number;
   fumblesLost?: number;
+  // Season counts of games hitting each yardage threshold
+  bonusRushYd100?: number;
+  bonusRushYd200?: number;
+  bonusRecYd100?: number;
+  bonusPassYd300?: number;
   // Kicker
   fgMade0to39?: number;
   fgMade40to49?: number;
@@ -121,9 +134,14 @@ export const DEFAULT_NFL_SCORING_WEIGHTS: NflScoringWeights = {
   passInt:        -2,
   rushYds:         0.1,   // 1 pt / 10 yds
   rushTDs:         6,
+  rushAtt:         0,
   rec:             0.5,   // half PPR
   recYds:          0.1,   // 1 pt / 10 yds
   recTDs:          6,
+  bonusRushYd100:  0,
+  bonusRushYd200:  0,
+  bonusRecYd100:   0,
+  bonusPassYd300:  0,
   fumblesLost:    -2,
   fgMade0to39:     3,
   fgMade40to49:    4,

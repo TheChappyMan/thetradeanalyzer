@@ -215,13 +215,14 @@ type WeightGroup = { heading: string; keys: WeightKey[] };
 
 const LEFT_WEIGHT_GROUPS: WeightGroup[] = [
   { heading: "Passing",   keys: ["passYds", "passTDs", "passInt"] },
-  { heading: "Rushing",   keys: ["rushYds", "rushTDs"] },
+  { heading: "Rushing",   keys: ["rushYds", "rushTDs", "rushAtt"] },
   { heading: "Receiving", keys: ["rec", "recYds", "recTDs"] },
   { heading: "Misc",      keys: ["fumblesLost"] },
   { heading: "Kicker",    keys: ["fgMade0to39", "fgMade40to49", "fgMade50plus", "fgMissed", "patMade", "patMissed"] },
 ];
 
 const RIGHT_WEIGHT_GROUPS: WeightGroup[] = [
+  { heading: "Yard Bonuses", keys: ["bonusRushYd100", "bonusRushYd200", "bonusRecYd100", "bonusPassYd300"] },
   { heading: "Defense / ST", keys: ["sacks", "ints", "fumbRec", "defTDs"] },
   { heading: "DST Pts Allowed", keys: [
     "ptsAllowed0", "ptsAllowed1to6", "ptsAllowed7to13",
@@ -235,9 +236,14 @@ const WEIGHT_LABELS: Record<WeightKey, string> = {
   passInt:          "Pass INTs",
   rushYds:          "Rush Yds (per yd)",
   rushTDs:          "Rush TDs",
+  rushAtt:          "Rush Attempts (per carry)",
   rec:              "Reception",
   recYds:           "Rec Yds (per yd)",
   recTDs:           "Rec TDs",
+  bonusRushYd100:   "100+ Rush Yds Game",
+  bonusRushYd200:   "200+ Rush Yds Game",
+  bonusRecYd100:    "100+ Rec Yds Game",
+  bonusPassYd300:   "300+ Pass Yds Game",
   fumblesLost:      "Fumbles Lost",
   fgMade0to39:      "FG 0–39 yds",
   fgMade40to49:     "FG 40–49 yds",

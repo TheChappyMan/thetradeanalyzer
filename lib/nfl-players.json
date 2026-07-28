@@ -14,10 +14,15 @@
           "passInt": 10,
           "rushYds": 579,
           "rushTDs": 14,
+          "rushAtt": 112,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -32,10 +37,15 @@
           "passInt": 8,
           "rushYds": 1,
           "rushTDs": 0,
+          "rushAtt": 29,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -50,10 +60,15 @@
           "passInt": 8,
           "rushYds": 450,
           "rushTDs": 4,
+          "rushAtt": 103,
           "rec": 1,
           "recYds": 2,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -68,10 +83,15 @@
           "passInt": 12,
           "rushYds": 359,
           "rushTDs": 9,
+          "rushAtt": 82,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -86,10 +106,15 @@
           "passInt": 10,
           "rushYds": 177,
           "rushTDs": 2,
+          "rushAtt": 53,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 6
         }
       },
       {
@@ -104,10 +129,15 @@
           "passInt": 7,
           "rushYds": 383,
           "rushTDs": 3,
+          "rushAtt": 77,
           "rec": 2,
           "recYds": 22,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -122,10 +152,15 @@
           "passInt": 8,
           "rushYds": 45,
           "rushTDs": 0,
+          "rushAtt": 19,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 5
+          "fumblesLost": 5,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 6
         }
       },
       {
@@ -140,10 +175,15 @@
           "passInt": 6,
           "rushYds": 421,
           "rushTDs": 8,
+          "rushAtt": 105,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -158,10 +198,15 @@
           "passInt": 11,
           "rushYds": 356,
           "rushTDs": 5,
+          "rushAtt": 83,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 4
         }
       },
       {
@@ -176,10 +221,15 @@
           "passInt": 13,
           "rushYds": 498,
           "rushTDs": 2,
+          "rushAtt": 83,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -194,10 +244,15 @@
           "passInt": 11,
           "rushYds": 422,
           "rushTDs": 5,
+          "rushAtt": 64,
           "rec": 1,
           "recYds": -10,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -212,10 +267,15 @@
           "passInt": 11,
           "rushYds": 382,
           "rushTDs": 1,
+          "rushAtt": 55,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -230,10 +290,15 @@
           "passInt": 5,
           "rushYds": 487,
           "rushTDs": 9,
+          "rushAtt": 86,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -248,10 +313,15 @@
           "passInt": 14,
           "rushYds": 95,
           "rushTDs": 0,
+          "rushAtt": 35,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 6
+          "fumblesLost": 6,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -266,10 +336,15 @@
           "passInt": 6,
           "rushYds": 199,
           "rushTDs": 0,
+          "rushAtt": 47,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -284,10 +359,15 @@
           "passInt": 8,
           "rushYds": 168,
           "rushTDs": 1,
+          "rushAtt": 38,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -302,10 +382,15 @@
           "passInt": 8,
           "rushYds": 164,
           "rushTDs": 5,
+          "rushAtt": 45,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -320,10 +405,15 @@
           "passInt": 7,
           "rushYds": 61,
           "rushTDs": 1,
+          "rushAtt": 21,
           "rec": 1,
           "recYds": -9,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -338,10 +428,15 @@
           "passInt": 11,
           "rushYds": 216,
           "rushTDs": 2,
+          "rushAtt": 54,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -356,10 +451,15 @@
           "passInt": 7,
           "rushYds": 349,
           "rushTDs": 2,
+          "rushAtt": 67,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -374,10 +474,15 @@
           "passInt": 8,
           "rushYds": 209,
           "rushTDs": 1,
+          "rushAtt": 48,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -392,10 +497,15 @@
           "passInt": 7,
           "rushYds": 159,
           "rushTDs": 2,
+          "rushAtt": 39,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 7
+          "fumblesLost": 7,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -410,10 +520,15 @@
           "passInt": 10,
           "rushYds": 147,
           "rushTDs": 3,
+          "rushAtt": 33,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -428,10 +543,15 @@
           "passInt": 17,
           "rushYds": 109,
           "rushTDs": 0,
+          "rushAtt": 41,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -446,10 +566,15 @@
           "passInt": 15,
           "rushYds": 43,
           "rushTDs": 0,
+          "rushAtt": 20,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -464,10 +589,15 @@
           "passInt": 6,
           "rushYds": 186,
           "rushTDs": 3,
+          "rushAtt": 45,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -482,10 +612,15 @@
           "passInt": 10,
           "rushYds": 35,
           "rushTDs": 1,
+          "rushAtt": 21,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -500,10 +635,15 @@
           "passInt": 1,
           "rushYds": 383,
           "rushTDs": 4,
+          "rushAtt": 71,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -518,10 +658,15 @@
           "passInt": 5,
           "rushYds": 41,
           "rushTDs": 0,
+          "rushAtt": 14,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -536,10 +681,15 @@
           "passInt": 6,
           "rushYds": 60,
           "rushTDs": 0,
+          "rushAtt": 36,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -554,10 +704,15 @@
           "passInt": 7,
           "rushYds": 297,
           "rushTDs": 1,
+          "rushAtt": 50,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -572,10 +727,15 @@
           "passInt": 12,
           "rushYds": 181,
           "rushTDs": 4,
+          "rushAtt": 37,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -878,10 +1038,15 @@
           "passInt": 0,
           "rushYds": 1202,
           "rushTDs": 10,
+          "rushAtt": 311,
           "rec": 102,
           "recYds": 924,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -896,10 +1061,15 @@
           "passInt": 0,
           "rushYds": 1585,
           "rushTDs": 18,
+          "rushAtt": 323,
           "rec": 46,
           "recYds": 378,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -914,10 +1084,15 @@
           "passInt": 0,
           "rushYds": 1478,
           "rushTDs": 7,
+          "rushAtt": 287,
           "rec": 79,
           "recYds": 820,
           "recTDs": 4,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 5,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -932,10 +1107,15 @@
           "passInt": 0,
           "rushYds": 1223,
           "rushTDs": 13,
+          "rushAtt": 243,
           "rec": 77,
           "recYds": 616,
           "recTDs": 5,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -950,10 +1130,15 @@
           "passInt": 0,
           "rushYds": 1621,
           "rushTDs": 12,
+          "rushAtt": 309,
           "rec": 33,
           "recYds": 291,
           "recTDs": 2,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 8,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -968,10 +1153,15 @@
           "passInt": 0,
           "rushYds": 1350,
           "rushTDs": 8,
+          "rushAtt": 238,
           "rec": 67,
           "recYds": 488,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -986,10 +1176,15 @@
           "passInt": 0,
           "rushYds": 1595,
           "rushTDs": 16,
+          "rushAtt": 307,
           "rec": 15,
           "recYds": 150,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 7,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1004,10 +1199,15 @@
           "passInt": 0,
           "rushYds": 1252,
           "rushTDs": 10,
+          "rushAtt": 259,
           "rec": 36,
           "recYds": 281,
           "recTDs": 3,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1022,10 +1222,15 @@
           "passInt": 0,
           "rushYds": 1019,
           "rushTDs": 6,
+          "rushAtt": 232,
           "rec": 69,
           "recYds": 437,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1040,10 +1245,15 @@
           "passInt": 0,
           "rushYds": 1107,
           "rushTDs": 7,
+          "rushAtt": 260,
           "rec": 36,
           "recYds": 292,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1058,10 +1268,15 @@
           "passInt": 0,
           "rushYds": 1201,
           "rushTDs": 11,
+          "rushAtt": 252,
           "rec": 35,
           "recYds": 137,
           "recTDs": 2,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1076,10 +1291,15 @@
           "passInt": 0,
           "rushYds": 929,
           "rushTDs": 13,
+          "rushAtt": 234,
           "rec": 36,
           "recYds": 282,
           "recTDs": 1,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1094,10 +1314,15 @@
           "passInt": 0,
           "rushYds": 975,
           "rushTDs": 5,
+          "rushAtt": 266,
           "rec": 55,
           "recYds": 346,
           "recTDs": 5,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1112,10 +1337,15 @@
           "passInt": 0,
           "rushYds": 1087,
           "rushTDs": 9,
+          "rushAtt": 223,
           "rec": 34,
           "recYds": 299,
           "recTDs": 1,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1130,10 +1360,15 @@
           "passInt": 0,
           "rushYds": 1140,
           "rushTDs": 7,
+          "rushAtt": 280,
           "rec": 37,
           "recYds": 273,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1148,10 +1383,15 @@
           "passInt": 0,
           "rushYds": 1076,
           "rushTDs": 6,
+          "rushAtt": 236,
           "rec": 39,
           "recYds": 297,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1166,10 +1406,15 @@
           "passInt": 0,
           "rushYds": 958,
           "rushTDs": 6,
+          "rushAtt": 211,
           "rec": 40,
           "recYds": 333,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1184,10 +1429,15 @@
           "passInt": 0,
           "rushYds": 911,
           "rushTDs": 9,
+          "rushAtt": 180,
           "rec": 35,
           "recYds": 221,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1202,15 +1452,20 @@
           "passInt": 0,
           "rushYds": 1065,
           "rushTDs": 4,
+          "rushAtt": 243,
           "rec": 36,
           "recYds": 350,
           "recTDs": 1,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
         "id": 39694,
-        "name": "Kenneth Gainwell",
+        "name": "Kenny Gainwell",
         "team": "TB",
         "position": "RB",
         "gamesPlayed": 17,
@@ -1220,10 +1475,15 @@
           "passInt": 0,
           "rushYds": 537,
           "rushTDs": 5,
+          "rushAtt": 114,
           "rec": 73,
           "recYds": 486,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1238,10 +1498,15 @@
           "passInt": 0,
           "rushYds": 540,
           "rushTDs": 7,
+          "rushAtt": 146,
           "rec": 47,
           "recYds": 356,
           "recTDs": 5,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1256,10 +1521,15 @@
           "passInt": 0,
           "rushYds": 1027,
           "rushTDs": 5,
+          "rushAtt": 221,
           "rec": 31,
           "recYds": 282,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1274,10 +1544,15 @@
           "passInt": 0,
           "rushYds": 1082,
           "rushTDs": 5,
+          "rushAtt": 242,
           "rec": 33,
           "recYds": 206,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1292,10 +1567,15 @@
           "passInt": 0,
           "rushYds": 730,
           "rushTDs": 12,
+          "rushAtt": 184,
           "rec": 20,
           "recYds": 144,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1310,10 +1590,15 @@
           "passInt": 0,
           "rushYds": 603,
           "rushTDs": 7,
+          "rushAtt": 130,
           "rec": 32,
           "recYds": 345,
           "recTDs": 2,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1328,10 +1613,15 @@
           "passInt": 0,
           "rushYds": 827,
           "rushTDs": 7,
+          "rushAtt": 230,
           "rec": 26,
           "recYds": 171,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1346,10 +1636,15 @@
           "passInt": 0,
           "rushYds": 716,
           "rushTDs": 8,
+          "rushAtt": 158,
           "rec": 24,
           "recYds": 192,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1364,10 +1659,15 @@
           "passInt": 0,
           "rushYds": 740,
           "rushTDs": 2,
+          "rushAtt": 176,
           "rec": 36,
           "recYds": 288,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1382,10 +1682,15 @@
           "passInt": 0,
           "rushYds": 805,
           "rushTDs": 8,
+          "rushAtt": 175,
           "rec": 9,
           "recYds": 68,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1400,10 +1705,15 @@
           "passInt": 0,
           "rushYds": 611,
           "rushTDs": 8,
+          "rushAtt": 163,
           "rec": 18,
           "recYds": 143,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1418,10 +1728,15 @@
           "passInt": 0,
           "rushYds": 783,
           "rushTDs": 5,
+          "rushAtt": 169,
           "rec": 18,
           "recYds": 164,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1436,10 +1751,15 @@
           "passInt": 0,
           "rushYds": 703,
           "rushTDs": 2,
+          "rushAtt": 196,
           "rec": 24,
           "recYds": 208,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1454,10 +1774,15 @@
           "passInt": 0,
           "rushYds": 588,
           "rushTDs": 1,
+          "rushAtt": 173,
           "rec": 30,
           "recYds": 277,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1472,10 +1797,15 @@
           "passInt": 0,
           "rushYds": 758,
           "rushTDs": 6,
+          "rushAtt": 159,
           "rec": 14,
           "recYds": 51,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1490,10 +1820,15 @@
           "passInt": 0,
           "rushYds": 572,
           "rushTDs": 4,
+          "rushAtt": 132,
           "rec": 40,
           "recYds": 218,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1508,10 +1843,15 @@
           "passInt": 0,
           "rushYds": 545,
           "rushTDs": 4,
+          "rushAtt": 124,
           "rec": 32,
           "recYds": 192,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1526,10 +1866,15 @@
           "passInt": 0,
           "rushYds": 746,
           "rushTDs": 6,
+          "rushAtt": 145,
           "rec": 8,
           "recYds": 36,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1544,10 +1889,15 @@
           "passInt": 0,
           "rushYds": 514,
           "rushTDs": 8,
+          "rushAtt": 143,
           "rec": 14,
           "recYds": 96,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1562,10 +1912,15 @@
           "passInt": 0,
           "rushYds": 410,
           "rushTDs": 5,
+          "rushAtt": 101,
           "rec": 24,
           "recYds": 207,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1580,10 +1935,15 @@
           "passInt": 0,
           "rushYds": 511,
           "rushTDs": 1,
+          "rushAtt": 134,
           "rec": 30,
           "recYds": 223,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1598,10 +1958,15 @@
           "passInt": 0,
           "rushYds": 772,
           "rushTDs": 4,
+          "rushAtt": 153,
           "rec": 11,
           "recYds": 37,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1616,10 +1981,15 @@
           "passInt": 0,
           "rushYds": 643,
           "rushTDs": 3,
+          "rushAtt": 155,
           "rec": 16,
           "recYds": 136,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1634,10 +2004,15 @@
           "passInt": 0,
           "rushYds": 548,
           "rushTDs": 2,
+          "rushAtt": 132,
           "rec": 28,
           "recYds": 199,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1652,10 +2027,15 @@
           "passInt": 0,
           "rushYds": 437,
           "rushTDs": 5,
+          "rushAtt": 119,
           "rec": 18,
           "recYds": 151,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1670,10 +2050,15 @@
           "passInt": 0,
           "rushYds": 500,
           "rushTDs": 6,
+          "rushAtt": 112,
           "rec": 3,
           "recYds": 30,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1688,10 +2073,15 @@
           "passInt": 0,
           "rushYds": 283,
           "rushTDs": 2,
+          "rushAtt": 72,
           "rec": 45,
           "recYds": 264,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1706,10 +2096,15 @@
           "passInt": 0,
           "rushYds": 200,
           "rushTDs": 3,
+          "rushAtt": 50,
           "rec": 24,
           "recYds": 263,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1724,10 +2119,15 @@
           "passInt": 0,
           "rushYds": 471,
           "rushTDs": 1,
+          "rushAtt": 131,
           "rec": 33,
           "recYds": 186,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1742,10 +2142,15 @@
           "passInt": 0,
           "rushYds": 320,
           "rushTDs": 7,
+          "rushAtt": 86,
           "rec": 8,
           "recYds": 34,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1760,10 +2165,15 @@
           "passInt": 0,
           "rushYds": 307,
           "rushTDs": 5,
+          "rushAtt": 83,
           "rec": 10,
           "recYds": 79,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1778,10 +2188,15 @@
           "passInt": 0,
           "rushYds": 496,
           "rushTDs": 3,
+          "rushAtt": 125,
           "rec": 15,
           "recYds": 99,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1796,10 +2211,15 @@
           "passInt": 0,
           "rushYds": 269,
           "rushTDs": 4,
+          "rushAtt": 82,
           "rec": 22,
           "recYds": 160,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1814,10 +2234,15 @@
           "passInt": 0,
           "rushYds": 333,
           "rushTDs": 1,
+          "rushAtt": 92,
           "rec": 33,
           "recYds": 267,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1832,10 +2257,15 @@
           "passInt": 0,
           "rushYds": 506,
           "rushTDs": 3,
+          "rushAtt": 122,
           "rec": 13,
           "recYds": 67,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1850,10 +2280,15 @@
           "passInt": 0,
           "rushYds": 462,
           "rushTDs": 1,
+          "rushAtt": 118,
           "rec": 19,
           "recYds": 101,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1868,10 +2303,15 @@
           "passInt": 0,
           "rushYds": 382,
           "rushTDs": 3,
+          "rushAtt": 84,
           "rec": 17,
           "recYds": 87,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1886,10 +2326,15 @@
           "passInt": 0,
           "rushYds": 175,
           "rushTDs": 0,
+          "rushAtt": 65,
           "rec": 33,
           "recYds": 271,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1904,10 +2349,15 @@
           "passInt": 0,
           "rushYds": 221,
           "rushTDs": 1,
+          "rushAtt": 44,
           "rec": 25,
           "recYds": 196,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1922,10 +2372,15 @@
           "passInt": 0,
           "rushYds": 236,
           "rushTDs": 1,
+          "rushAtt": 43,
           "rec": 21,
           "recYds": 186,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1940,10 +2395,15 @@
           "passInt": 0,
           "rushYds": 400,
           "rushTDs": 2,
+          "rushAtt": 92,
           "rec": 8,
           "recYds": 25,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1958,10 +2418,15 @@
           "passInt": 0,
           "rushYds": 93,
           "rushTDs": 2,
+          "rushAtt": 18,
           "rec": 21,
           "recYds": 169,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1976,10 +2441,15 @@
           "passInt": 0,
           "rushYds": 312,
           "rushTDs": 0,
+          "rushAtt": 44,
           "rec": 13,
           "recYds": 101,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -1994,10 +2464,15 @@
           "passInt": 0,
           "rushYds": 275,
           "rushTDs": 0,
+          "rushAtt": 58,
           "rec": 10,
           "recYds": 86,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2012,10 +2487,15 @@
           "passInt": 0,
           "rushYds": 356,
           "rushTDs": 2,
+          "rushAtt": 63,
           "rec": 3,
           "recYds": 32,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2030,10 +2510,15 @@
           "passInt": 0,
           "rushYds": 206,
           "rushTDs": 2,
+          "rushAtt": 57,
           "rec": 17,
           "recYds": 104,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2048,10 +2533,15 @@
           "passInt": 0,
           "rushYds": 341,
           "rushTDs": 1,
+          "rushAtt": 59,
           "rec": 9,
           "recYds": 63,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2066,10 +2556,15 @@
           "passInt": 0,
           "rushYds": 151,
           "rushTDs": 0,
+          "rushAtt": 44,
           "rec": 25,
           "recYds": 172,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2084,10 +2579,15 @@
           "passInt": 0,
           "rushYds": 199,
           "rushTDs": 3,
+          "rushAtt": 70,
           "rec": 7,
           "recYds": 32,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2102,10 +2602,15 @@
           "passInt": 0,
           "rushYds": 288,
           "rushTDs": 2,
+          "rushAtt": 70,
           "rec": 5,
           "recYds": 44,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2120,10 +2625,15 @@
           "passInt": 0,
           "rushYds": -3,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 24,
           "recYds": 213,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2678,10 +3188,15 @@
           "passInt": 0,
           "rushYds": 105,
           "rushTDs": 1,
+          "rushAtt": 10,
           "rec": 129,
           "recYds": 1715,
           "recTDs": 10,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2696,10 +3211,15 @@
           "passInt": 0,
           "rushYds": 36,
           "rushTDs": 0,
+          "rushAtt": 7,
           "rec": 119,
           "recYds": 1793,
           "recTDs": 10,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 9,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2714,10 +3234,15 @@
           "passInt": 0,
           "rushYds": 9,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 117,
           "recYds": 1401,
           "recTDs": 11,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2732,10 +3257,15 @@
           "passInt": 0,
           "rushYds": 14,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 125,
           "recYds": 1412,
           "recTDs": 8,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 7,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2750,10 +3280,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 93,
           "recYds": 1429,
           "recTDs": 9,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2768,10 +3303,15 @@
           "passInt": 1,
           "rushYds": -3,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 100,
           "recYds": 1163,
           "recTDs": 9,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2786,10 +3326,15 @@
           "passInt": 0,
           "rushYds": 62,
           "rushTDs": 1,
+          "rushAtt": 10,
           "rec": 86,
           "recYds": 1211,
           "recTDs": 5,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2804,10 +3349,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 60,
           "recYds": 789,
           "recTDs": 14,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2822,10 +3372,15 @@
           "passInt": 0,
           "rushYds": 15,
           "rushTDs": 1,
+          "rushAtt": 2,
           "rec": 71,
           "recYds": 1117,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2840,10 +3395,15 @@
           "passInt": 0,
           "rushYds": 12,
           "rushTDs": 0,
+          "rushAtt": 6,
           "rec": 65,
           "recYds": 1117,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2858,10 +3418,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 78,
           "recYds": 1006,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2876,10 +3441,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 78,
           "recYds": 1003,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2894,10 +3464,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 74,
           "recYds": 1017,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2912,10 +3487,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 59,
           "recYds": 846,
           "recTDs": 11,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2930,10 +3510,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 70,
           "recYds": 1014,
           "recTDs": 7,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2948,10 +3533,15 @@
           "passInt": 0,
           "rushYds": 5,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 92,
           "recYds": 1014,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2966,10 +3556,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 68,
           "recYds": 919,
           "recTDs": 7,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -2984,10 +3579,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 85,
           "recYds": 1013,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3002,10 +3602,15 @@
           "passInt": 0,
           "rushYds": 2,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 75,
           "recYds": 1077,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 6,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3020,10 +3625,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 77,
           "recYds": 1008,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3038,10 +3648,15 @@
           "passInt": 0,
           "rushYds": 9,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 63,
           "recYds": 938,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3056,10 +3671,15 @@
           "passInt": 0,
           "rushYds": 28,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 64,
           "recYds": 910,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3074,10 +3694,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 80,
           "recYds": 784,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3092,10 +3717,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 47,
           "recYds": 1003,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3110,10 +3740,15 @@
           "passInt": 0,
           "rushYds": 7,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 84,
           "recYds": 1048,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3128,10 +3763,15 @@
           "passInt": 0,
           "rushYds": 12,
           "rushTDs": 1,
+          "rushAtt": 2,
           "rec": 59,
           "recYds": 850,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3146,10 +3786,15 @@
           "passInt": 0,
           "rushYds": 75,
           "rushTDs": 1,
+          "rushAtt": 17,
           "rec": 72,
           "recYds": 727,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3164,10 +3809,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 66,
           "recYds": 789,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3182,10 +3832,15 @@
           "passInt": 0,
           "rushYds": 7,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 51,
           "recYds": 735,
           "recTDs": 8,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3200,10 +3855,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 55,
           "recYds": 643,
           "recTDs": 9,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3218,10 +3878,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 7,
           "rec": 58,
           "recYds": 847,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3236,10 +3901,15 @@
           "passInt": 0,
           "rushYds": 79,
           "rushTDs": 1,
+          "rushAtt": 15,
           "rec": 50,
           "recYds": 682,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3254,10 +3924,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 81,
           "recYds": 777,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3272,10 +3947,15 @@
           "passInt": 0,
           "rushYds": 12,
           "rushTDs": 0,
+          "rushAtt": 5,
           "rec": 65,
           "recYds": 709,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3290,10 +3970,15 @@
           "passInt": 0,
           "rushYds": 13,
           "rushTDs": 0,
+          "rushAtt": 5,
           "rec": 75,
           "recYds": 835,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3308,10 +3993,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 55,
           "recYds": 724,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3326,10 +4016,15 @@
           "passInt": 0,
           "rushYds": 51,
           "rushTDs": 0,
+          "rushAtt": 11,
           "rec": 57,
           "recYds": 696,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3344,10 +4039,15 @@
           "passInt": 0,
           "rushYds": 5,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 72,
           "recYds": 719,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3362,10 +4062,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 44,
           "recYds": 661,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3380,10 +4085,15 @@
           "passInt": 0,
           "rushYds": 20,
           "rushTDs": 1,
+          "rushAtt": 5,
           "rec": 53,
           "recYds": 571,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3398,10 +4108,15 @@
           "passInt": 0,
           "rushYds": 69,
           "rushTDs": 0,
+          "rushAtt": 9,
           "rec": 59,
           "recYds": 687,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3416,10 +4131,15 @@
           "passInt": 0,
           "rushYds": 3,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 35,
           "recYds": 611,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3434,10 +4154,15 @@
           "passInt": 0,
           "rushYds": 21,
           "rushTDs": 1,
+          "rushAtt": 3,
           "rec": 48,
           "recYds": 707,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3452,10 +4177,15 @@
           "passInt": 0,
           "rushYds": 81,
           "rushTDs": 1,
+          "rushAtt": 2,
           "rec": 42,
           "recYds": 610,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3470,10 +4200,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 49,
           "recYds": 587,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3488,10 +4223,15 @@
           "passInt": 0,
           "rushYds": -2,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 58,
           "recYds": 566,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3506,10 +4246,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 41,
           "recYds": 525,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3524,10 +4269,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 33,
           "recYds": 551,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3542,10 +4292,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 41,
           "recYds": 608,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3560,10 +4315,15 @@
           "passInt": 0,
           "rushYds": 37,
           "rushTDs": 0,
+          "rushAtt": 6,
           "rec": 47,
           "recYds": 652,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3578,10 +4338,15 @@
           "passInt": 0,
           "rushYds": 5,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 50,
           "recYds": 602,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3596,10 +4361,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 41,
           "recYds": 515,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3614,10 +4384,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 38,
           "recYds": 582,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3632,10 +4407,15 @@
           "passInt": 1,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 47,
           "recYds": 593,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3650,10 +4430,15 @@
           "passInt": 0,
           "rushYds": 25,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 40,
           "recYds": 475,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3668,10 +4453,15 @@
           "passInt": 0,
           "rushYds": 18,
           "rushTDs": 0,
+          "rushAtt": 11,
           "rec": 48,
           "recYds": 423,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3686,10 +4476,15 @@
           "passInt": 0,
           "rushYds": 4,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 46,
           "recYds": 550,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3704,10 +4499,15 @@
           "passInt": 0,
           "rushYds": 110,
           "rushTDs": 1,
+          "rushAtt": 17,
           "rec": 46,
           "recYds": 317,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3722,10 +4522,15 @@
           "passInt": 0,
           "rushYds": 87,
           "rushTDs": 0,
+          "rushAtt": 11,
           "rec": 42,
           "recYds": 532,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3740,10 +4545,15 @@
           "passInt": 0,
           "rushYds": 13,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 29,
           "recYds": 444,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3758,10 +4568,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 38,
           "recYds": 404,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3776,10 +4591,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 36,
           "recYds": 395,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3794,10 +4614,15 @@
           "passInt": 0,
           "rushYds": 22,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 35,
           "recYds": 428,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3812,10 +4637,15 @@
           "passInt": 0,
           "rushYds": 21,
           "rushTDs": 0,
+          "rushAtt": 7,
           "rec": 31,
           "recYds": 447,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3830,10 +4660,15 @@
           "passInt": 0,
           "rushYds": 22,
           "rushTDs": 0,
+          "rushAtt": 7,
           "rec": 28,
           "recYds": 322,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3848,10 +4683,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 37,
           "recYds": 538,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3866,10 +4706,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 33,
           "recYds": 394,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3884,10 +4729,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 37,
           "recYds": 551,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3902,10 +4752,15 @@
           "passInt": 0,
           "rushYds": 89,
           "rushTDs": 0,
+          "rushAtt": 17,
           "rec": 26,
           "recYds": 396,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3920,10 +4775,15 @@
           "passInt": 0,
           "rushYds": 14,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 33,
           "recYds": 435,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3938,10 +4798,15 @@
           "passInt": 0,
           "rushYds": -4,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 33,
           "recYds": 453,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3956,10 +4821,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 35,
           "recYds": 363,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3974,10 +4844,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 19,
           "recYds": 438,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -3992,10 +4867,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 31,
           "recYds": 372,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4010,10 +4890,15 @@
           "passInt": 0,
           "rushYds": -2,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 36,
           "recYds": 528,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4028,10 +4913,15 @@
           "passInt": 0,
           "rushYds": 78,
           "rushTDs": 1,
+          "rushAtt": 12,
           "rec": 37,
           "recYds": 322,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4046,10 +4936,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 30,
           "recYds": 368,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4064,10 +4959,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 16,
           "recYds": 239,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4082,10 +4982,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 32,
           "recYds": 443,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4100,10 +5005,15 @@
           "passInt": 0,
           "rushYds": 25,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 39,
           "recYds": 313,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4118,10 +5028,15 @@
           "passInt": 0,
           "rushYds": 19,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 39,
           "recYds": 371,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4136,10 +5051,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 33,
           "recYds": 360,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4154,10 +5074,15 @@
           "passInt": 0,
           "rushYds": 6,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 30,
           "recYds": 332,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4172,10 +5097,15 @@
           "passInt": 0,
           "rushYds": 15,
           "rushTDs": 1,
+          "rushAtt": 7,
           "rec": 29,
           "recYds": 206,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4190,10 +5120,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 31,
           "recYds": 378,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4208,10 +5143,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 33,
           "recYds": 345,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4226,10 +5166,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 22,
           "recYds": 330,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4244,10 +5189,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 29,
           "recYds": 350,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4262,10 +5212,15 @@
           "passInt": 0,
           "rushYds": 49,
           "rushTDs": 0,
+          "rushAtt": 10,
           "rec": 29,
           "recYds": 361,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -4280,10 +5235,15 @@
           "passInt": 0,
           "rushYds": -5,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 33,
           "recYds": 274,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5018,10 +5978,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 126,
           "recYds": 1239,
           "recTDs": 11,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5036,10 +6001,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 88,
           "recYds": 928,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5054,10 +6024,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 60,
           "recYds": 591,
           "recTDs": 11,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5072,10 +6047,15 @@
           "passInt": 0,
           "rushYds": 1,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 76,
           "recYds": 851,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5090,10 +6070,15 @@
           "passInt": 0,
           "rushYds": 13,
           "rushTDs": 1,
+          "rushAtt": 7,
           "rec": 72,
           "recYds": 731,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5108,10 +6093,15 @@
           "passInt": 0,
           "rushYds": 8,
           "rushTDs": 1,
+          "rushAtt": 6,
           "rec": 76,
           "recYds": 817,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5126,10 +6116,15 @@
           "passInt": 0,
           "rushYds": 1,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 82,
           "recYds": 600,
           "recTDs": 8,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5144,10 +6139,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 60,
           "recYds": 768,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5162,10 +6162,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 77,
           "recYds": 889,
           "recTDs": 3,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5180,10 +6185,15 @@
           "passInt": 0,
           "rushYds": 2,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 64,
           "recYds": 680,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5198,10 +6208,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 82,
           "recYds": 777,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5216,10 +6231,15 @@
           "passInt": 0,
           "rushYds": -2,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 58,
           "recYds": 713,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5234,10 +6254,15 @@
           "passInt": 0,
           "rushYds": -3,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 57,
           "recYds": 628,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5252,10 +6277,15 @@
           "passInt": 0,
           "rushYds": 14,
           "rushTDs": 1,
+          "rushAtt": 10,
           "rec": 52,
           "recYds": 519,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5270,10 +6300,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 43,
           "recYds": 408,
           "recTDs": 8,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5288,10 +6323,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 49,
           "recYds": 664,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5306,10 +6346,15 @@
           "passInt": 0,
           "rushYds": 48,
           "rushTDs": 1,
+          "rushAtt": 10,
           "rec": 48,
           "recYds": 422,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5324,10 +6369,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 39,
           "recYds": 571,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5342,10 +6392,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 45,
           "recYds": 528,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5360,10 +6415,15 @@
           "passInt": 0,
           "rushYds": 3,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 32,
           "recYds": 489,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5378,10 +6438,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 50,
           "recYds": 504,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5396,10 +6461,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 56,
           "recYds": 560,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5414,10 +6484,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 46,
           "recYds": 540,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5432,10 +6507,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 41,
           "recYds": 486,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5450,10 +6530,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 59,
           "recYds": 572,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5468,10 +6553,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 51,
           "recYds": 438,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5486,10 +6576,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 40,
           "recYds": 489,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5504,10 +6599,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 36,
           "recYds": 417,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5522,10 +6622,15 @@
           "passInt": 0,
           "rushYds": 7,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 50,
           "recYds": 461,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5540,10 +6645,15 @@
           "passInt": 0,
           "rushYds": 4,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 24,
           "recYds": 283,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5558,10 +6668,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 34,
           "recYds": 293,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -5576,10 +6691,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 33,
           "recYds": 293,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -6941,10 +8061,15 @@
           "passInt": 4,
           "rushYds": 915,
           "rushTDs": 4,
+          "rushAtt": 139,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 5
+          "fumblesLost": 5,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -6959,10 +8084,15 @@
           "passInt": 9,
           "rushYds": 201,
           "rushTDs": 2,
+          "rushAtt": 42,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 5
+          "fumblesLost": 5,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 5
         }
       },
       {
@@ -6977,10 +8107,15 @@
           "passInt": 6,
           "rushYds": 531,
           "rushTDs": 12,
+          "rushAtt": 102,
           "rec": 0,
           "recYds": 7,
           "recTDs": 1,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -6995,10 +8130,15 @@
           "passInt": 16,
           "rushYds": 378,
           "rushTDs": 3,
+          "rushAtt": 60,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 6
         }
       },
       {
@@ -7013,10 +8153,15 @@
           "passInt": 9,
           "rushYds": 891,
           "rushTDs": 6,
+          "rushAtt": 148,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -7031,10 +8176,15 @@
           "passInt": 5,
           "rushYds": 630,
           "rushTDs": 14,
+          "rushAtt": 150,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 5
+          "fumblesLost": 5,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -7049,10 +8199,15 @@
           "passInt": 12,
           "rushYds": 212,
           "rushTDs": 1,
+          "rushAtt": 67,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -7067,10 +8222,15 @@
           "passInt": 12,
           "rushYds": 56,
           "rushTDs": 0,
+          "rushAtt": 35,
           "rec": 1,
           "recYds": 7,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 4
         }
       },
       {
@@ -7085,10 +8245,15 @@
           "passInt": 12,
           "rushYds": 430,
           "rushTDs": 4,
+          "rushAtt": 92,
           "rec": 1,
           "recYds": 2,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7103,10 +8268,15 @@
           "passInt": 11,
           "rushYds": 572,
           "rushTDs": 5,
+          "rushAtt": 78,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7121,10 +8291,15 @@
           "passInt": 3,
           "rushYds": 306,
           "rushTDs": 2,
+          "rushAtt": 69,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7139,10 +8314,15 @@
           "passInt": 11,
           "rushYds": 307,
           "rushTDs": 2,
+          "rushAtt": 58,
           "rec": 1,
           "recYds": 2,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 3
         }
       },
       {
@@ -7157,10 +8337,15 @@
           "passInt": 12,
           "rushYds": 323,
           "rushTDs": 5,
+          "rushAtt": 66,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 5
         }
       },
       {
@@ -7175,10 +8360,15 @@
           "passInt": 15,
           "rushYds": 272,
           "rushTDs": 2,
+          "rushAtt": 53,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 5
         }
       },
       {
@@ -7193,10 +8383,15 @@
           "passInt": 6,
           "rushYds": 489,
           "rushTDs": 0,
+          "rushAtt": 81,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 5
+          "fumblesLost": 5,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 4
         }
       },
       {
@@ -7211,10 +8406,15 @@
           "passInt": 11,
           "rushYds": 107,
           "rushTDs": 0,
+          "rushAtt": 22,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -7229,10 +8429,15 @@
           "passInt": 12,
           "rushYds": 233,
           "rushTDs": 0,
+          "rushAtt": 52,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7247,10 +8452,15 @@
           "passInt": 11,
           "rushYds": 83,
           "rushTDs": 1,
+          "rushAtt": 25,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -7265,10 +8475,15 @@
           "passInt": 8,
           "rushYds": 41,
           "rushTDs": 0,
+          "rushAtt": 30,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7283,10 +8498,15 @@
           "passInt": 9,
           "rushYds": 249,
           "rushTDs": 6,
+          "rushAtt": 43,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7301,10 +8521,15 @@
           "passInt": 10,
           "rushYds": 421,
           "rushTDs": 2,
+          "rushAtt": 54,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 6
+          "fumblesLost": 6,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7319,10 +8544,15 @@
           "passInt": 7,
           "rushYds": 49,
           "rushTDs": 0,
+          "rushAtt": 17,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 4
         }
       },
       {
@@ -7337,10 +8567,15 @@
           "passInt": 5,
           "rushYds": 155,
           "rushTDs": 2,
+          "rushAtt": 43,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 4
+          "fumblesLost": 4,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7355,10 +8590,15 @@
           "passInt": 16,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 23,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7373,10 +8613,15 @@
           "passInt": 12,
           "rushYds": 499,
           "rushTDs": 6,
+          "rushAtt": 86,
           "rec": 1,
           "recYds": -1,
           "recTDs": 0,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7391,10 +8636,15 @@
           "passInt": 5,
           "rushYds": 71,
           "rushTDs": 1,
+          "rushAtt": 17,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7409,10 +8659,15 @@
           "passInt": 7,
           "rushYds": 119,
           "rushTDs": 3,
+          "rushAtt": 26,
           "rec": 0,
           "recYds": -5,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7427,10 +8682,15 @@
           "passInt": 7,
           "rushYds": 265,
           "rushTDs": 2,
+          "rushAtt": 67,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7445,10 +8705,15 @@
           "passInt": 12,
           "rushYds": 183,
           "rushTDs": 0,
+          "rushAtt": 45,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 6
+          "fumblesLost": 6,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7463,10 +8728,15 @@
           "passInt": 12,
           "rushYds": 83,
           "rushTDs": 1,
+          "rushAtt": 25,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7481,10 +8751,15 @@
           "passInt": 1,
           "rushYds": 289,
           "rushTDs": 5,
+          "rushAtt": 62,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 1
         }
       },
       {
@@ -7499,10 +8774,15 @@
           "passInt": 8,
           "rushYds": 54,
           "rushTDs": 1,
+          "rushAtt": 13,
           "rec": 0,
           "recYds": 0,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 2
         }
       },
       {
@@ -7805,10 +9085,15 @@
           "passInt": 0,
           "rushYds": 1412,
           "rushTDs": 16,
+          "rushAtt": 250,
           "rec": 52,
           "recYds": 517,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 5,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7823,10 +9108,15 @@
           "passInt": 0,
           "rushYds": 2005,
           "rushTDs": 13,
+          "rushAtt": 345,
           "rec": 33,
           "recYds": 278,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 10,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7841,10 +9131,15 @@
           "passInt": 0,
           "rushYds": 1921,
           "rushTDs": 16,
+          "rushAtt": 325,
           "rec": 19,
           "recYds": 193,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 9,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7859,10 +9154,15 @@
           "passInt": 0,
           "rushYds": 1456,
           "rushTDs": 14,
+          "rushAtt": 304,
           "rec": 61,
           "recYds": 431,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 5,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7877,10 +9177,15 @@
           "passInt": 0,
           "rushYds": 1329,
           "rushTDs": 15,
+          "rushAtt": 301,
           "rec": 36,
           "recYds": 342,
           "recTDs": 1,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7895,10 +9200,15 @@
           "passInt": 0,
           "rushYds": 1299,
           "rushTDs": 14,
+          "rushAtt": 316,
           "rec": 34,
           "recYds": 182,
           "recTDs": 2,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7913,10 +9223,15 @@
           "passInt": 0,
           "rushYds": 907,
           "rushTDs": 6,
+          "rushAtt": 203,
           "rec": 78,
           "recYds": 592,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7931,10 +9246,15 @@
           "passInt": 0,
           "rushYds": 1009,
           "rushTDs": 16,
+          "rushAtt": 207,
           "rec": 32,
           "recYds": 258,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7949,10 +9269,15 @@
           "passInt": 0,
           "rushYds": 1431,
           "rushTDs": 11,
+          "rushAtt": 303,
           "rec": 18,
           "recYds": 136,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 7,
+          "bonusRushYd200": 1,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7967,10 +9292,15 @@
           "passInt": 0,
           "rushYds": 950,
           "rushTDs": 6,
+          "rushAtt": 228,
           "rec": 68,
           "recYds": 543,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -7985,10 +9315,15 @@
           "passInt": 0,
           "rushYds": 1094,
           "rushTDs": 8,
+          "rushAtt": 236,
           "rec": 47,
           "recYds": 414,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 6,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8003,10 +9338,15 @@
           "passInt": 0,
           "rushYds": 990,
           "rushTDs": 7,
+          "rushAtt": 229,
           "rec": 54,
           "recYds": 360,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8021,10 +9361,15 @@
           "passInt": 0,
           "rushYds": 1195,
           "rushTDs": 10,
+          "rushAtt": 250,
           "rec": 43,
           "recYds": 171,
           "recTDs": 1,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8039,10 +9384,15 @@
           "passInt": 0,
           "rushYds": 1122,
           "rushTDs": 8,
+          "rushAtt": 207,
           "rec": 47,
           "recYds": 392,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8057,10 +9407,15 @@
           "passInt": 0,
           "rushYds": 1016,
           "rushTDs": 11,
+          "rushAtt": 245,
           "rec": 36,
           "recYds": 309,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 7,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8075,10 +9430,15 @@
           "passInt": 0,
           "rushYds": 1138,
           "rushTDs": 5,
+          "rushAtt": 255,
           "rec": 51,
           "recYds": 408,
           "recTDs": 2,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8093,10 +9453,15 @@
           "passInt": 0,
           "rushYds": 876,
           "rushTDs": 5,
+          "rushAtt": 209,
           "rec": 57,
           "recYds": 483,
           "recTDs": 3,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8111,10 +9476,15 @@
           "passInt": 0,
           "rushYds": 775,
           "rushTDs": 12,
+          "rushAtt": 185,
           "rec": 36,
           "recYds": 341,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8129,10 +9499,15 @@
           "passInt": 0,
           "rushYds": 959,
           "rushTDs": 6,
+          "rushAtt": 253,
           "rec": 42,
           "recYds": 386,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8147,10 +9522,15 @@
           "passInt": 0,
           "rushYds": 1043,
           "rushTDs": 6,
+          "rushAtt": 263,
           "rec": 36,
           "recYds": 283,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8165,10 +9545,15 @@
           "passInt": 0,
           "rushYds": 1079,
           "rushTDs": 2,
+          "rushAtt": 235,
           "rec": 39,
           "recYds": 249,
           "recTDs": 3,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 4,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8183,10 +9568,15 @@
           "passInt": 0,
           "rushYds": 1079,
           "rushTDs": 5,
+          "rushAtt": 260,
           "rec": 41,
           "recYds": 238,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8201,10 +9591,15 @@
           "passInt": 0,
           "rushYds": 613,
           "rushTDs": 3,
+          "rushAtt": 144,
           "rec": 51,
           "recYds": 393,
           "recTDs": 6,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8219,10 +9614,15 @@
           "passInt": 0,
           "rushYds": 905,
           "rushTDs": 9,
+          "rushAtt": 195,
           "rec": 32,
           "recYds": 153,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8237,10 +9637,15 @@
           "passInt": 0,
           "rushYds": 839,
           "rushTDs": 5,
+          "rushAtt": 192,
           "rec": 38,
           "recYds": 284,
           "recTDs": 1,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8255,10 +9660,15 @@
           "passInt": 0,
           "rushYds": 569,
           "rushTDs": 8,
+          "rushAtt": 135,
           "rec": 42,
           "recYds": 340,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8273,10 +9683,15 @@
           "passInt": 0,
           "rushYds": 801,
           "rushTDs": 7,
+          "rushAtt": 207,
           "rec": 33,
           "recYds": 168,
           "recTDs": 1,
-          "fumblesLost": 3
+          "fumblesLost": 3,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8291,10 +9706,15 @@
           "passInt": 0,
           "rushYds": 573,
           "rushTDs": 7,
+          "rushAtt": 153,
           "rec": 46,
           "recYds": 299,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8309,10 +9729,15 @@
           "passInt": 0,
           "rushYds": 799,
           "rushTDs": 8,
+          "rushAtt": 187,
           "rec": 20,
           "recYds": 159,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8327,10 +9752,15 @@
           "passInt": 0,
           "rushYds": 728,
           "rushTDs": 7,
+          "rushAtt": 200,
           "rec": 23,
           "recYds": 176,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8345,10 +9775,15 @@
           "passInt": 0,
           "rushYds": 513,
           "rushTDs": 4,
+          "rushAtt": 139,
           "rec": 52,
           "recYds": 346,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8363,10 +9798,15 @@
           "passInt": 0,
           "rushYds": 766,
           "rushTDs": 7,
+          "rushAtt": 168,
           "rec": 7,
           "recYds": 54,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 2,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8381,10 +9821,15 @@
           "passInt": 0,
           "rushYds": 420,
           "rushTDs": 4,
+          "rushAtt": 132,
           "rec": 36,
           "recYds": 294,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8399,10 +9844,15 @@
           "passInt": 0,
           "rushYds": 565,
           "rushTDs": 3,
+          "rushAtt": 104,
           "rec": 37,
           "recYds": 225,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8417,10 +9867,15 @@
           "passInt": 0,
           "rushYds": 367,
           "rushTDs": 4,
+          "rushAtt": 77,
           "rec": 35,
           "recYds": 366,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8435,10 +9890,15 @@
           "passInt": 0,
           "rushYds": 558,
           "rushTDs": 2,
+          "rushAtt": 150,
           "rec": 39,
           "recYds": 254,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8453,10 +9913,15 @@
           "passInt": 0,
           "rushYds": 789,
           "rushTDs": 3,
+          "rushAtt": 153,
           "rec": 11,
           "recYds": 91,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 3,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8471,10 +9936,15 @@
           "passInt": 0,
           "rushYds": 442,
           "rushTDs": 3,
+          "rushAtt": 113,
           "rec": 17,
           "recYds": 189,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8489,10 +9959,15 @@
           "passInt": 0,
           "rushYds": 311,
           "rushTDs": 2,
+          "rushAtt": 66,
           "rec": 40,
           "recYds": 261,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8507,10 +9982,15 @@
           "passInt": 0,
           "rushYds": 511,
           "rushTDs": 1,
+          "rushAtt": 120,
           "rec": 38,
           "recYds": 310,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8525,10 +10005,15 @@
           "passInt": 0,
           "rushYds": 228,
           "rushTDs": 1,
+          "rushAtt": 47,
           "rec": 42,
           "recYds": 383,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8543,10 +10028,15 @@
           "passInt": 0,
           "rushYds": 312,
           "rushTDs": 4,
+          "rushAtt": 84,
           "rec": 30,
           "recYds": 224,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8561,10 +10051,15 @@
           "passInt": 0,
           "rushYds": 644,
           "rushTDs": 3,
+          "rushAtt": 137,
           "rec": 13,
           "recYds": 88,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8579,10 +10074,15 @@
           "passInt": 0,
           "rushYds": 538,
           "rushTDs": 1,
+          "rushAtt": 120,
           "rec": 23,
           "recYds": 206,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8597,10 +10097,15 @@
           "passInt": 0,
           "rushYds": 502,
           "rushTDs": 4,
+          "rushAtt": 103,
           "rec": 11,
           "recYds": 48,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8615,10 +10120,15 @@
           "passInt": 0,
           "rushYds": 437,
           "rushTDs": 4,
+          "rushAtt": 113,
           "rec": 21,
           "recYds": 119,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8633,10 +10143,15 @@
           "passInt": 0,
           "rushYds": 420,
           "rushTDs": 4,
+          "rushAtt": 84,
           "rec": 15,
           "recYds": 152,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8651,10 +10166,15 @@
           "passInt": 0,
           "rushYds": 444,
           "rushTDs": 2,
+          "rushAtt": 104,
           "rec": 14,
           "recYds": 68,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8669,10 +10189,15 @@
           "passInt": 0,
           "rushYds": 496,
           "rushTDs": 1,
+          "rushAtt": 113,
           "rec": 24,
           "recYds": 76,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8687,10 +10212,15 @@
           "passInt": 0,
           "rushYds": 213,
           "rushTDs": 1,
+          "rushAtt": 41,
           "rec": 18,
           "recYds": 284,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8705,10 +10235,15 @@
           "passInt": 0,
           "rushYds": 334,
           "rushTDs": 2,
+          "rushAtt": 92,
           "rec": 19,
           "recYds": 148,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8723,10 +10258,15 @@
           "passInt": 0,
           "rushYds": 242,
           "rushTDs": 2,
+          "rushAtt": 74,
           "rec": 23,
           "recYds": 187,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8741,10 +10281,15 @@
           "passInt": 0,
           "rushYds": 150,
           "rushTDs": 6,
+          "rushAtt": 55,
           "rec": 16,
           "recYds": 104,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8759,10 +10304,15 @@
           "passInt": 0,
           "rushYds": 92,
           "rushTDs": 1,
+          "rushAtt": 20,
           "rec": 28,
           "recYds": 322,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8777,10 +10327,15 @@
           "passInt": 0,
           "rushYds": 278,
           "rushTDs": 2,
+          "rushAtt": 85,
           "rec": 19,
           "recYds": 161,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8795,10 +10350,15 @@
           "passInt": 0,
           "rushYds": 205,
           "rushTDs": 2,
+          "rushAtt": 55,
           "rec": 24,
           "recYds": 148,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8813,10 +10373,15 @@
           "passInt": 0,
           "rushYds": 308,
           "rushTDs": 2,
+          "rushAtt": 50,
           "rec": 9,
           "recYds": 109,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8831,10 +10396,15 @@
           "passInt": 0,
           "rushYds": 332,
           "rushTDs": 3,
+          "rushAtt": 102,
           "rec": 5,
           "recYds": 31,
           "recTDs": 1,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8849,10 +10419,15 @@
           "passInt": 0,
           "rushYds": 365,
           "rushTDs": 4,
+          "rushAtt": 101,
           "rec": 3,
           "recYds": 6,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8867,15 +10442,20 @@
           "passInt": 0,
           "rushYds": 261,
           "rushTDs": 4,
+          "rushAtt": 55,
           "rec": 9,
           "recYds": 27,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
         "id": 39694,
-        "name": "Kenneth Gainwell",
+        "name": "Kenny Gainwell",
         "team": "TB",
         "position": "RB",
         "gamesPlayed": 17,
@@ -8885,10 +10465,15 @@
           "passInt": 0,
           "rushYds": 290,
           "rushTDs": 1,
+          "rushAtt": 75,
           "rec": 16,
           "recYds": 116,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8903,10 +10488,15 @@
           "passInt": 0,
           "rushYds": 226,
           "rushTDs": 3,
+          "rushAtt": 74,
           "rec": 12,
           "recYds": 69,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8921,10 +10511,15 @@
           "passInt": 0,
           "rushYds": 310,
           "rushTDs": 1,
+          "rushAtt": 83,
           "rec": 12,
           "recYds": 79,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8939,10 +10534,15 @@
           "passInt": 0,
           "rushYds": 26,
           "rushTDs": 1,
+          "rushAtt": 5,
           "rec": 19,
           "recYds": 200,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8957,10 +10557,15 @@
           "passInt": 0,
           "rushYds": 310,
           "rushTDs": 2,
+          "rushAtt": 76,
           "rec": 5,
           "recYds": 27,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8975,10 +10580,15 @@
           "passInt": 0,
           "rushYds": 223,
           "rushTDs": 1,
+          "rushAtt": 24,
           "rec": 16,
           "recYds": 104,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -8993,10 +10603,15 @@
           "passInt": 0,
           "rushYds": 112,
           "rushTDs": 0,
+          "rushAtt": 30,
           "rec": 19,
           "recYds": 198,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9011,10 +10626,15 @@
           "passInt": 0,
           "rushYds": 159,
           "rushTDs": 2,
+          "rushAtt": 56,
           "rec": 16,
           "recYds": 99,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9029,10 +10649,15 @@
           "passInt": 0,
           "rushYds": 291,
           "rushTDs": 1,
+          "rushAtt": 63,
           "rec": 6,
           "recYds": 59,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9047,10 +10672,15 @@
           "passInt": 0,
           "rushYds": 293,
           "rushTDs": 2,
+          "rushAtt": 40,
           "rec": 2,
           "recYds": 2,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9605,10 +11235,15 @@
           "passInt": 0,
           "rushYds": 32,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 127,
           "recYds": 1708,
           "recTDs": 17,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9623,10 +11258,15 @@
           "passInt": 0,
           "rushYds": 3,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 103,
           "recYds": 1533,
           "recTDs": 10,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9641,10 +11281,15 @@
           "passInt": 0,
           "rushYds": 6,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 115,
           "recYds": 1263,
           "recTDs": 12,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9659,10 +11304,15 @@
           "passInt": 0,
           "rushYds": 48,
           "rushTDs": 0,
+          "rushAtt": 6,
           "rec": 87,
           "recYds": 1282,
           "recTDs": 10,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9677,10 +11327,15 @@
           "passInt": 0,
           "rushYds": -3,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 100,
           "recYds": 1271,
           "recTDs": 9,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9695,10 +11350,15 @@
           "passInt": 0,
           "rushYds": 2,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 82,
           "recYds": 1096,
           "recTDs": 13,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9713,10 +11373,15 @@
           "passInt": 0,
           "rushYds": 2,
           "rushTDs": 0,
+          "rushAtt": 5,
           "rec": 109,
           "recYds": 1204,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9731,10 +11396,15 @@
           "passInt": 0,
           "rushYds": 70,
           "rushTDs": 0,
+          "rushAtt": 14,
           "rec": 101,
           "recYds": 1194,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9749,10 +11419,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 74,
           "recYds": 1004,
           "recTDs": 11,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9767,10 +11442,15 @@
           "passInt": 0,
           "rushYds": 5,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 101,
           "recYds": 1104,
           "recTDs": 7,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9785,10 +11465,15 @@
           "passInt": 0,
           "rushYds": 26,
           "rushTDs": 0,
+          "rushAtt": 5,
           "rec": 100,
           "recYds": 1130,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9803,10 +11488,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 82,
           "recYds": 1149,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9821,10 +11511,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 85,
           "recYds": 1063,
           "recTDs": 8,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9839,10 +11534,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 81,
           "recYds": 1081,
           "recTDs": 8,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9857,10 +11557,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 90,
           "recYds": 1229,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9875,10 +11580,15 @@
           "passInt": 0,
           "rushYds": 75,
           "rushTDs": 0,
+          "rushAtt": 14,
           "rec": 98,
           "recYds": 966,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9893,10 +11603,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 73,
           "recYds": 911,
           "recTDs": 10,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9911,10 +11626,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 67,
           "recYds": 1079,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9929,10 +11649,15 @@
           "passInt": 0,
           "rushYds": 61,
           "rushTDs": 1,
+          "rushAtt": 11,
           "rec": 58,
           "recYds": 1001,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9947,10 +11672,15 @@
           "passInt": 0,
           "rushYds": 20,
           "rushTDs": 1,
+          "rushAtt": 3,
           "rec": 63,
           "recYds": 875,
           "recTDs": 9,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9965,10 +11695,15 @@
           "passInt": 0,
           "rushYds": 53,
           "rushTDs": 0,
+          "rushAtt": 8,
           "rec": 81,
           "recYds": 959,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -9983,10 +11718,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 68,
           "recYds": 1006,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10001,10 +11741,15 @@
           "passInt": 0,
           "rushYds": 23,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 87,
           "recYds": 1027,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10019,10 +11764,15 @@
           "passInt": 0,
           "rushYds": 56,
           "rushTDs": 0,
+          "rushAtt": 9,
           "rec": 74,
           "recYds": 1059,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10037,10 +11787,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 77,
           "recYds": 975,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10055,10 +11810,15 @@
           "passInt": 0,
           "rushYds": 163,
           "rushTDs": 1,
+          "rushAtt": 20,
           "rec": 55,
           "recYds": 857,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10073,10 +11833,15 @@
           "passInt": 0,
           "rushYds": 55,
           "rushTDs": 1,
+          "rushAtt": 8,
           "rec": 64,
           "recYds": 1017,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10091,10 +11856,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 62,
           "recYds": 885,
           "recTDs": 8,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10109,10 +11879,15 @@
           "passInt": 0,
           "rushYds": 46,
           "rushTDs": 1,
+          "rushAtt": 11,
           "rec": 79,
           "recYds": 990,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 5,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10127,10 +11902,15 @@
           "passInt": 0,
           "rushYds": 1,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 68,
           "recYds": 833,
           "recTDs": 8,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10145,10 +11925,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 66,
           "recYds": 992,
           "recTDs": 5,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10163,10 +11948,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 64,
           "recYds": 992,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10181,10 +11971,15 @@
           "passInt": 0,
           "rushYds": 104,
           "rushTDs": 3,
+          "rushAtt": 20,
           "rec": 59,
           "recYds": 638,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10199,10 +11994,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 45,
           "recYds": 756,
           "recTDs": 9,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10217,10 +12017,15 @@
           "passInt": 1,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 70,
           "recYds": 744,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10235,10 +12040,15 @@
           "passInt": 0,
           "rushYds": 12,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 72,
           "recYds": 803,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10253,10 +12063,15 @@
           "passInt": 0,
           "rushYds": 6,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 55,
           "recYds": 711,
           "recTDs": 8,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10271,10 +12086,15 @@
           "passInt": 0,
           "rushYds": 4,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 76,
           "recYds": 821,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10289,10 +12109,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 37,
           "recYds": 824,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10307,10 +12132,15 @@
           "passInt": 0,
           "rushYds": 10,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 67,
           "recYds": 710,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10325,10 +12155,15 @@
           "passInt": 0,
           "rushYds": -6,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 59,
           "recYds": 900,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10343,10 +12178,15 @@
           "passInt": 0,
           "rushYds": 18,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 93,
           "recYds": 699,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10361,10 +12201,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 69,
           "recYds": 808,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10379,10 +12224,15 @@
           "passInt": 0,
           "rushYds": 136,
           "rushTDs": 1,
+          "rushAtt": 42,
           "rec": 51,
           "recYds": 670,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10397,10 +12247,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 49,
           "recYds": 610,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10415,10 +12270,15 @@
           "passInt": 0,
           "rushYds": 15,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 54,
           "recYds": 734,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10433,10 +12293,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 32,
           "recYds": 497,
           "recTDs": 9,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10451,10 +12316,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 56,
           "recYds": 610,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10469,10 +12339,15 @@
           "passInt": 0,
           "rushYds": 43,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 37,
           "recYds": 461,
           "recTDs": 8,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10487,10 +12362,15 @@
           "passInt": 0,
           "rushYds": 12,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 58,
           "recYds": 744,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10505,10 +12385,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 48,
           "recYds": 615,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10523,10 +12408,15 @@
           "passInt": 0,
           "rushYds": 16,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 66,
           "recYds": 621,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10541,10 +12431,15 @@
           "passInt": 0,
           "rushYds": 43,
           "rushTDs": 0,
+          "rushAtt": 9,
           "rec": 51,
           "recYds": 667,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10559,10 +12454,15 @@
           "passInt": 0,
           "rushYds": 79,
           "rushTDs": 0,
+          "rushAtt": 10,
           "rec": 62,
           "recYds": 686,
           "recTDs": 1,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10577,10 +12477,15 @@
           "passInt": 0,
           "rushYds": 2,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 50,
           "recYds": 576,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10595,10 +12500,15 @@
           "passInt": 0,
           "rushYds": 42,
           "rushTDs": 0,
+          "rushAtt": 13,
           "rec": 39,
           "recYds": 503,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10613,10 +12523,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 31,
           "recYds": 505,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10631,10 +12546,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 37,
           "recYds": 530,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10649,10 +12569,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 46,
           "recYds": 601,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10667,10 +12592,15 @@
           "passInt": 0,
           "rushYds": 44,
           "rushTDs": 1,
+          "rushAtt": 9,
           "rec": 47,
           "recYds": 539,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10685,10 +12615,15 @@
           "passInt": 0,
           "rushYds": 7,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 47,
           "recYds": 548,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10703,10 +12638,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 36,
           "recYds": 479,
           "recTDs": 6,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10721,10 +12661,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 44,
           "recYds": 547,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10739,10 +12684,15 @@
           "passInt": 0,
           "rushYds": 24,
           "rushTDs": 0,
+          "rushAtt": 6,
           "rec": 49,
           "recYds": 497,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10757,10 +12707,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 43,
           "recYds": 589,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10775,10 +12730,15 @@
           "passInt": 0,
           "rushYds": 8,
           "rushTDs": 1,
+          "rushAtt": 3,
           "rec": 47,
           "recYds": 496,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10793,10 +12753,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 36,
           "recYds": 548,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10811,10 +12776,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 49,
           "recYds": 600,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10829,10 +12799,15 @@
           "passInt": 0,
           "rushYds": 9,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 29,
           "recYds": 556,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10847,10 +12822,15 @@
           "passInt": 0,
           "rushYds": 8,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 45,
           "recYds": 506,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10865,10 +12845,15 @@
           "passInt": 0,
           "rushYds": -4,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 28,
           "recYds": 414,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10883,10 +12868,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 39,
           "recYds": 415,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10901,10 +12891,15 @@
           "passInt": 0,
           "rushYds": 23,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 29,
           "recYds": 620,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10919,10 +12914,15 @@
           "passInt": 0,
           "rushYds": 17,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 39,
           "recYds": 573,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10937,10 +12937,15 @@
           "passInt": 0,
           "rushYds": 1,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 61,
           "recYds": 538,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10955,10 +12960,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 41,
           "recYds": 475,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10973,10 +12983,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 39,
           "recYds": 584,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -10991,10 +13006,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 31,
           "recYds": 378,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11009,10 +13029,15 @@
           "passInt": 0,
           "rushYds": 92,
           "rushTDs": 0,
+          "rushAtt": 16,
           "rec": 31,
           "recYds": 420,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11027,10 +13052,15 @@
           "passInt": 0,
           "rushYds": 45,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 31,
           "recYds": 400,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11045,10 +13075,15 @@
           "passInt": 0,
           "rushYds": 7,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 42,
           "recYds": 562,
           "recTDs": 0,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11063,10 +13098,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 32,
           "recYds": 478,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11081,10 +13121,15 @@
           "passInt": 0,
           "rushYds": 4,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 19,
           "recYds": 411,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11099,10 +13144,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 33,
           "recYds": 394,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11117,10 +13167,15 @@
           "passInt": 0,
           "rushYds": 31,
           "rushTDs": 0,
+          "rushAtt": 5,
           "rec": 37,
           "recYds": 342,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11135,10 +13190,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 32,
           "recYds": 390,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11153,10 +13213,15 @@
           "passInt": 0,
           "rushYds": 6,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 33,
           "recYds": 375,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11171,10 +13236,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 32,
           "recYds": 351,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11189,10 +13259,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 35,
           "recYds": 453,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11207,10 +13282,15 @@
           "passInt": 0,
           "rushYds": -5,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 29,
           "recYds": 339,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11945,10 +14025,15 @@
           "passInt": 0,
           "rushYds": 13,
           "rushTDs": 0,
+          "rushAtt": 5,
           "rec": 112,
           "recYds": 1194,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11963,10 +14048,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 78,
           "recYds": 1106,
           "recTDs": 8,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 4,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11981,10 +14071,15 @@
           "passInt": 0,
           "rushYds": 2,
           "rushTDs": 1,
+          "rushAtt": 1,
           "rec": 111,
           "recYds": 1146,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 3,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -11999,10 +14094,15 @@
           "passInt": 0,
           "rushYds": -1,
           "rushTDs": 0,
+          "rushAtt": 2,
           "rec": 88,
           "recYds": 884,
           "recTDs": 8,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 2,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12017,10 +14117,15 @@
           "passInt": 0,
           "rushYds": 5,
           "rushTDs": 0,
+          "rushAtt": 4,
           "rec": 55,
           "recYds": 673,
           "recTDs": 11,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12035,10 +14140,15 @@
           "passInt": 0,
           "rushYds": 1,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 97,
           "recYds": 823,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12053,10 +14163,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 60,
           "recYds": 726,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12071,10 +14186,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 66,
           "recYds": 654,
           "recTDs": 7,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12089,10 +14209,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 65,
           "recYds": 653,
           "recTDs": 7,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12107,10 +14232,15 @@
           "passInt": 0,
           "rushYds": 6,
           "rushTDs": 0,
+          "rushAtt": 3,
           "rec": 50,
           "recYds": 707,
           "recTDs": 7,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12125,10 +14255,15 @@
           "passInt": 0,
           "rushYds": -4,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 59,
           "recYds": 600,
           "recTDs": 4,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12143,10 +14278,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 64,
           "recYds": 505,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12161,10 +14301,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 66,
           "recYds": 674,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12179,10 +14324,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 65,
           "recYds": 665,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12197,10 +14347,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 47,
           "recYds": 602,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12215,10 +14370,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 42,
           "recYds": 477,
           "recTDs": 6,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12233,10 +14393,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 50,
           "recYds": 548,
           "recTDs": 3,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12251,10 +14416,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 47,
           "recYds": 474,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12269,10 +14439,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 51,
           "recYds": 449,
           "recTDs": 4,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12287,10 +14462,15 @@
           "passInt": 1,
           "rushYds": 278,
           "rushTDs": 6,
+          "rushAtt": 39,
           "rec": 23,
           "recYds": 187,
           "recTDs": 0,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 1,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12305,10 +14485,15 @@
           "passInt": 0,
           "rushYds": -4,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 40,
           "recYds": 437,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12323,10 +14508,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 53,
           "recYds": 532,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12341,10 +14531,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 45,
           "recYds": 476,
           "recTDs": 3,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12359,10 +14554,15 @@
           "passInt": 0,
           "rushYds": 17,
           "rushTDs": 0,
+          "rushAtt": 1,
           "rec": 52,
           "recYds": 479,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12377,10 +14577,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 32,
           "recYds": 413,
           "recTDs": 5,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12395,10 +14600,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 50,
           "recYds": 481,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12413,10 +14623,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 42,
           "recYds": 496,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 1,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12431,10 +14646,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 48,
           "recYds": 500,
           "recTDs": 1,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12449,10 +14669,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 59,
           "recYds": 494,
           "recTDs": 0,
-          "fumblesLost": 2
+          "fumblesLost": 2,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12467,10 +14692,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 44,
           "recYds": 448,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12485,10 +14715,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 40,
           "recYds": 411,
           "recTDs": 2,
-          "fumblesLost": 1
+          "fumblesLost": 1,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {
@@ -12503,10 +14738,15 @@
           "passInt": 0,
           "rushYds": 0,
           "rushTDs": 0,
+          "rushAtt": 0,
           "rec": 40,
           "recYds": 390,
           "recTDs": 2,
-          "fumblesLost": 0
+          "fumblesLost": 0,
+          "bonusRushYd100": 0,
+          "bonusRushYd200": 0,
+          "bonusRecYd100": 0,
+          "bonusPassYd300": 0
         }
       },
       {

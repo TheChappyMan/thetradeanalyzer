@@ -56,15 +56,20 @@ export function projectedNflValue(
 
   // ── Skill positions (QB / RB / WR / TE) ───────────────────
   const skillTotal =
-    (s.passYds     ?? 0) * weights.passYds     +
-    (s.passTDs     ?? 0) * weights.passTDs     +
-    (s.passInt     ?? 0) * weights.passInt     +
-    (s.rushYds     ?? 0) * weights.rushYds     +
-    (s.rushTDs     ?? 0) * weights.rushTDs     +
-    (s.rec         ?? 0) * weights.rec         +
-    (s.recYds      ?? 0) * weights.recYds      +
-    (s.recTDs      ?? 0) * weights.recTDs      +
-    (s.fumblesLost ?? 0) * weights.fumblesLost
+    (s.passYds        ?? 0) * weights.passYds        +
+    (s.passTDs        ?? 0) * weights.passTDs        +
+    (s.passInt        ?? 0) * weights.passInt        +
+    (s.rushYds        ?? 0) * weights.rushYds        +
+    (s.rushTDs        ?? 0) * weights.rushTDs        +
+    (s.rushAtt        ?? 0) * weights.rushAtt        +
+    (s.rec            ?? 0) * weights.rec            +
+    (s.recYds         ?? 0) * weights.recYds         +
+    (s.recTDs         ?? 0) * weights.recTDs         +
+    (s.fumblesLost    ?? 0) * weights.fumblesLost    +
+    (s.bonusRushYd100 ?? 0) * weights.bonusRushYd100 +
+    (s.bonusRushYd200 ?? 0) * weights.bonusRushYd200 +
+    (s.bonusRecYd100  ?? 0) * weights.bonusRecYd100  +
+    (s.bonusPassYd300 ?? 0) * weights.bonusPassYd300
 
   return useRates ? (skillTotal / gp) * 17 : skillTotal
 }
