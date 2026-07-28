@@ -579,11 +579,21 @@ function computeMlbPoolStats(
   const pitcherPoolStats: Partial<Record<PitcherStatKey, StatPoolStats>> = {};
 
   for (const stat of hitterStats) {
+    if (RATE_HITTER.has(stat)) {
+      // AVG/OBP/SLG: volume-weighted by at-bats in both modes — a 1.000
+      // average over 4 AB must not out-z a .330 average over 400 AB.
+      const sample  = topHitters.map((p) => p.stats[stat]);
+      const volumes = topHitters.map((p) => p.stats.AB ?? 0);
+      const avgVolume = volumes.reduce((a, b) => a + b, 0) / (volumes.length || 1);
+      const ps = _statPoolOrSkip(stat, sample, { avgVolume });
+      if (ps) hitterPoolStats[stat] = ps;
+      continue;
+    }
     // null/undefined entries stay nullish so the pool excludes them
     const sample = topHitters.map((p) => {
       const raw = p.stats[stat];
       if (raw === null || raw === undefined) return raw;
-      if (!useRates || RATE_HITTER.has(stat)) return raw;
+      if (!useRates) return raw;
       return raw / (p.gamesPlayed || 1);
     });
     const ps = _statPoolOrSkip(stat, sample);
@@ -623,7 +633,12 @@ function _hitterZ(
   ps: StatPoolStats, useRates: boolean
 ): number {
   if (ps.stddev === 0) return 0;
-  const raw   = player.stats[stat] ?? 0;
+  const raw = player.stats[stat] ?? 0;
+  // AVG/OBP/SLG: volume-weighted by AB in both modes (mirrors ERA/WHIP by IP)
+  if (RATE_HITTER.has(stat) && ps.avgVolume !== undefined && ps.avgVolume > 0) {
+    const ab = player.stats.AB ?? 0;
+    return (raw - ps.mean) * (ab / ps.avgVolume) / ps.stddev;
+  }
   const value = (!useRates || RATE_HITTER.has(stat))
     ? raw
     : raw / (player.gamesPlayed || 1);
@@ -711,13 +726,15 @@ function buildTalentRanking(
 ): number[] {
   return playerDb
     .map((p) => {
-      if (league.format !== "points" && poolStats) {
-        return mlbZScoreValue(
-          p, league.hitterCategories, league.pitcherCategories,
-          poolStats, HITTER_STATS, PITCHER_STATS, useRates
-        );
-      }
-      return projectedSeasonValue(p, league.hitterWeights, league.pitcherWeights, useRates);
+      const v = league.format !== "points" && poolStats
+        ? mlbZScoreValue(
+            p, league.hitterCategories, league.pitcherCategories,
+            poolStats, HITTER_STATS, PITCHER_STATS, useRates
+          )
+        : projectedSeasonValue(p, league.hitterWeights, league.pitcherWeights, useRates);
+      // Trade value is floored at zero — below-average players are worth
+      // a free replacement, not negative value
+      return Math.max(0, v);
     })
     .sort((a, b) => b - a);
 }
@@ -793,7 +810,14 @@ export default function MlbTradeAnalyzer() {
         const priDb = buildPlayerDatabase(priorSeason);
         setCurrentSeasonDb(curDb);
         setPriorSeasonDb(priDb);
-        setInjuryMap(currentSeason.injuryMap ?? {});
+        const im = currentSeason.injuryMap ?? {};
+        if (Object.keys(im).length === 0) {
+          console.warn(
+            "[MLB injuries] injury map is EMPTY — no IL data was returned by /api/mlb, " +
+            "so every player is being valued as healthy. Injury discounts will not apply."
+          );
+        }
+        setInjuryMap(im);
         setCurrentSeasonYear(currentSeason.season);
         setPriorSeasonYear(priorSeason.season);
         // Auto-detect sparse season → default to last year
@@ -883,6 +907,20 @@ export default function MlbTradeAnalyzer() {
   const useRates   = dataMode === "thisAvg" || dataMode === "lastAvg";
   const isRotoMode = league.format !== "points";
 
+  // Median games played among rostered-caliber players, used to flag
+  // players whose Total-mode value is dragged down by missed time.
+  const poolMedianGp = useMemo(() => {
+    const median = (arr: number[]) => {
+      if (arr.length === 0) return 0;
+      const s = [...arr].sort((a, b) => a - b);
+      return s[Math.floor(s.length / 2)];
+    };
+    return {
+      hitter:  median(playerDb.filter((p) => !p.isPitcher && p.gamesPlayed > 0).map((p) => p.gamesPlayed)),
+      pitcher: median(playerDb.filter((p) =>  p.isPitcher && p.gamesPlayed > 0).map((p) => p.gamesPlayed)),
+    };
+  }, [playerDb]);
+
   // ── Pool stats for roto z-score ───────────────────────────────
   const poolStats = useMemo(() => {
     if (playerDb.length === 0 || !isRotoMode) return null;
@@ -919,15 +957,22 @@ export default function MlbTradeAnalyzer() {
   const recvPicksParsed = useMemo(() => parsePicks(recvPicks, league.teams), [recvPicks, league.teams]);
 
   // ── Per-player value helper ───────────────────────────────────
+  // A player can never have negative trade value — the alternative is
+  // dropping him for a free replacement. Floor the raw z/points value at
+  // zero FIRST, then apply multipliers, so a boost (keeper ×1.32) always
+  // increases value and a discount (injury ×0.35) always decreases it.
+  // The raw signed z-score is still shown on the player card.
   function playerValue(p: TradePlayer, dbEntry: MlbDbPlayer): number {
     const base = isRotoMode && poolStats
       ? mlbZScoreValue(dbEntry, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates)
       : projectedSeasonValue(dbEntry, league.hitterWeights, league.pitcherWeights, useRates);
+    const floored  = Math.max(0, base);
     const scarcity = positionScarcityMultiplier(dbEntry.position);
     const ageMult  = ageMultiplier(dbEntry.age, league.leagueType === "keeper");
     const kMult    = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
     const iMult    = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], league.leagueType === "redraft");
-    return base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
+    // Order: scarcity → age curve (keeper only) → keeper rank → injury (redraft only)
+    return floored * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
   }
 
   const keepersPerTeam = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
@@ -1453,6 +1498,7 @@ export default function MlbTradeAnalyzer() {
               hitterWeights={league.hitterWeights}
               pitcherWeights={league.pitcherWeights}
               useRates={useRates}
+              poolMedianGp={poolMedianGp}
               injuryMap={injuryMap}
               onAdd={(p) => addPlayer("send", p)}
               onRemove={(id) => removePlayer("send", id)}
@@ -1478,6 +1524,7 @@ export default function MlbTradeAnalyzer() {
               hitterWeights={league.hitterWeights}
               pitcherWeights={league.pitcherWeights}
               useRates={useRates}
+              poolMedianGp={poolMedianGp}
               injuryMap={injuryMap}
               onAdd={(p) => addPlayer("recv", p)}
               onRemove={(id) => removePlayer("recv", id)}
@@ -1713,6 +1760,7 @@ type MlbTradeSideProps = {
   hitterWeights:  HitterWeights;
   pitcherWeights: PitcherWeights;
   useRates: boolean;
+  poolMedianGp: { hitter: number; pitcher: number };
   injuryMap: Record<number, string>;
   onAdd: (p: MlbDbPlayer) => void;
   onRemove: (id: number) => void;
@@ -1723,7 +1771,7 @@ function MlbTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus, isKeeperLeague, rankMap,
   poolStats, isRotoMode, hitterCategories, pitcherCategories,
-  hitterWeights, pitcherWeights, useRates,
+  hitterWeights, pitcherWeights, useRates, poolMedianGp,
   injuryMap,
   onAdd, onRemove, onToggleKeeper,
 }: MlbTradeSideProps) {
@@ -1760,7 +1808,8 @@ function MlbTradeSide({
           const ageMult     = ageMultiplier(dbEntry.age, isKeeperLeague);
           const kMult       = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
           const iMult       = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], !isKeeperLeague);
-          const adjusted    = base * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
+          // Floor before multipliers — must match playerValue() exactly
+          const adjusted    = Math.max(0, base) * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
           const rank        = rankMap.get(p.id) ?? null;
 
           // Warnings
@@ -1769,6 +1818,12 @@ function MlbTradeSide({
             : dbEntry.position === "SP"
               ? dbEntry.gamesStarted < 5
               : dbEntry.gamesPlayed < 10;
+
+          // Total mode undervalues players who missed significant time —
+          // low raw totals reflect availability, not ability.
+          const medianGp = dbEntry.isPitcher ? poolMedianGp.pitcher : poolMedianGp.hitter;
+          const missedTime = !useRates && medianGp > 0 &&
+            dbEntry.gamesPlayed < medianGp * 0.6 && !isEarlySeason;
 
           return (
             <div key={p.id} className="card text-xs" style={{ padding: "0.5rem" }}>
@@ -1811,6 +1866,13 @@ function MlbTradeSide({
               {isEarlySeason && (
                 <div className="text-[10px] text-amber-700 mb-1">
                   ⚠ Small sample — fewer than {dbEntry.isPitcher && dbEntry.position === "SP" ? "5 starts" : "15 games"} played.
+                </div>
+              )}
+
+              {missedTime && (
+                <div className="text-[10px] text-amber-700 mb-1">
+                  ⚠ Missed time — Total mode reflects this partial season, not ability.
+                  Try a &quot;Projected&quot; data mode for a fairer keeper comparison.
                 </div>
               )}
 
