@@ -839,6 +839,19 @@ export default function MlbTradeAnalyzer() {
             "[MLB injuries] injury map is EMPTY — no IL data was returned by /api/mlb, " +
             "so every player is being valued as healthy. Injury discounts will not apply."
           );
+        } else {
+          // Verification: every distinct status the feed returned, how many
+          // players carry it, and the redraft multiplier now applied.
+          const counts: Record<string, number> = {};
+          for (const status of Object.values(im)) {
+            counts[status] = (counts[status] ?? 0) + 1;
+          }
+          for (const [status, count] of Object.entries(counts)) {
+            console.log(
+              `[MLB injuries] status "${status}": ${count} players, ` +
+              `redraft ×${mlbInjuryMultiplier(status, true).toFixed(2)}, keeper ×1.00`
+            );
+          }
         }
         setInjuryMap(im);
         setCurrentSeasonYear(currentSeason.season);
@@ -1914,18 +1927,26 @@ function MlbApiStatus({
 /**
  * Returns the value multiplier for an injured MLB player.
  * Only applied in redraft leagues — keeper leagues retain full value.
- * DTD carries a badge only; IL designations discount value.
+ *
+ * Short IL stints (a 10-day stint is ~9 of 162 games) carry a badge for
+ * awareness but NO discount; only long absences reduce value. The 15-day
+ * IL is the pitcher minimum — the equivalent of the position player's
+ * 10-day IL, not a more severe injury — so both are treated identically.
  */
 function mlbInjuryMultiplier(status: string | undefined, isRedraft: boolean): number {
   if (!status || !isRedraft) return 1.0;
   switch (status) {
     case "DTD":       return 1.0;   // badge only
-    case "7-Day IL":  return 1.0;   // badge only (concussion IL — typically short)
-    case "10-Day IL": return 0.75;
-    case "15-Day IL": return 0.70;
-    case "60-Day IL": return 0.35;
+    case "7-Day IL":  return 1.0;   // badge only (concussion IL)
+    case "10-Day IL": return 1.0;   // badge only — short-term absence
+    case "15-Day IL": return 1.0;   // badge only — pitcher-minimum equivalent of 10-day
+    case "60-Day IL": return 0.75;
     case "Out for Season": return 0.10;
-    default:          return 1.0;
+    default:
+      // Unknown designation from the feed: warn and value as healthy
+      // rather than guessing at a discount.
+      console.warn(`[MLB injuries] unknown injury status "${status}" — treating player as healthy`);
+      return 1.0;
   }
 }
 
@@ -1940,25 +1961,28 @@ function MlbInjuryBadge({
   isRedraft: boolean;
 }) {
   if (!status) return null;
-  const isAmber      = status === "DTD" || status === "7-Day IL";
-  const isOrange     = status === "10-Day IL";
-  const isDeepOrange = status === "15-Day IL";
-  const isRed        = status === "60-Day IL";
-  const isDarkRed    = status === "Out for Season";
+  // Visual severity tracks the DISCOUNT, not the designation length:
+  // tiers with no discount use the milder warning color; 60-day and
+  // season-ending use the danger colors.
+  const noDiscountTier =
+    status === "DTD" || status === "7-Day IL" ||
+    status === "10-Day IL" || status === "15-Day IL";
+  const isRed     = status === "60-Day IL";
+  const isDarkRed = status === "Out for Season";
   const { border, text, bg } =
-    isAmber      ? { border: "border-amber-400",      text: "text-amber-700",      bg: "bg-amber-50"      } :
-    isOrange     ? { border: "border-orange-300",     text: "text-orange-600",     bg: "bg-orange-50"     } :
-    isDeepOrange ? { border: "border-orange-500",     text: "text-orange-800",     bg: "bg-orange-100"    } :
-    isRed        ? { border: "border-red-400",        text: "text-red-700",        bg: "bg-red-50"        } :
-    isDarkRed    ? { border: "border-red-700",        text: "text-red-900",        bg: "bg-red-100"       } :
-                   { border: "border-gray-300",       text: "text-gray-600",       bg: ""                 };
-  const showDiscount = isRedraft && mult < 1.0;
+    noDiscountTier ? { border: "border-amber-400", text: "text-amber-700", bg: "bg-amber-50" } :
+    isRed          ? { border: "border-red-400",   text: "text-red-700",   bg: "bg-red-50"   } :
+    isDarkRed      ? { border: "border-red-700",   text: "text-red-900",   bg: "bg-red-100"  } :
+                     { border: "border-gray-300",  text: "text-gray-600",  bg: ""            };
+  const title = !isRedraft
+    ? "Full value retained — keeper league"
+    : mult < 1.0
+      ? `Value discounted ×${mult.toFixed(2)} for redraft`
+      : "Short-term absence. No value adjustment applied.";
   return (
     <span
       className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
-      title={showDiscount
-        ? `Value discounted ×${mult.toFixed(2)} for redraft`
-        : "Full value retained — keeper league"}
+      title={title}
     >
       {status}
     </span>
