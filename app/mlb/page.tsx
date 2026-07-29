@@ -1117,42 +1117,63 @@ export default function MlbTradeAnalyzer() {
   // realistic trade value; relative spacing above replacement is preserved).
   // Points mode: raw projected points, unshifted and unclamped — points
   // values are positive by construction and must not change.
-  const adjustedBase = useCallback((dbEntry: MlbDbPlayer): number => {
+  // Core: distance from the player's positional replacement bar, or null
+  // in points mode (points values flow through untouched).
+  const replacementDiff = useCallback((dbEntry: MlbDbPlayer): number | null => {
     const eff = effectiveEntry(dbEntry);
-    if (isRotoMode && poolStats && replacementZ) {
-      const z    = mlbZScoreValue(eff, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates);
-      // Positional bar: SP/RP for pitchers, the fielding position for
-      // hitters, global hitter bar for DH (see replacementZ). Below the
-      // bar, values compress into a narrow positive band that preserves
-      // ordering instead of clamping everyone to identical zero.
-      const repl = replacementZ.byPosition[eff.position] ?? 0;
-      return softReplacementValue(z - repl);
-    }
-    return projectedSeasonValue(eff, league.hitterWeights, league.pitcherWeights, useRates);
+    if (!(isRotoMode && poolStats && replacementZ)) return null;
+    const z = mlbZScoreValue(eff, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates);
+    // Positional bar: SP/RP for pitchers, the fielding position for
+    // hitters, global hitter bar for DH (see replacementZ).
+    return z - (replacementZ.byPosition[eff.position] ?? 0);
   }, [effectiveEntry, isRotoMode, poolStats, league.hitterCategories, league.pitcherCategories,
-      league.hitterWeights, league.pitcherWeights, useRates, replacementZ]);
+      useRates, replacementZ]);
+
+  // DISPLAY / RANKING value: soft floor keeps ordering below the bar, so a
+  // good bench catcher never prices identically to a poor one on cards and
+  // in sorted lists. Continuous at the bar (diff 0 → 0.05 on both sides).
+  const displayBase = useCallback((dbEntry: MlbDbPlayer): number => {
+    const diff = replacementDiff(dbEntry);
+    if (diff === null) {
+      return projectedSeasonValue(effectiveEntry(dbEntry), league.hitterWeights, league.pitcherWeights, useRates);
+    }
+    return softReplacementValue(diff);
+  }, [replacementDiff, effectiveEntry, league.hitterWeights, league.pitcherWeights, useRates]);
+
+  // TRADE-MATH value: identical to display above the bar, but EXACTLY 0
+  // below it. A below-replacement throw-in must never tip a fairness
+  // verdict — five waiver adds contribute exactly 0, not +0.25.
+  const tradeBase = useCallback((dbEntry: MlbDbPlayer): number => {
+    const diff = replacementDiff(dbEntry);
+    if (diff === null) {
+      return projectedSeasonValue(effectiveEntry(dbEntry), league.hitterWeights, league.pitcherWeights, useRates);
+    }
+    const v = diff >= 0 ? diff + BELOW_REPL_BAND : 0;
+    if (v < 0) console.warn(`[MLB value] invariant violated: negative trade value for ${dbEntry.name}`);
+    return v;
+  }, [replacementDiff, effectiveEntry, league.hitterWeights, league.pitcherWeights, useRates]);
 
   // ── Talent ranking for pick valuation ─────────────────────────
-  // Built from the same replacement-adjusted values as trade math, so pick
-  // values (capped relative to the player at that rank) shift with them.
+  // Pick valuation is trade math — built from tradeBase, so a pick landing
+  // on a below-replacement rank is worth exactly 0.
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
-    return playerDb.map(adjustedBase).sort((a, b) => b - a);
-  }, [playerDb, adjustedBase]);
+    return playerDb.map(tradeBase).sort((a, b) => b - a);
+  }, [playerDb, tradeBase]);
 
   // ── League ranking map ────────────────────────────────────────
-  // Ranks use the same valuation basis as player value (incl. the
-  // prior-season fallback), so a star with a collapsed current-season rank
-  // still receives the right keeper multiplier.
+  // Ranks are a DISPLAY concern — displayBase preserves ordering below the
+  // bar. Same basis as player value (incl. the prior-season fallback), so a
+  // star with a collapsed rank still gets the right keeper multiplier.
   const rankMap = useMemo(() => {
     const map = new Map<number, number>();
     if (playerDb.length === 0) return map;
     const sorted = [...playerDb].sort(
-      (a, b) => adjustedBase(b) - adjustedBase(a) || b.gamesPlayed - a.gamesPlayed
+      (a, b) => displayBase(b) - displayBase(a) || b.gamesPlayed - a.gamesPlayed
     );
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
-  }, [playerDb, adjustedBase]);
+  }, [playerDb, displayBase]);
 
   // Raw (unshifted, unclamped) base for card display transparency
   const rawBase = useCallback((dbEntry: MlbDbPlayer): number => {
@@ -1180,6 +1201,7 @@ export default function MlbTradeAnalyzer() {
 
 
 
+
   // ── Parsed picks ──────────────────────────────────────────────
   const sendPicksParsed = useMemo(() => parsePicks(sendPicks, league.teams), [sendPicks, league.teams]);
   const recvPicksParsed = useMemo(() => parsePicks(recvPicks, league.teams), [recvPicks, league.teams]);
@@ -1189,7 +1211,7 @@ export default function MlbTradeAnalyzer() {
   // value, never a signed z-score, so a boost (keeper ×1.32) always
   // increases value and a discount (injury ×0.35) always decreases it.
   function playerValue(p: TradePlayer, dbEntry: MlbDbPlayer): number {
-    const base     = adjustedBase(dbEntry);
+    const base     = tradeBase(dbEntry);
     const scarcity = positionScarcityMultiplier(dbEntry.position);
     const ageMult  = ageMultiplier(dbEntry.age, league.leagueType === "keeper");
     const kMult    = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
@@ -1732,7 +1754,7 @@ export default function MlbTradeAnalyzer() {
               useRates={useRates}
               poolMedianGp={poolMedianGp}
               injuryMap={injuryMap}
-              adjustedBaseOf={adjustedBase}
+              displayBaseOf={displayBase}
               rawBaseOf={rawBase}
               fallbackLabelOf={fallbackLabel}
               onAdd={(p) => addPlayer("send", p)}
@@ -1761,7 +1783,7 @@ export default function MlbTradeAnalyzer() {
               useRates={useRates}
               poolMedianGp={poolMedianGp}
               injuryMap={injuryMap}
-              adjustedBaseOf={adjustedBase}
+              displayBaseOf={displayBase}
               rawBaseOf={rawBase}
               fallbackLabelOf={fallbackLabel}
               onAdd={(p) => addPlayer("recv", p)}
@@ -2011,8 +2033,8 @@ type MlbTradeSideProps = {
   useRates: boolean;
   poolMedianGp: { hitter: number; pitcher: number };
   injuryMap: Record<number, string>;
-  /** Replacement-adjusted base value — must match the trade-total math */
-  adjustedBaseOf: (dbEntry: MlbDbPlayer) => number;
+  /** DISPLAY value (soft-floored) — cards and lists only, NOT trade math */
+  displayBaseOf: (dbEntry: MlbDbPlayer) => number;
   /** Raw signed z-score (or raw points) for transparency display */
   rawBaseOf: (dbEntry: MlbDbPlayer) => number;
   /** Prior-season fallback / low-confidence note for the card, or null */
@@ -2027,7 +2049,7 @@ function MlbTradeSide({
   playerDb, dbStatus, isKeeperLeague, rankMap,
   poolStats, isRotoMode, hitterCategories, pitcherCategories,
   hitterWeights, pitcherWeights, useRates, poolMedianGp,
-  injuryMap, adjustedBaseOf, rawBaseOf, fallbackLabelOf,
+  injuryMap, displayBaseOf, rawBaseOf, fallbackLabelOf,
   onAdd, onRemove, onToggleKeeper,
 }: MlbTradeSideProps) {
 
@@ -2063,7 +2085,7 @@ function MlbTradeSide({
           const ageMult     = ageMultiplier(dbEntry.age, isKeeperLeague);
           const kMult       = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
           const iMult       = mlbInjuryMultiplier(injuryMap[dbEntry.mlbId], !isKeeperLeague);
-          const adjusted    = adjustedBaseOf(dbEntry) * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
+          const adjusted    = displayBaseOf(dbEntry) * scarcity * (p.isKeeper ? ageMult : 1.0) * kMult * iMult;
           const rank        = rankMap.get(p.id) ?? null;
           const fallbackNote = fallbackLabelOf(dbEntry);
 

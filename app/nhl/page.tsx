@@ -1037,40 +1037,63 @@ export default function TradeAnalyzer() {
   // Categories: z − z_replacement, clamped at 0 (below-replacement players
   // have no realistic trade value). Points mode: raw projected points,
   // unshifted and unclamped — points-mode results must not change.
-  // Multi-eligible players are valued at their most favorable eligible
-  // position (how a manager would actually deploy them). The positional
-  // shift is applied AFTER the volume-weighted z-score is computed.
-  const adjustedBase = useCallback((dbEntry: DbPlayer, eligiblePositions?: string[]): number => {
+  // Core: distance from the most favorable eligible positional bar
+  // (maximizing the diff is equivalent to maximizing either derived value,
+  // both are monotonic in it), or null in points mode. Multi-eligible
+  // players are valued where a manager would actually deploy them; the
+  // positional shift applies AFTER the volume-weighted z is computed.
+  const replacementDiff = useCallback((dbEntry: DbPlayer, eligiblePositions?: string[]): number | null => {
     const eff = effectiveEntry(dbEntry);
-    if (league.scoringType === "categories" && poolStats && replacementZ) {
-      const z = zScoreValue(eff, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
-      if (eff.isGoalie) return softReplacementValue(z - (replacementZ.byPosition.G ?? 0));
-      // Map eligibility to positional groups: W → LW/RW, F → C/LW/RW
-      const cands = new Set<string>();
-      const eligible = eligiblePositions && eligiblePositions.length > 0
-        ? eligiblePositions
-        : [dbEntry.position];
-      for (const pos of eligible) {
-        if (pos === "W") { cands.add("LW"); cands.add("RW"); }
-        else if (pos === "F") { cands.add("C"); cands.add("LW"); cands.add("RW"); }
-        else if (pos in replacementZ.byPosition) cands.add(pos);
-      }
-      if (cands.size === 0) cands.add(dbEntry.position);
-      let best = -Infinity;
-      let bestPos = dbEntry.position;
-      for (const g of cands) {
-        const v = softReplacementValue(z - (replacementZ.byPosition[g] ?? 0));
-        if (v > best) { best = v; bestPos = g; }
-      }
-      if (cands.size > 1) {
-        console.log(`[NHL pos] ${dbEntry.name}: valued at ${bestPos} (eligible: ${eligible.join("/")})`);
-      }
-      return best;
+    if (!(league.scoringType === "categories" && poolStats && replacementZ)) return null;
+    const z = zScoreValue(eff, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
+    if (eff.isGoalie) return z - (replacementZ.byPosition.G ?? 0);
+    // Map eligibility to positional groups: W → LW/RW, F → C/LW/RW
+    const cands = new Set<string>();
+    const eligible = eligiblePositions && eligiblePositions.length > 0
+      ? eligiblePositions
+      : [dbEntry.position];
+    for (const pos of eligible) {
+      if (pos === "W") { cands.add("LW"); cands.add("RW"); }
+      else if (pos === "F") { cands.add("C"); cands.add("LW"); cands.add("RW"); }
+      else if (pos in replacementZ.byPosition) cands.add(pos);
     }
-    return projectedSeasonValue(eff, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+    if (cands.size === 0) cands.add(dbEntry.position);
+    let best = -Infinity;
+    let bestPos = dbEntry.position;
+    for (const g of cands) {
+      const d = z - (replacementZ.byPosition[g] ?? 0);
+      if (d > best) { best = d; bestPos = g; }
+    }
+    if (cands.size > 1) {
+      console.log(`[NHL pos] ${dbEntry.name}: valued at ${bestPos} (eligible: ${eligible.join("/")})`);
+    }
+    return best;
   }, [effectiveEntry, league.scoringType, league.skaterCategories, league.goalieCategories,
-      league.skaterWeights, league.goalieWeights, league.positionBonuses, poolStats,
-      useRates, replacementZ]);
+      poolStats, useRates, replacementZ]);
+
+  // DISPLAY / RANKING value: soft floor keeps ordering below the bar on
+  // cards and in sorted lists. Continuous at the bar.
+  const displayBase = useCallback((dbEntry: DbPlayer, eligiblePositions?: string[]): number => {
+    const diff = replacementDiff(dbEntry, eligiblePositions);
+    if (diff === null) {
+      return projectedSeasonValue(effectiveEntry(dbEntry), league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+    }
+    return softReplacementValue(diff);
+  }, [replacementDiff, effectiveEntry, league.skaterWeights, league.goalieWeights,
+      league.positionBonuses, useRates]);
+
+  // TRADE-MATH value: identical to display above the bar, EXACTLY 0 below
+  // it — below-replacement throw-ins can never tip a fairness verdict.
+  const tradeBase = useCallback((dbEntry: DbPlayer, eligiblePositions?: string[]): number => {
+    const diff = replacementDiff(dbEntry, eligiblePositions);
+    if (diff === null) {
+      return projectedSeasonValue(effectiveEntry(dbEntry), league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+    }
+    const v = diff >= 0 ? diff + BELOW_REPL_BAND : 0;
+    if (v < 0) console.warn(`[NHL value] invariant violated: negative trade value for ${dbEntry.name}`);
+    return v;
+  }, [replacementDiff, effectiveEntry, league.skaterWeights, league.goalieWeights,
+      league.positionBonuses, useRates]);
 
   // Card note for players valued on fallback / low-confidence data.
   // Uses REAL current-season games (playerDb is normalized in Avg modes).
@@ -1088,12 +1111,12 @@ export default function TradeAnalyzer() {
     return null;
   }, [thinSampleFallback, priorSeasonIdStr, currentSeasonDb]);
 
-  // League-specific talent ranking — sorted replacement-adjusted values, the
-  // same basis as trade math, so pick values shift with the baseline.
+  // League-specific talent ranking — pick valuation is trade math, so it is
+  // built from tradeBase (below-replacement ranks are worth exactly 0).
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
-    return playerDb.map((p) => adjustedBase(p)).sort((a, b) => b - a);
-  }, [playerDb, adjustedBase]);
+    return playerDb.map((p) => tradeBase(p)).sort((a, b) => b - a);
+  }, [playerDb, tradeBase]);
 
   // League ranking: playerId → 1-based rank on the same valuation basis as
   // player value (incl. the prior-season fallback), so a star with a
@@ -1110,12 +1133,13 @@ export default function TradeAnalyzer() {
     const sorted = allZero
       ? [...playerDb].sort((a, b) => b.gamesPlayed - a.gamesPlayed)
       : [...playerDb].sort(
-          (a, b) => adjustedBase(b) - adjustedBase(a) || b.gamesPlayed - a.gamesPlayed
+          (a, b) => displayBase(b) - displayBase(a) || b.gamesPlayed - a.gamesPlayed
         );
 
     sorted.forEach((p, i) => map.set(p.id, i + 1));
     return map;
-  }, [playerDb, league.scoringType, league.skaterWeights, league.goalieWeights, adjustedBase]);
+  }, [playerDb, league.scoringType, league.skaterWeights, league.goalieWeights, displayBase]);
+
 
 
 
@@ -1136,11 +1160,11 @@ export default function TradeAnalyzer() {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      // Replacement-adjusted (positional, soft-floored) in categories mode;
-      // raw projected points in points mode. Valued at the most favorable
-      // checked eligibility. Multipliers never touch a signed z-score.
+      // TRADE value (positional, exactly 0 below replacement) in categories
+      // mode; raw projected points in points mode. Valued at the most
+      // favorable checked eligibility. Multipliers never touch a signed z.
       // Order: positional flex coverage → keeper rank → injury (redraft only)
-      const base  = adjustedBase(dbEntry, p.positions);
+      const base  = tradeBase(dbEntry, p.positions);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
@@ -1159,8 +1183,8 @@ export default function TradeAnalyzer() {
     const playerTotal = recvPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      // Replacement-adjusted base — see sendValue comment
-      const base  = adjustedBase(dbEntry, p.positions);
+      // Trade-math base — see sendValue comment
+      const base  = tradeBase(dbEntry, p.positions);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
