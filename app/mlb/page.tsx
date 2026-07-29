@@ -499,6 +499,18 @@ function _median(values: number[]): number {
 // Volume-weighted pitcher rate stats — longer stints count more than short ones.
 const VOL_PITCHER_RATES = new Set<PitcherStatKey>(["ERA", "WHIP", "K/9", "K/BB", "K%"]);
 
+// ── Below-replacement soft floor ─────────────────────────────
+// A hard clamp at 0 makes every below-replacement player at a position
+// price identically, so trading a good bench piece for a bad one reads
+// as even. Instead, below-replacement values are compressed into a
+// narrow positive band that preserves ordering: value approaches 0 as
+// the deficit grows but never ties. Continuous at the replacement point
+// (diff = 0 → BAND on both branches).
+const BELOW_REPL_BAND = 0.05;
+function softReplacementValue(diff: number): number {
+  return diff >= 0 ? diff + BELOW_REPL_BAND : BELOW_REPL_BAND * Math.exp(diff / 2);
+}
+
 // A category with (near-)zero spread, or where almost nobody in the pool
 // registers the stat, produces meaningless exploding z-scores. Skip it.
 const MIN_STAT_STDDEV   = 1e-6;
@@ -1033,17 +1045,59 @@ export default function MlbTradeAnalyzer() {
   // against the first player OUTSIDE the league-adjusted pool (rank N+1):
   //   value = z_player − z_replacement, clamped at 0 below replacement.
   // Raw z-scores are still shown on player cards.
+  // Positional version: replacement is computed PER POSITION — the best
+  // player at that position outside the number of starters the league must
+  // field there. A global bar prices starting catchers 6–12 at zero because
+  // only ~5 catchers clear the overall pool; a positional bar prices exactly
+  // the required starters above zero at every position.
+  //   required = teams × dedicated slots (CI/MI/IF/LF/CF/RF folded into
+  //   their base positions); UTIL deepens every hitter position uniformly
+  //   and is never attributed to a single one. P flex splits SP/RP.
+  // DH-only players can fill UTIL only, so their bar is the global hitter
+  // replacement (the best freely available hitter overall).
   const replacementZ = useMemo(() => {
-    if (!poolStats || !isRotoMode) return { hitter: 0, pitcher: 0 };
+    if (!poolStats || !isRotoMode) return null;
     const zOf = (p: MlbDbPlayer) =>
       mlbZScoreValue(effectiveEntry(p), league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates);
-    const hitterZs  = playerDb.filter((p) => !p.isPitcher && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
-    const pitcherZs = playerDb.filter((p) =>  p.isPitcher && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
-    return {
-      hitter:  hitterZs[Math.min(poolStats.hitterN,  Math.max(0, hitterZs.length - 1))]  ?? 0,
-      pitcher: pitcherZs[Math.min(poolStats.pitcherN, Math.max(0, pitcherZs.length - 1))] ?? 0,
+
+    const t = league.teams;
+    const slot = (k: MlbRosterKey) => league.roster[k] || 0;
+    const HITTER_GROUPS = ["C", "1B", "2B", "3B", "SS", "OF"] as const;
+    const utilPerPos = (t * slot("UTIL")) / HITTER_GROUPS.length;
+    const required: Record<string, number> = {
+      C:    Math.round(t * slot("C") + utilPerPos),
+      "1B": Math.round(t * (slot("1B") + slot("CI") / 2 + slot("IF") / 4) + utilPerPos),
+      "2B": Math.round(t * (slot("2B") + slot("MI") / 2 + slot("IF") / 4) + utilPerPos),
+      "3B": Math.round(t * (slot("3B") + slot("CI") / 2 + slot("IF") / 4) + utilPerPos),
+      SS:   Math.round(t * (slot("SS") + slot("MI") / 2 + slot("IF") / 4) + utilPerPos),
+      OF:   Math.round(t * (slot("OF") + slot("LF") + slot("CF") + slot("RF")) + utilPerPos),
+      SP:   t * slot("SP") + Math.ceil((t * slot("P")) / 2),
+      RP:   t * slot("RP") + Math.floor((t * slot("P")) / 2),
     };
-  }, [poolStats, isRotoMode, playerDb, league.hitterCategories, league.pitcherCategories, useRates, effectiveEntry]);
+
+    const zsByGroup: Record<string, number[]> = {};
+    const allHitterZ: number[] = [];
+    for (const p of playerDb) {
+      if (p.gamesPlayed === 0) continue;
+      const z = zOf(p);
+      if (p.isPitcher) {
+        (zsByGroup[p.position] ??= []).push(z);       // SP | RP
+      } else {
+        allHitterZ.push(z);
+        if (p.position !== "DH") (zsByGroup[p.position] ??= []).push(z);
+      }
+    }
+
+    const replMap: Record<string, number> = {};
+    for (const [group, req] of Object.entries(required)) {
+      const zs = (zsByGroup[group] ?? []).sort((a, b) => b - a);
+      replMap[group] = zs.length === 0 ? 0 : zs[Math.min(req, zs.length - 1)] ?? 0;
+    }
+    allHitterZ.sort((a, b) => b - a);
+    replMap.DH = allHitterZ[Math.min(poolStats.hitterN, Math.max(0, allHitterZ.length - 1))] ?? 0;
+    return { byPosition: replMap, required };
+  }, [poolStats, isRotoMode, playerDb, league.teams, league.roster,
+      league.hitterCategories, league.pitcherCategories, useRates, effectiveEntry]);
 
   // ── Replacement-adjusted base value ───────────────────────────
   // Roto: z − z_replacement, clamped at 0 (below-replacement players have no
@@ -1052,10 +1106,14 @@ export default function MlbTradeAnalyzer() {
   // values are positive by construction and must not change.
   const adjustedBase = useCallback((dbEntry: MlbDbPlayer): number => {
     const eff = effectiveEntry(dbEntry);
-    if (isRotoMode && poolStats) {
+    if (isRotoMode && poolStats && replacementZ) {
       const z    = mlbZScoreValue(eff, league.hitterCategories, league.pitcherCategories, poolStats, HITTER_STATS, PITCHER_STATS, useRates);
-      const repl = eff.isPitcher ? replacementZ.pitcher : replacementZ.hitter;
-      return Math.max(0, z - repl);
+      // Positional bar: SP/RP for pitchers, the fielding position for
+      // hitters, global hitter bar for DH (see replacementZ). Below the
+      // bar, values compress into a narrow positive band that preserves
+      // ordering instead of clamping everyone to identical zero.
+      const repl = replacementZ.byPosition[eff.position] ?? 0;
+      return softReplacementValue(z - repl);
     }
     return projectedSeasonValue(eff, league.hitterWeights, league.pitcherWeights, useRates);
   }, [effectiveEntry, isRotoMode, poolStats, league.hitterCategories, league.pitcherCategories,
@@ -1106,6 +1164,7 @@ export default function MlbTradeAnalyzer() {
     }
     return null;
   }, [thinSampleFallback, priorSeasonYear, currentSeasonDb]);
+
 
 
   // ── Parsed picks ──────────────────────────────────────────────

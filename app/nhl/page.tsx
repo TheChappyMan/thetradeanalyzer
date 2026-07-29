@@ -329,6 +329,16 @@ function slotsCoveredByPositions(positions: string[], roster: Roster): number {
 
 const FLEX_ALPHA = 0.4;
 
+// ── Below-replacement soft floor ─────────────────────────────
+// A hard clamp at 0 makes every below-replacement player at a position
+// price identically. Below-replacement values compress into a narrow
+// positive band that preserves ordering; continuous at the replacement
+// point (diff = 0 → BAND on both branches).
+const BELOW_REPL_BAND = 0.05;
+function softReplacementValue(diff: number): number {
+  return diff >= 0 ? diff + BELOW_REPL_BAND : BELOW_REPL_BAND * Math.exp(diff / 2);
+}
+
 function positionMultiplier(positions: string[], roster: Roster): number {
   if (!positions || positions.length === 0) return 1;
   if (positions.includes("G")) return 1;
@@ -987,29 +997,75 @@ export default function TradeAnalyzer() {
   //   value = z_player − z_replacement, clamped at 0 below replacement.
   // Points mode is untouched — its values are positive by construction.
   // The shift is applied AFTER volume-weighted z (SV%/GAA) is computed.
+  // Positional version: replacement is computed PER POSITION (C/LW/RW/D/G) —
+  // the best player at that position outside the number of starters the
+  // league must field there. Flex slots are attributed by the same coverage
+  // semantics as POSITION_SLOT_MAP: W splits across LW/RW, F across
+  // C/LW/RW, and U deepens all four skater positions uniformly.
   const replacementZ = useMemo(() => {
-    if (!poolStats || league.scoringType !== "categories") return { skater: 0, goalie: 0 };
+    if (!poolStats || league.scoringType !== "categories") return null;
     const zOf = (p: DbPlayer) =>
       zScoreValue(effectiveEntry(p), league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
-    const skaterZs = playerDb.filter((p) => !p.isGoalie && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
-    const goalieZs = playerDb.filter((p) =>  p.isGoalie && p.gamesPlayed > 0).map(zOf).sort((a, b) => b - a);
-    return {
-      skater: skaterZs[Math.min(poolStats.skaterN, Math.max(0, skaterZs.length - 1))] ?? 0,
-      goalie: goalieZs[Math.min(poolStats.goalieN, Math.max(0, goalieZs.length - 1))] ?? 0,
+
+    const t = league.teams;
+    const s = (k: RosterKey) => league.roster[k] || 0;
+    const required: Record<string, number> = {
+      C:  Math.round(t * (s("C")  + s("F") / 3 + s("U") / 4)),
+      LW: Math.round(t * (s("LW") + s("W") / 2 + s("F") / 3 + s("U") / 4)),
+      RW: Math.round(t * (s("RW") + s("W") / 2 + s("F") / 3 + s("U") / 4)),
+      D:  Math.round(t * (s("D")  + s("U") / 4)),
+      G:  t * s("G"),
     };
+
+    const zsByGroup: Record<string, number[]> = {};
+    for (const p of playerDb) {
+      if (p.gamesPlayed === 0) continue;
+      const group = p.isGoalie ? "G" : p.position;   // C | LW | RW | D
+      (zsByGroup[group] ??= []).push(zOf(p));
+    }
+
+    const byPosition: Record<string, number> = {};
+    for (const [group, req] of Object.entries(required)) {
+      const zs = (zsByGroup[group] ?? []).sort((a, b) => b - a);
+      byPosition[group] = zs.length === 0 ? 0 : zs[Math.min(req, zs.length - 1)] ?? 0;
+    }
+    return { byPosition, required };
   }, [poolStats, league.scoringType, league.skaterCategories, league.goalieCategories,
-      playerDb, useRates, effectiveEntry]);
+      league.teams, league.roster, playerDb, useRates, effectiveEntry]);
 
   // ── Replacement-adjusted base value ───────────────────────────
   // Categories: z − z_replacement, clamped at 0 (below-replacement players
   // have no realistic trade value). Points mode: raw projected points,
   // unshifted and unclamped — points-mode results must not change.
-  const adjustedBase = useCallback((dbEntry: DbPlayer): number => {
+  // Multi-eligible players are valued at their most favorable eligible
+  // position (how a manager would actually deploy them). The positional
+  // shift is applied AFTER the volume-weighted z-score is computed.
+  const adjustedBase = useCallback((dbEntry: DbPlayer, eligiblePositions?: string[]): number => {
     const eff = effectiveEntry(dbEntry);
-    if (league.scoringType === "categories" && poolStats) {
-      const z    = zScoreValue(eff, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
-      const repl = eff.isGoalie ? replacementZ.goalie : replacementZ.skater;
-      return Math.max(0, z - repl);
+    if (league.scoringType === "categories" && poolStats && replacementZ) {
+      const z = zScoreValue(eff, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
+      if (eff.isGoalie) return softReplacementValue(z - (replacementZ.byPosition.G ?? 0));
+      // Map eligibility to positional groups: W → LW/RW, F → C/LW/RW
+      const cands = new Set<string>();
+      const eligible = eligiblePositions && eligiblePositions.length > 0
+        ? eligiblePositions
+        : [dbEntry.position];
+      for (const pos of eligible) {
+        if (pos === "W") { cands.add("LW"); cands.add("RW"); }
+        else if (pos === "F") { cands.add("C"); cands.add("LW"); cands.add("RW"); }
+        else if (pos in replacementZ.byPosition) cands.add(pos);
+      }
+      if (cands.size === 0) cands.add(dbEntry.position);
+      let best = -Infinity;
+      let bestPos = dbEntry.position;
+      for (const g of cands) {
+        const v = softReplacementValue(z - (replacementZ.byPosition[g] ?? 0));
+        if (v > best) { best = v; bestPos = g; }
+      }
+      if (cands.size > 1) {
+        console.log(`[NHL pos] ${dbEntry.name}: valued at ${bestPos} (eligible: ${eligible.join("/")})`);
+      }
+      return best;
     }
     return projectedSeasonValue(eff, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
   }, [effectiveEntry, league.scoringType, league.skaterCategories, league.goalieCategories,
@@ -1036,7 +1092,7 @@ export default function TradeAnalyzer() {
   // same basis as trade math, so pick values shift with the baseline.
   const talentRanking = useMemo(() => {
     if (playerDb.length === 0) return [];
-    return playerDb.map(adjustedBase).sort((a, b) => b - a);
+    return playerDb.map((p) => adjustedBase(p)).sort((a, b) => b - a);
   }, [playerDb, adjustedBase]);
 
   // League ranking: playerId → 1-based rank on the same valuation basis as
@@ -1062,6 +1118,7 @@ export default function TradeAnalyzer() {
   }, [playerDb, league.scoringType, league.skaterWeights, league.goalieWeights, adjustedBase]);
 
 
+
   // Parsed picks with errors flagged
   const sendPicksParsed = useMemo(
     () => parsePicks(sendPicks, league.teams),
@@ -1079,10 +1136,11 @@ export default function TradeAnalyzer() {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
-      // Replacement-adjusted (clamped) in categories mode; raw projected
-      // points in points mode. Multipliers never touch a signed z-score.
+      // Replacement-adjusted (positional, soft-floored) in categories mode;
+      // raw projected points in points mode. Valued at the most favorable
+      // checked eligibility. Multipliers never touch a signed z-score.
       // Order: positional flex coverage → keeper rank → injury (redraft only)
-      const base  = adjustedBase(dbEntry);
+      const base  = adjustedBase(dbEntry, p.positions);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
@@ -1102,7 +1160,7 @@ export default function TradeAnalyzer() {
       const dbEntry = playerDb.find((x) => x.id === p.id);
       if (!dbEntry) return sum;
       // Replacement-adjusted base — see sendValue comment
-      const base  = adjustedBase(dbEntry);
+      const base  = adjustedBase(dbEntry, p.positions);
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
