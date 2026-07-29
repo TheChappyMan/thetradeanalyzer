@@ -326,6 +326,8 @@ async function main() {
   }
 
   const output = {
+    // Stamped so the app can tell users how stale the fallback data is
+    generatedAt: new Date().toISOString().slice(0, 10),
     currentSeason: { seasonId: '2025', players: currentPlayers },
     priorSeason:   { seasonId: '2024', players: priorPlayers   },
   }

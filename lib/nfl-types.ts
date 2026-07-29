@@ -134,6 +134,11 @@ export type NflDbPlayer = {
   team: string;
   position: NflPlayerPosition;
   gamesPlayed: number;
+  /**
+   * Sleeper injury designation (e.g. "Questionable", "Out", "IR"), if any.
+   * Data plumbing only for now — badges/discounts are a pending feature.
+   */
+  injuryStatus?: string;
   stats: NflPlayerStats;
 };
 

@@ -8,7 +8,6 @@ import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
 import { NFL_WEIGHT_DESCRIPTIONS } from "@/lib/stat-descriptions";
-import nflPlayersJson from "@/lib/nfl-players.json";
 import {
   DEFAULT_NFL_LEAGUE,
   type NflLeague,
@@ -324,22 +323,16 @@ export default function NflTradeAnalyzer() {
       return "thisTotal";
     }
   });
-  // Seed from static JSON so the analyzer is usable immediately on first paint.
-  // The useEffect below still fetches /api/nfl to replace with live ESPN data
-  // if it is available; static data is the reliable fallback.
-  const [currentSeasonDb,    setCurrentSeasonDb]    = useState<NflDbPlayer[]>(
-    nflPlayersJson.currentSeason.players as NflDbPlayer[]
-  );
-  const [priorSeasonDb,      setPriorSeasonDb]      = useState<NflDbPlayer[]>(
-    nflPlayersJson.priorSeason.players as NflDbPlayer[]
-  );
-  const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>(
-    nflPlayersJson.currentSeason.seasonId
-  );
-  const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>(
-    nflPlayersJson.priorSeason.seasonId
-  );
-  const [dbStatus,  setDbStatus]  = useState<DbStatus>("ready");
+  // Live Sleeper data via /api/nfl — the static file is served by the route
+  // only as a last-resort fallback (source === "fallback"), never imported
+  // here as seed state.
+  const [currentSeasonDb,    setCurrentSeasonDb]    = useState<NflDbPlayer[]>([]);
+  const [priorSeasonDb,      setPriorSeasonDb]      = useState<NflDbPlayer[]>([]);
+  const [currentSeasonIdStr, setCurrentSeasonIdStr] = useState<string>("");
+  const [priorSeasonIdStr,   setPriorSeasonIdStr]   = useState<string>("");
+  const [dbStatus,  setDbStatus]  = useState<DbStatus>("loading");
+  const [dataSource, setDataSource] = useState<"sleeper" | "fallback">("sleeper");
+  const [fallbackGeneratedAt, setFallbackGeneratedAt] = useState<string | null>(null);
 
   // ── Tier 2: multi-league state ───────────────────────────────
   const [t2Leagues,      setT2Leagues]      = useState<LeagueRow[]>([]);
@@ -361,23 +354,39 @@ export default function NflTradeAnalyzer() {
     type SeasonPayload = {
       seasonId: string;
       players: NflDbPlayer[];
-      source: "espn" | "fallback";
+      source: "sleeper" | "fallback";
+      hasData: boolean;
     };
     let cancelled = false;
     fetch("/api/nfl?endpoint=all-seasons")
       .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then(({ currentSeason, priorSeason }: { currentSeason: SeasonPayload; priorSeason: SeasonPayload }) => {
+      .then((json: { currentSeason: SeasonPayload; priorSeason: SeasonPayload; fallbackGeneratedAt?: string | null }) => {
         if (cancelled) return;
+        const { currentSeason, priorSeason } = json;
         setCurrentSeasonDb(currentSeason.players);
         setPriorSeasonDb(priorSeason.players);
         setCurrentSeasonIdStr(currentSeason.seasonId);
         setPriorSeasonIdStr(priorSeason.seasonId);
-        // Auto-detect: if no saved preference and current season is sparse, default to last year
-        const savedMode = (() => { try { return localStorage.getItem(LS_NFL_DATA_MODE); } catch { return null; } })();
-        if (!savedMode) {
-          const significant = currentSeason.players.filter((p) => p.gamesPlayed >= 3).length;
-          if (significant < 100) setDataMode("lastTotal");
+        setDataSource(currentSeason.source);
+        setFallbackGeneratedAt(json.fallbackGeneratedAt ?? null);
+        if (currentSeason.source === "fallback") {
+          console.warn(
+            "[NFL] live Sleeper data unavailable — using static fallback " +
+            `(generated ${json.fallbackGeneratedAt ?? "unknown date"}). Data may be stale.`
+          );
         }
+        // If the current season has NO data at all (pre-season / week 0),
+        // force a prior-year mode regardless of any saved preference so the
+        // analyzer never shows every player at zero. A merely thin season
+        // only overrides when the user has no saved preference.
+        const savedMode = (() => { try { return localStorage.getItem(LS_NFL_DATA_MODE); } catch { return null; } })();
+        const significant = currentSeason.players.filter((p) => p.gamesPlayed >= 3).length;
+        setDataMode((prev) => {
+          const usingThis = prev === "thisTotal" || prev === "thisAvg";
+          if (!currentSeason.hasData && usingThis) return "lastTotal";
+          if (!savedMode && significant < 100) return "lastTotal";
+          return prev;
+        });
         setDbStatus("ready");
       })
       .catch(() => { if (!cancelled) setDbStatus("error"); });
@@ -773,6 +782,8 @@ export default function NflTradeAnalyzer() {
             priorSeasonId={priorSeasonIdStr}
             dataMode={dataMode}
             setDataMode={setDataMode}
+            source={dataSource}
+            fallbackGeneratedAt={fallbackGeneratedAt}
           />
         </div>
 
@@ -1120,6 +1131,7 @@ export default function NflTradeAnalyzer() {
 
 function NflApiStatus({
   status, playerCount, currentSeasonId, priorSeasonId, dataMode, setDataMode,
+  source, fallbackGeneratedAt,
 }: {
   status: DbStatus;
   playerCount: number;
@@ -1127,6 +1139,8 @@ function NflApiStatus({
   priorSeasonId: string;
   dataMode: DataMode;
   setDataMode: (m: DataMode) => void;
+  source: "sleeper" | "fallback";
+  fallbackGeneratedAt: string | null;
 }) {
   if (status === "loading") return <div className="text-xs" style={{ color: "var(--color-muted)" }}>Loading NFL data…</div>;
   if (status === "error")   return <div className="text-xs" style={{ color: "var(--color-danger)" }}>NFL API unavailable — please refresh</div>;
@@ -1138,6 +1152,12 @@ function NflApiStatus({
       <div className="whitespace-nowrap">
         <div>{playerCount} players loaded</div>
         {activeId && <div>Season: {activeId}</div>}
+        {source === "fallback" && (
+          <div className="text-amber-600">
+            ⚠ Live data unavailable — cached data
+            {fallbackGeneratedAt ? ` from ${fallbackGeneratedAt}` : ""} may be stale
+          </div>
+        )}
       </div>
       <select
         className="form-input"
