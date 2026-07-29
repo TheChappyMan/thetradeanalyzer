@@ -126,31 +126,49 @@ export function replacementLevelValue(
 
   if (values.length === 0) return 0
 
-  let startableCount: number
+  // ── Bench-aware effective counts (per team) ────────────────
+  // Rostered bench players are not freely available, so replacement sits
+  // below the bench, not just below the starters. Exactly 1 bench slot per
+  // team is allocated to QB; ALL remaining bench slots distribute across
+  // RB/WR/TE in proportion to each position's starter+flex count, so the
+  // split self-adjusts to league format. K and DST receive no bench
+  // allocation (kickers and defenses are rarely benched). IR slots are
+  // excluded entirely — IR players are not acquirable replacements.
+  const bench          = roster.BN ?? 0
+  const qbBench        = Math.min(1, bench)
+  const remainingBench = Math.max(0, bench - qbBench)
+  const flex  = roster.FLEX ?? 0
+  const rbSF  = (roster.RB ?? 0) + flex * 0.5
+  const wrSF  = (roster.WR ?? 0) + flex * 0.4
+  const teSF  = (roster.TE ?? 0) + flex * 0.1
+  const sfTotal = rbSF + wrSF + teSF
+  const benchFor = (sf: number) => (sfTotal > 0 ? remainingBench * (sf / sfTotal) : 0)
 
-  switch (position) {
-    case 'QB':
-      startableCount = teams * (qbFormat === '2QB' ? 2 : 1)
-      break
-    case 'K':
-      startableCount = teams * (roster.K ?? 0)
-      break
-    case 'DST':
-      startableCount = teams * (roster.DST ?? 0)
-      break
-    case 'RB':
-    case 'WR':
-    case 'TE': {
-      const dedicated = teams * (roster[position] ?? 0)
-      const flexTotal = teams * (roster.FLEX ?? 0)
-      const flexShare = position === 'RB' ? 0.5 : position === 'WR' ? 0.4 : 0.1
-      startableCount  = Math.round(dedicated + flexTotal * flexShare)
-      break
-    }
-    default:
-      startableCount = teams
+  const qbStarters = qbFormat === '2QB' ? 2 : 1
+  const perTeam: Record<NflPlayerPosition, number> = {
+    QB:  qbStarters + qbBench,
+    RB:  rbSF + benchFor(rbSF),
+    WR:  wrSF + benchFor(wrSF),
+    TE:  teSF + benchFor(teSF),
+    K:   roster.K ?? 0,
+    DST: roster.DST ?? 0,
   }
 
+  // Invariant: effective counts sum to the roster size excluding IR
+  // (with QB slots counted at the format-derived starter count). The
+  // proportional method satisfies this exactly; warn if it ever drifts.
+  const effectiveSum = Object.values(perTeam).reduce((a, b) => a + b, 0)
+  const rosterExclIr =
+    qbStarters + (roster.RB ?? 0) + (roster.WR ?? 0) + (roster.TE ?? 0) +
+    (roster.FLEX ?? 0) + (roster.K ?? 0) + (roster.DST ?? 0) + bench
+  if (Math.abs(effectiveSum - rosterExclIr) > 1e-6) {
+    console.warn(
+      `[NFL replacement] effective counts (${effectiveSum.toFixed(4)}) do not sum to ` +
+      `roster size excl. IR (${rosterExclIr}) — bench distribution is broken`
+    )
+  }
+
+  const startableCount = Math.round(teams * perTeam[position])
   const idx = Math.min(startableCount, values.length - 1)
   return values[idx] ?? 0
 }
