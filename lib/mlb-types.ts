@@ -8,18 +8,20 @@
 // ============================================================
 
 // Derived from buildPlayerDatabase() stats object in app/mlb/page.tsx
+// PO/A/E = fielding putouts, assists, errors
 export type HitterStatKey =
   | "G" | "R" | "HR" | "RBI" | "SB" | "AVG" | "OBP" | "SLG"
   | "H" | "1B" | "2B" | "3B" | "BB" | "K" | "XBH" | "TB" | "CS" | "AB"
-  | "SF" | "SH" | "HBP" | "GIDP" | "PA";
+  | "SF" | "SH" | "HBP" | "GIDP" | "PA" | "PO" | "A" | "E";
 
 // Derived from buildPlayerDatabase() stats object in app/mlb/page.tsx
 // H = hits allowed, ER = earned runs, HR = home runs allowed,
 // HBP = hit batters, NH/PG = no-hitters / perfect games
 export type PitcherStatKey =
   | "W" | "L" | "SV" | "BS" | "HLD" | "K" | "ERA" | "WHIP"
-  | "IP" | "OUTS" | "QS" | "CG" | "NH" | "PG"
-  | "H" | "ER" | "HR" | "BB" | "HBP" | "BLK" | "HR9";
+  | "IP" | "OUTS" | "QS" | "GS" | "CG" | "NH" | "PG"
+  | "H" | "ER" | "HR" | "BB" | "HBP" | "BLK"
+  | "HR9" | "K/9" | "K/BB" | "K%";
 
 export type HitterWeights  = Record<HitterStatKey,  number>;
 export type PitcherWeights = Record<PitcherStatKey, number>;
@@ -38,11 +40,13 @@ export type LeagueFormat = "5x5" | "obp" | "points";
 // ROSTER
 // ============================================================
 
-// Derived from (["C","1B","2B","3B","SS","OF","UTIL"] as MlbRosterKey[])
-// and (["SP","RP","P"] as MlbRosterKey[]) in app/mlb/page.tsx
+// Hitter slots (incl. CI = 1B/3B, MI = 2B/SS, IF = any infield,
+// LF/CF/RF outfield splits), pitcher slots, and bench-type slots
+// (BN, IL, NA = minors/not active — excluded from pool sizing).
 export type MlbRosterKey =
-  | "C" | "1B" | "2B" | "3B" | "SS" | "OF" | "UTIL"
-  | "SP" | "RP" | "P" | "BN" | "IL";
+  | "C" | "1B" | "2B" | "3B" | "SS" | "CI" | "MI" | "IF"
+  | "OF" | "LF" | "CF" | "RF" | "UTIL"
+  | "SP" | "RP" | "P" | "BN" | "IL" | "NA";
 
 export type MlbRoster = Record<MlbRosterKey, number>;
 
@@ -71,12 +75,13 @@ export type MlbLeague = {
 export const HITTER_STATS: HitterStatKey[] = [
   "G", "R", "HR", "RBI", "SB", "AVG", "OBP", "SLG",
   "H", "1B", "2B", "3B", "BB", "K", "XBH", "TB", "CS", "AB",
-  "SF", "SH", "HBP", "GIDP", "PA",
+  "SF", "SH", "HBP", "GIDP", "PA", "PO", "A", "E",
 ];
 
 export const PITCHER_STATS: PitcherStatKey[] = [
   "W", "L", "SV", "BS", "HLD", "K", "ERA", "WHIP", "IP", "OUTS",
-  "QS", "CG", "NH", "PG", "H", "ER", "HR", "BB", "HBP", "BLK", "HR9",
+  "QS", "GS", "CG", "NH", "PG", "H", "ER", "HR", "BB", "HBP", "BLK",
+  "HR9", "K/9", "K/BB", "K%",
 ];
 
 // ============================================================
@@ -174,8 +179,9 @@ export const DEFAULT_MLB_LEAGUE: MlbLeague = {
   leagueType:     "redraft",
   keepersPerTeam: 0,
   roster: {
-    C: 1, "1B": 1, "2B": 1, "3B": 1, SS: 1, OF: 3, UTIL: 1,
-    SP: 5, RP: 3, P: 0, BN: 5, IL: 2,
+    C: 1, "1B": 1, "2B": 1, "3B": 1, SS: 1, CI: 0, MI: 0, IF: 0,
+    OF: 3, LF: 0, CF: 0, RF: 0, UTIL: 1,
+    SP: 5, RP: 3, P: 0, BN: 5, IL: 2, NA: 0,
   },
   format: "5x5",
   ...presetForFormat("5x5"),

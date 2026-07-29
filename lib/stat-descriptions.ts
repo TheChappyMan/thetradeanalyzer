@@ -94,6 +94,9 @@ export const MLB_HITTER_DESCRIPTIONS: Record<string, string> = {
   HBP: "Hit by pitch.",
   GIDP: "Grounded into double play: usually scored negative.",
   PA:  "Plate appearances.",
+  PO:  "Putouts recorded on defense.",
+  A:   "Assists recorded on defense.",
+  E:   "Errors committed on defense: usually scored negative.",
 };
 
 export const MLB_PITCHER_DESCRIPTIONS: Record<string, string> = {
@@ -117,5 +120,9 @@ export const MLB_PITCHER_DESCRIPTIONS: Record<string, string> = {
   BB:   "Walks issued.",
   HBP:  "Batters hit by pitch: usually scored negative.",
   BLK:  "Balks: usually scored negative.",
+  GS:   "Games started.",
   HR9:  "Home runs allowed per 9 innings. Lower is better.",
+  "K/9":  "Strikeouts per 9 innings pitched.",
+  "K/BB": "Strikeout-to-walk ratio: strikeouts divided by walks issued.",
+  "K%":   "Strikeout rate: strikeouts divided by batters faced (0.25 = 25%).",
 };

@@ -142,6 +142,39 @@ async function fetchMlbInjuries(season: number): Promise<Record<number, string>>
   return injuryMap;
 }
 
+// ── Fielding stats (putouts / assists / errors) ──────────────
+// PO/A/E live in the fielding stat group, not hitting. The fielding
+// endpoint returns one split per player PER POSITION, so totals are
+// summed across positions before being merged into each hitter's
+// stat object (as putOuts / assists / errors).
+
+async function fetchFieldingTotals(
+  season: number
+): Promise<Record<number, { putOuts: number; assists: number; errors: number }>> {
+  const totals: Record<number, { putOuts: number; assists: number; errors: number }> = {};
+  try {
+    const url =
+      `${MLB_BASE}/stats?stats=season&season=${season}&group=fielding` +
+      `&gameType=R&limit=5000&playerPool=All`;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) return totals;
+    const json = (await res.json()) as {
+      stats?: Array<{ splits?: MlbStatSplit[] }>;
+    };
+    for (const sp of json.stats?.[0]?.splits ?? []) {
+      const id = sp.player?.id;
+      if (!id) continue;
+      const t = (totals[id] ??= { putOuts: 0, assists: 0, errors: 0 });
+      t.putOuts += Number(sp.stat?.putOuts ?? 0);
+      t.assists += Number(sp.stat?.assists ?? 0);
+      t.errors  += Number(sp.stat?.errors  ?? 0);
+    }
+  } catch {
+    // fielding stats are supplemental — hitters simply carry 0s
+  }
+  return totals;
+}
+
 // ── No-hitters / perfect games ───────────────────────────────
 // The season stats endpoint does not expose noHitters/perfectGames.
 // Both require a complete game, so only pitchers with CG >= 1 (about
@@ -197,10 +230,21 @@ async function addNoHitterCounts(season: number, pitchers: MlbStatSplit[]) {
 }
 
 async function fetchOneSeason(season: number, includeSupplemental: boolean) {
-  const [hitters, pitchers] = await Promise.all([
+  const [hitters, pitchers, fielding] = await Promise.all([
     fetchStats(season, "hitting"),
     fetchStats(season, "pitching"),
+    fetchFieldingTotals(season),
   ]);
+
+  // Merge fielding totals (PO/A/E) into each hitter's stat object
+  for (const sp of hitters) {
+    const f = fielding[sp.player.id];
+    if (f) {
+      sp.stat.putOuts = f.putOuts;
+      sp.stat.assists = f.assists;
+      sp.stat.errors  = f.errors;
+    }
+  }
 
   await addNoHitterCounts(season, pitchers);
 

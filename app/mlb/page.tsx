@@ -233,6 +233,10 @@ function buildPlayerDatabase(args: {
         HBP: asNumber(s.hitByPitch),
         GIDP: asNumber(s.groundIntoDoublePlay),
         PA:  asNumber(s.plateAppearances),
+        // Fielding totals — merged into hitting splits by /api/mlb
+        PO:  asNumber(s.putOuts),
+        A:   asNumber(s.assists),
+        E:   asNumber(s.errors),
       },
     });
   }
@@ -251,6 +255,8 @@ function buildPlayerDatabase(args: {
     const saves = asNumber(s.saves);
     const ip    = parseIP(s.inningsPitched);
     const hr9   = ip > 0 ? (asNumber(s.homeRuns) * 9) / ip : 0;
+    const bf    = asNumber(s.battersFaced);
+    const kPct  = bf > 0 ? asNumber(s.strikeOuts) / bf : 0;
 
     db.push({
       id: mlbId * 10 + 1,
@@ -275,6 +281,7 @@ function buildPlayerDatabase(args: {
         IP:   ip,
         OUTS: asNumber(s.outs),
         QS:   asNumber(s.qualityStarts),
+        GS:   gs,
         CG:   asNumber(s.completeGames),
         NH:   asNumber(s.noHitters),     // injected by /api/mlb from game logs
         PG:   asNumber(s.perfectGames),  // injected by /api/mlb from game logs
@@ -285,6 +292,9 @@ function buildPlayerDatabase(args: {
         HBP:  asNumber(s.hitBatsmen),
         BLK:  asNumber(s.balks),
         HR9:  hr9,
+        "K/9":  parseRate(s.strikeoutsPer9Inn),
+        "K/BB": parseRate(s.strikeoutWalkRatio),
+        "K%":   kPct,
       },
     });
   }
@@ -297,7 +307,7 @@ function buildPlayerDatabase(args: {
 // ============================================================
 
 const RATE_HITTER  = new Set<HitterStatKey>(["AVG", "OBP", "SLG"]);
-const RATE_PITCHER = new Set<PitcherStatKey>(["ERA", "WHIP", "HR9"]);
+const RATE_PITCHER = new Set<PitcherStatKey>(["ERA", "WHIP", "HR9", "K/9", "K/BB", "K%"]);
 
 function normalizeHitterTo162(player: MlbDbPlayer): MlbDbPlayer {
   if (player.isPitcher || player.gamesPlayed === 0) return player;
@@ -487,7 +497,7 @@ function _median(values: number[]): number {
 }
 
 // Volume-weighted pitcher rate stats — longer stints count more than short ones.
-const VOL_PITCHER_RATES = new Set<PitcherStatKey>(["ERA", "WHIP"]);
+const VOL_PITCHER_RATES = new Set<PitcherStatKey>(["ERA", "WHIP", "K/9", "K/BB", "K%"]);
 
 // A category with (near-)zero spread, or where almost nobody in the pool
 // registers the stat, produces meaningless exploding z-scores. Skip it.
@@ -547,7 +557,7 @@ function computeMlbPoolStats(
   const hitters  = playerDb.filter((p) => !p.isPitcher && p.gamesPlayed > 0);
   const pitchers = playerDb.filter((p) =>  p.isPitcher && p.gamesPlayed > 0);
 
-  const hitterSlots  = (["C", "1B", "2B", "3B", "SS", "OF", "UTIL"] as MlbRosterKey[])
+  const hitterSlots  = (["C", "1B", "2B", "3B", "SS", "CI", "MI", "IF", "OF", "LF", "CF", "RF", "UTIL"] as MlbRosterKey[])
     .reduce((s, k) => s + (roster[k] || 0), 0);
   const pitcherSlots = (["SP", "RP", "P"] as MlbRosterKey[])
     .reduce((s, k) => s + (roster[k] || 0), 0);
