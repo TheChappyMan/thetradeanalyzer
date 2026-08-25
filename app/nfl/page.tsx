@@ -776,7 +776,7 @@ export default function NflTradeAnalyzer() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text)" }}>NFL Trade Analyzer</h1>
-            <Link href="/nfl/rankings" className="link-primary text-sm whitespace-nowrap">
+            <Link href="/rankings?tab=nfl" className="link-primary text-sm whitespace-nowrap">
               Full Rankings →
             </Link>
           </div>

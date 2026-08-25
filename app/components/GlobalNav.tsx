@@ -34,6 +34,7 @@ export default function GlobalNav({ isAdmin = false }: { isAdmin?: boolean }) {
     { href: "/nhl",          label: "NHL"          },
     { href: "/nfl",          label: "NFL"          },
     { href: "/mlb",          label: "MLB"          },
+    { href: "/rankings",     label: "Rankings"     },
     ...(hasPro ? [
       { href: "/settings",   label: "Settings"     },
       { href: "/history",    label: "History"      },
