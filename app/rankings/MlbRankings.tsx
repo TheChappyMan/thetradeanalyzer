@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
+import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import { useUser } from "@clerk/nextjs";
 import {
   DEFAULT_MLB_LEAGUE,
@@ -99,6 +100,14 @@ export default function MlbRankings() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [clerkLoaded, isPro]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Free users: pick up the session-scoped settings configured on the
+  // analyzer page (Pro users load their saved leagues above instead).
+  useEffect(() => {
+    if (!clerkLoaded || isPro) return;
+    const saved = loadSessionLeague<MlbLeague>("mlb");
+    if (saved) setLeague(mergeLeague(saved));
+  }, [clerkLoaded, isPro]);
 
   useEffect(() => {
     if (!activeLeagueId) return;

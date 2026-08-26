@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
+import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import { useUser } from "@clerk/nextjs";
 import {
   DEFAULT_NFL_LEAGUE,
@@ -118,6 +119,14 @@ export default function NflRankings() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [clerkLoaded, isPro]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Free users: pick up the session-scoped settings configured on the
+  // analyzer page (Pro users load their saved leagues above instead).
+  useEffect(() => {
+    if (!clerkLoaded || isPro) return;
+    const saved = loadSessionLeague<NflLeague>("nfl");
+    if (saved) applySettings(saved);
+  }, [clerkLoaded, isPro]);
 
   useEffect(() => {
     if (!activeLeagueId) return;

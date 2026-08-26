@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useLeagueContext } from "@/lib/league-context";
+import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
@@ -453,6 +454,27 @@ export default function NflTradeAnalyzer() {
     if (row?.settings) applyLeagueSettings(row.settings as NflLeague);
     setCurrentLeagueId(activeLeagueId);
   }, [isTier2, activeLeagueId, t2Leagues, applyLeagueSettings]);
+
+  // Free users: session-scoped settings so navigating to Rankings and back
+  // doesn't reset the league to defaults. One effect so the restore always
+  // runs before the first write (a separate write effect would clobber the
+  // stored settings with defaults on the same render pass). Pro users are
+  // untouched — their settings come from Supabase above.
+  const sessionRestoredRef = useRef(false);
+  useEffect(() => {
+    if (!clerkLoaded) return;
+    if (!sessionRestoredRef.current) {
+      sessionRestoredRef.current = true;
+      if (!isPro) {
+        const saved = loadSessionLeague<NflLeague>("nfl");
+        if (saved) {
+          applyLeagueSettings(saved);
+          return; // write on the next pass, once the restore has landed
+        }
+      }
+    }
+    if (!isPro) saveSessionLeague("nfl", league);
+  }, [clerkLoaded, isPro, league, applyLeagueSettings]);
 
   // ── Replacement levels per position ───────────────────────
   const replacementLevels = useMemo(() => {
