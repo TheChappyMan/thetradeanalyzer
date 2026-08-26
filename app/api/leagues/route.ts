@@ -64,12 +64,26 @@ export async function GET(request: Request) {
 
 // ── POST /api/leagues ──────────────────────────────────────────────────────
 // Creates a new league row.
+// Tier gate (the UI hides "+ New League" from tier1, but the API must
+// enforce it too — UI-only gating let tier1 accounts create extra leagues):
+//   free          → 403 (saved leagues are a paid feature)
+//   tier1         → one league per sport; 403 if one already exists
+//   tier2 / tier3 → unlimited
 // Body: { sport: string, name?: string, settings: object }
 // Returns: { data: LeagueRow }  (201)
 export async function POST(request: Request) {
   const userId = await getUserId()
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // getUserTier() includes the admin override and treats tier3 as ≥ tier2
+  const tier = await getUserTier()
+  if (tier === 'free') {
+    return NextResponse.json(
+      { error: 'Paid subscription required' },
+      { status: 403 }
+    )
   }
 
   let body: { sport?: string; name?: string; settings?: unknown }
@@ -85,6 +99,25 @@ export async function POST(request: Request) {
       { error: 'sport and settings are required' },
       { status: 400 }
     )
+  }
+
+  // Tier 1: single saved league per sport
+  if (!isEffectivelyTier2(tier)) {
+    const { count, error: countError } = await supabase
+      .from('leagues')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('sport', sport)
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 })
+    }
+    if ((count ?? 0) >= 1) {
+      return NextResponse.json(
+        { error: 'Tier 2 subscription required for multiple leagues' },
+        { status: 403 }
+      )
+    }
   }
 
   const leagueName =

@@ -118,30 +118,37 @@ export default async function SettingsPage() {
   }
 
   // ── Tier 1: single league per sport (existing behaviour) ─────
+  // NEWEST row via order+limit(1), NOT .maybeSingle() — maybeSingle errors
+  // when duplicate rows exist (a past bug created them), which silently fell
+  // back to defaults here while saves kept inserting more duplicates. This
+  // targets the same row the save action (findTier1Row) updates.
   const [nhlResult, nflResult, mlbResult] = await Promise.all([
     supabase
       .from('leagues')
       .select('settings')
       .eq('user_id', userId)
       .eq('sport', 'nhl')
-      .maybeSingle(),
+      .order('created_at', { ascending: false })
+      .limit(1),
     supabase
       .from('leagues')
       .select('settings')
       .eq('user_id', userId)
       .eq('sport', 'nfl')
-      .maybeSingle(),
+      .order('created_at', { ascending: false })
+      .limit(1),
     supabase
       .from('leagues')
       .select('settings')
       .eq('user_id', userId)
       .eq('sport', 'mlb')
-      .maybeSingle(),
+      .order('created_at', { ascending: false })
+      .limit(1),
   ])
 
-  const initialLeague    = (nhlResult.data?.settings ?? null) as League    | null
-  const initialNflLeague = (nflResult.data?.settings ?? null) as NflLeague | null
-  const initialMlbLeague = (mlbResult.data?.settings ?? null) as MlbLeague | null
+  const initialLeague    = (nhlResult.data?.[0]?.settings ?? null) as League    | null
+  const initialNflLeague = (nflResult.data?.[0]?.settings ?? null) as NflLeague | null
+  const initialMlbLeague = (mlbResult.data?.[0]?.settings ?? null) as MlbLeague | null
 
   return (
     <NhlSettingsForm

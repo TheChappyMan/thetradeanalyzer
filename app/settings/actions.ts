@@ -2,11 +2,36 @@
 
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
+import { getUserTier } from '@/lib/auth'
 import type { League } from '@/lib/types'
 import type { NflLeague } from '@/lib/nfl-types'
 import type { MlbLeague } from '@/lib/mlb-types'
 
 type ActionResult = { success: boolean; error?: string; id?: string }
+
+/**
+ * Finds the tier-1 target row for (user, sport): the NEWEST league row.
+ * Newest matches what GET /api/leagues and the tier-2 selector default to.
+ *
+ * Deliberately NOT `.maybeSingle()` — that errors when more than one row
+ * exists, which (with the error ignored) read as "no existing league" and
+ * inserted another duplicate on every tier-1 save. Ordering + limit(1)
+ * keeps saves deterministic and self-healing even if duplicates exist.
+ */
+async function findTier1Row(
+  userId: string,
+  sport: 'nhl' | 'nfl' | 'mlb'
+): Promise<{ id: string } | null | { error: string }> {
+  const { data, error } = await supabase
+    .from('leagues')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('sport', sport)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  if (error) return { error: error.message }
+  return data?.[0] ?? null
+}
 
 // ── NHL ───────────────────────────────────────────────────────────────────────
 
@@ -23,6 +48,10 @@ export async function saveLeagueSettings(
     const { userId } = await auth()
     if (!userId) return { success: false, error: 'Not authenticated' }
 
+    // Saved leagues are a paid feature — enforce server-side, not just in UI
+    const tier = await getUserTier()
+    if (tier === 'free') return { success: false, error: 'Paid subscription required' }
+
     const leagueName = league.name.trim() || 'My NHL League'
 
     if (leagueId) {
@@ -37,12 +66,8 @@ export async function saveLeagueSettings(
     }
 
     // Tier 1: upsert by (user_id, sport)
-    const { data: existing } = await supabase
-      .from('leagues')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('sport', 'nhl')
-      .maybeSingle()
+    const existing = await findTier1Row(userId, 'nhl')
+    if (existing && 'error' in existing) return { success: false, error: existing.error }
 
     if (existing) {
       const { error } = await supabase
@@ -56,27 +81,6 @@ export async function saveLeagueSettings(
     const { data, error } = await supabase
       .from('leagues')
       .insert({ user_id: userId, sport: 'nhl', name: leagueName, settings: league })
-      .select('id')
-      .single()
-    if (error) return { success: false, error: error.message }
-    return { success: true, id: data?.id }
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
-  }
-}
-
-/** Create a brand-new NHL league (Tier 2). */
-export async function createNhlLeague(
-  name: string,
-  settings: League
-): Promise<ActionResult> {
-  try {
-    const { userId } = await auth()
-    if (!userId) return { success: false, error: 'Not authenticated' }
-
-    const { data, error } = await supabase
-      .from('leagues')
-      .insert({ user_id: userId, sport: 'nhl', name: name.trim() || 'New League', settings })
       .select('id')
       .single()
     if (error) return { success: false, error: error.message }
@@ -101,6 +105,10 @@ export async function saveNflLeagueSettings(
     const { userId } = await auth()
     if (!userId) return { success: false, error: 'Not authenticated' }
 
+    // Saved leagues are a paid feature — enforce server-side, not just in UI
+    const tier = await getUserTier()
+    if (tier === 'free') return { success: false, error: 'Paid subscription required' }
+
     const leagueName = league.name.trim() || 'My NFL League'
 
     if (leagueId) {
@@ -113,12 +121,8 @@ export async function saveNflLeagueSettings(
       return { success: true, id: leagueId }
     }
 
-    const { data: existing } = await supabase
-      .from('leagues')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('sport', 'nfl')
-      .maybeSingle()
+    const existing = await findTier1Row(userId, 'nfl')
+    if (existing && 'error' in existing) return { success: false, error: existing.error }
 
     if (existing) {
       const { error } = await supabase
@@ -132,27 +136,6 @@ export async function saveNflLeagueSettings(
     const { data, error } = await supabase
       .from('leagues')
       .insert({ user_id: userId, sport: 'nfl', name: leagueName, settings: league })
-      .select('id')
-      .single()
-    if (error) return { success: false, error: error.message }
-    return { success: true, id: data?.id }
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
-  }
-}
-
-/** Create a brand-new NFL league (Tier 2). */
-export async function createNflLeague(
-  name: string,
-  settings: NflLeague
-): Promise<ActionResult> {
-  try {
-    const { userId } = await auth()
-    if (!userId) return { success: false, error: 'Not authenticated' }
-
-    const { data, error } = await supabase
-      .from('leagues')
-      .insert({ user_id: userId, sport: 'nfl', name: name.trim() || 'New League', settings })
       .select('id')
       .single()
     if (error) return { success: false, error: error.message }
@@ -177,6 +160,10 @@ export async function saveMlbLeagueSettings(
     const { userId } = await auth()
     if (!userId) return { success: false, error: 'Not authenticated' }
 
+    // Saved leagues are a paid feature — enforce server-side, not just in UI
+    const tier = await getUserTier()
+    if (tier === 'free') return { success: false, error: 'Paid subscription required' }
+
     const leagueName = league.name.trim() || 'My MLB League'
 
     if (leagueId) {
@@ -189,12 +176,8 @@ export async function saveMlbLeagueSettings(
       return { success: true, id: leagueId }
     }
 
-    const { data: existing } = await supabase
-      .from('leagues')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('sport', 'mlb')
-      .maybeSingle()
+    const existing = await findTier1Row(userId, 'mlb')
+    if (existing && 'error' in existing) return { success: false, error: existing.error }
 
     if (existing) {
       const { error } = await supabase
@@ -208,27 +191,6 @@ export async function saveMlbLeagueSettings(
     const { data, error } = await supabase
       .from('leagues')
       .insert({ user_id: userId, sport: 'mlb', name: leagueName, settings: league })
-      .select('id')
-      .single()
-    if (error) return { success: false, error: error.message }
-    return { success: true, id: data?.id }
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
-  }
-}
-
-/** Create a brand-new MLB league (Tier 2). */
-export async function createMlbLeague(
-  name: string,
-  settings: MlbLeague
-): Promise<ActionResult> {
-  try {
-    const { userId } = await auth()
-    if (!userId) return { success: false, error: 'Not authenticated' }
-
-    const { data, error } = await supabase
-      .from('leagues')
-      .insert({ user_id: userId, sport: 'mlb', name: name.trim() || 'New League', settings })
       .select('id')
       .single()
     if (error) return { success: false, error: error.message }
