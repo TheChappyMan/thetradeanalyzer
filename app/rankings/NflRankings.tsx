@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useLeagueContext } from "@/lib/league-context";
 import { useUser } from "@clerk/nextjs";
 import {
   DEFAULT_NFL_LEAGUE,
@@ -93,11 +94,13 @@ export default function NflRankings() {
   const { user, isLoaded: clerkLoaded } = useUser();
   const tier    = (user?.publicMetadata?.tier as string) ?? "free";
   const isPro   = tier === "tier1" || tier === "tier2" || tier === "tier3";
-  const isTier2 = tier === "tier2" || tier === "tier3";
+  const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
   // ── League settings ───────────────────────────────────────
+  // Every premium user gets a league selector; the initial selection
+  // follows the league chosen on the dashboard (league context).
   const [league, setLeague] = useState<NflLeague>(DEFAULT_NFL_LEAGUE);
-  const [t2Leagues, setT2Leagues] = useState<LeagueRow[]>([]);
+  const [leagues, setLeagues] = useState<LeagueRow[]>([]);
   const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,22 +111,19 @@ export default function NflRankings() {
       .then((json: { data: LeagueRow[] } | null) => {
         if (cancelled) return;
         const rows = json?.data ?? [];
-        if (isTier2) {
-          setT2Leagues(rows);
-          setActiveLeagueId(rows[0]?.id ?? null);
-        } else if (rows[0]?.settings) {
-          applySettings(rows[0].settings as NflLeague);
-        }
+        setLeagues(rows);
+        const ctxId = ctxLeagueIds["nfl"];
+        setActiveLeagueId(rows.find((r) => r.id === ctxId)?.id ?? rows[0]?.id ?? null);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [clerkLoaded, isPro, isTier2]);
+  }, [clerkLoaded, isPro]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!isTier2 || !activeLeagueId) return;
-    const row = t2Leagues.find((r) => r.id === activeLeagueId);
+    if (!activeLeagueId) return;
+    const row = leagues.find((r) => r.id === activeLeagueId);
     if (row?.settings) applySettings(row.settings as NflLeague);
-  }, [isTier2, activeLeagueId, t2Leagues]);
+  }, [activeLeagueId, leagues]);
 
   function applySettings(settings: NflLeague) {
     setLeague({
@@ -283,7 +283,7 @@ export default function NflRankings() {
       </p>
 
       {/* Tier 2/3: league selector */}
-      {isTier2 && t2Leagues.length > 0 && (
+      {isPro && leagues.length > 0 && (
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs" style={{ color: "var(--color-muted)" }}>League:</span>
           <select
@@ -292,7 +292,7 @@ export default function NflRankings() {
             value={activeLeagueId ?? ""}
             onChange={(e) => setActiveLeagueId(e.target.value)}
           >
-            {t2Leagues.map((l) => (
+            {leagues.map((l) => (
               <option key={l.id} value={l.id}>{l.name}</option>
             ))}
           </select>

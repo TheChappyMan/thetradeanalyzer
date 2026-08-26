@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useLeagueContext } from "@/lib/league-context";
 import { useUser } from "@clerk/nextjs";
 import {
   DEFAULT_MLB_LEAGUE,
@@ -76,11 +77,11 @@ export default function MlbRankings() {
   const { user, isLoaded: clerkLoaded } = useUser();
   const tier    = (user?.publicMetadata?.tier as string) ?? "free";
   const isPro   = tier === "tier1" || tier === "tier2" || tier === "tier3";
-  const isTier2 = tier === "tier2" || tier === "tier3";
+  const { selectedLeagueId: ctxLeagueIds } = useLeagueContext();
 
   // ── League settings ───────────────────────────────────────
   const [league, setLeague] = useState<MlbLeague>(DEFAULT_MLB_LEAGUE);
-  const [t2Leagues, setT2Leagues] = useState<LeagueRow[]>([]);
+  const [leagues, setLeagues] = useState<LeagueRow[]>([]);
   const [activeLeagueId, setActiveLeagueId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -91,22 +92,19 @@ export default function MlbRankings() {
       .then((json: { data: LeagueRow[] } | null) => {
         if (cancelled) return;
         const rows = json?.data ?? [];
-        if (isTier2) {
-          setT2Leagues(rows);
-          setActiveLeagueId(rows[0]?.id ?? null);
-        } else if (rows[0]?.settings) {
-          setLeague(mergeLeague(rows[0].settings as MlbLeague));
-        }
+        setLeagues(rows);
+        const ctxId = ctxLeagueIds["mlb"];
+        setActiveLeagueId(rows.find((r) => r.id === ctxId)?.id ?? rows[0]?.id ?? null);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [clerkLoaded, isPro, isTier2]);
+  }, [clerkLoaded, isPro]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!isTier2 || !activeLeagueId) return;
-    const row = t2Leagues.find((r) => r.id === activeLeagueId);
+    if (!activeLeagueId) return;
+    const row = leagues.find((r) => r.id === activeLeagueId);
     if (row?.settings) setLeague(mergeLeague(row.settings as MlbLeague));
-  }, [isTier2, activeLeagueId, t2Leagues]);
+  }, [activeLeagueId, leagues]);
 
   // ── Player data ───────────────────────────────────────────
   const [currentSeasonDb, setCurrentSeasonDb] = useState<MlbDbPlayer[]>([]);
@@ -269,7 +267,7 @@ export default function MlbRankings() {
         {!isPro && <> Configure scoring in the <Link href="/mlb" className="link-primary">analyzer</Link> with a Pro plan.</>}
       </p>
 
-      {isTier2 && t2Leagues.length > 0 && (
+      {isPro && leagues.length > 0 && (
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs" style={{ color: "var(--color-muted)" }}>League:</span>
           <select
@@ -278,7 +276,7 @@ export default function MlbRankings() {
             value={activeLeagueId ?? ""}
             onChange={(e) => setActiveLeagueId(e.target.value)}
           >
-            {t2Leagues.map((l) => (
+            {leagues.map((l) => (
               <option key={l.id} value={l.id}>{l.name}</option>
             ))}
           </select>
