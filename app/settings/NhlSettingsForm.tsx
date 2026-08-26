@@ -628,8 +628,12 @@ export default function NhlSettingsForm({
               </>
             ) : (
               <>
-                <p className="text-sm mb-4" style={{ color: "var(--color-muted)" }}>
+                <p className="text-sm mb-2" style={{ color: "var(--color-muted)" }}>
                   You are currently on the Free plan.
+                </p>
+                <p className="text-sm mb-4">
+                  🎉 Use code <span className="font-bold">BIG50</span> before December 31, 2026
+                  and get 50% off forever — no price changes as long as you&apos;re subscribed.
                 </p>
                 <a
                   href="https://thetradeanalyzer.com/pricing"

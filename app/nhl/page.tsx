@@ -1119,6 +1119,10 @@ export default function TradeAnalyzer() {
           >
             upgrade to Pro
           </a>
+          <span className="block sm:inline sm:ml-2">
+            🎉 Use code <span className="font-bold">BIG50</span> before December 31, 2026 and get
+            50% off forever — no price changes as long as you&apos;re subscribed.
+          </span>
         </div>
       )}
       <div className="p-6 max-w-6xl mx-auto">

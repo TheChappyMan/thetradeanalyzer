@@ -260,6 +260,10 @@ export default function Dashboard() {
                     Upgrade to Pro
                   </a>{" "}
                   to save your settings and track trade history
+                  <span className="block mt-1">
+                    🎉 Use code <span className="font-bold">BIG50</span> before December 31, 2026
+                    and get 50% off forever — no price changes as long as you&apos;re subscribed.
+                  </span>
                 </span>
               </div>
 
