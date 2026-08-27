@@ -170,23 +170,36 @@ export default function NhlRankings() {
     return computeNhlReplacement(playerDb, league.teams, league.roster, zOf);
   }, [poolStats, playerDb, league.teams, league.roster, league.skaterCategories, league.goalieCategories, useRates]);
 
-  type Ranked = { p: DbPlayer; value: number; rank: number };
+  type Ranked = { p: DbPlayer; value: number; proj: number; rank: number };
+
+  // Points mode: positional replacement bars on projected points, so the
+  // rank order matches the recommendation engine's value basis instead of
+  // raw points (which over-ranks the highest-scoring position groups —
+  // same bug as NFL QBs floating above RBs). Display-layer only: the
+  // analyzer's points-mode values are untouched.
+  const pointsReplacement = useMemo(() => {
+    if (isCatMode || playerDb.length === 0) return null;
+    const projOf = (p: DbPlayer) =>
+      projectedSeasonValue(p, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+    return computeNhlReplacement(playerDb, league.teams, league.roster, projOf);
+  }, [isCatMode, playerDb, league.skaterWeights, league.goalieWeights, league.teams, league.roster, league.positionBonuses, useRates]);
 
   const ranked: Ranked[] = useMemo(() => {
-    const valueOf = (p: DbPlayer): number => {
+    const compute = (p: DbPlayer): { value: number; proj: number } => {
+      const group = p.isGoalie ? "G" : p.position;
       if (isCatMode && poolStats && replacementZ) {
         const z = zScoreValue(p, league.skaterCategories, league.goalieCategories, poolStats, SKATER_STATS, GOALIE_STATS, useRates);
-        const group = p.isGoalie ? "G" : p.position;
-        return softReplacementValue(z - (replacementZ.byPosition[group] ?? 0));
+        return { value: softReplacementValue(z - (replacementZ.byPosition[group] ?? 0)), proj: 0 };
       }
-      return projectedSeasonValue(p, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+      const proj = projectedSeasonValue(p, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses);
+      return { value: softReplacementValue(proj - (pointsReplacement?.byPosition[group] ?? 0)), proj };
     };
     return playerDb
       .filter((p) => p.gamesPlayed > 0)
-      .map((p) => ({ p, value: valueOf(p), rank: 0 }))
-      .sort((a, b) => b.value - a.value)
+      .map((p) => ({ p, ...compute(p), rank: 0 }))
+      .sort((a, b) => b.value - a.value || b.proj - a.proj)
       .map((r, i) => ({ ...r, rank: i + 1 }));
-  }, [playerDb, isCatMode, poolStats, replacementZ, league, useRates]);
+  }, [playerDb, isCatMode, poolStats, replacementZ, pointsReplacement, league, useRates]);
 
   // ── Draftable pool + per-position averages ────────────────
   const draftableN = useMemo(() => {
@@ -309,9 +322,9 @@ export default function NhlRankings() {
   const columns: StatColumn[] =
     posFilter === "ALL" ? [] : posFilter === "G" ? GOALIE_COLUMNS : SKATER_COLUMNS;
   const avgForPos = posFilter === "ALL" ? undefined : poolAverages.get(posFilter);
-  const valueLabel = isCatMode ? "Value" : "Proj Pts";
+  const valueLabel = "Value";
   const colCount =
-    (draftActive ? 2 : 0) + 5 + (posFilter === "ALL" ? 1 : 0) + columns.length;
+    (draftActive ? 2 : 0) + 5 + (isCatMode ? 0 : 1) + (posFilter === "ALL" ? 1 : 0) + columns.length;
 
   // Marker only renders on the unfiltered list — a filtered or searched view
   // hides players, so "N available players from the top" would be misleading.
@@ -348,7 +361,7 @@ export default function NhlRankings() {
       </div>
 
       <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
-        Ranked by {isCatMode ? "category value (replacement-adjusted z-score)" : "projected points"} under
+        Ranked by {isCatMode ? "category value (replacement-adjusted z-score)" : "replacement-adjusted projected points"} under
         {" "}{isPro ? "your saved league settings" : "standard league settings"}
         {" "}({league.teams} teams, {isCatMode ? "categories" : "points"}).
         {" "}The draftable pool is the top {draftableN} players (teams × roster spots).
@@ -437,6 +450,7 @@ export default function NhlRankings() {
                 {posFilter === "ALL" && <th className="px-2 py-1.5 font-medium">Pos</th>}
                 <th className="px-2 py-1.5 font-medium">Team</th>
                 <th className="px-2 py-1.5 font-medium text-right">GP</th>
+                {!isCatMode && <th className="px-2 py-1.5 font-medium text-right">Proj Pts</th>}
                 <th className="px-2 py-1.5 font-medium text-right">{valueLabel}</th>
                 {columns.map((c) => (
                   <th key={c.key as string} className="px-2 py-1.5 font-medium text-right">{c.label}</th>
@@ -472,6 +486,7 @@ export default function NhlRankings() {
                     {posFilter === "ALL" && <td className="px-2 py-1">{r.p.isGoalie ? "G" : r.p.position}</td>}
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.p.team}</td>
                     <td className="px-2 py-1 text-right" style={{ color: "var(--color-muted)" }}>{r.p.gamesPlayed}</td>
+                    {!isCatMode && <td className="px-2 py-1 text-right">{r.proj.toFixed(1)}</td>}
                     <td className="px-2 py-1 text-right font-semibold">{r.value.toFixed(isCatMode ? 2 : 1)}</td>
                     {columns.map((c) => {
                       const value = r.p.stats[c.key] ?? 0;

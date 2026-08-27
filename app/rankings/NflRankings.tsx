@@ -259,6 +259,10 @@ export default function NflRankings() {
 
   type RankedPlayer = { p: NflDbPlayer; proj: number; var_: number; rank: number };
 
+  // Rank by VAR, not raw projected points — QBs out-point every other
+  // position raw, which floated all QBs to the top even in 1QB leagues
+  // while the recommendation engine (correctly) favored RBs. Ties at 0 VAR
+  // (below-replacement players) break by projection.
   const ranked: RankedPlayer[] = useMemo(() => {
     return playerDb
       .map((p) => {
@@ -266,12 +270,12 @@ export default function NflRankings() {
         const repl = replacementLevels.get(p.position) ?? 0;
         return { p, proj, var_: valueAboveReplacement(proj, repl), rank: 0 };
       })
-      .sort((a, b) => b.proj - a.proj)
+      .sort((a, b) => b.var_ - a.var_ || b.proj - a.proj)
       .map((r, i) => ({ ...r, rank: i + 1 }));
   }, [playerDb, league.scoringWeights, replacementLevels, useRates]);
 
   // ── Draftable pool + per-position stat averages ───────────
-  // Draftable = top (teams × roster spots excl. IR) players by projection.
+  // Draftable = top (teams × roster spots excl. IR) players by VAR.
   const draftableN = useMemo(() => {
     const r = league.roster;
     const spots = (r.QB ?? 0) + (r.RB ?? 0) + (r.WR ?? 0) + (r.TE ?? 0) +
@@ -520,7 +524,7 @@ export default function NflRankings() {
       )}
 
       <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
-        Ranked by projected points under {isPro ? "your saved league settings" : "standard league settings"}
+        Ranked by value above replacement (VAR) under {isPro ? "your saved league settings" : "standard league settings"}
         {" "}({league.teams} teams, {league.qbFormat}, {league.pprFormat === "standard" ? "non-PPR" : league.pprFormat === "half" ? "half-PPR" : "full PPR"}).
         {" "}The draftable pool is the top {draftableN} players (teams × roster spots).
         {" "}<span
