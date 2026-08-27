@@ -90,21 +90,30 @@ export function useDraftState(sport: "nhl" | "nfl", leagueId: string | null) {
 }
 
 // ── Next-pick math ────────────────────────────────────────────
-// Picks that happen before my next owned pick = overall − 1 − players
-// already checked; the marker sits after that many available players.
+// Total picks made = League checks + Mine checks. The user's next pick is
+// their first owned pick that is BOTH still in the future by total count
+// AND not already consumed by one of their own picks: Mine checks prove an
+// owned pick was used, so with 2 Mine checked the first two owned picks are
+// spent even if the board count hasn't reached them yet. Picks that happen
+// before that next pick = overall − 1 − total taken; the marker sits after
+// that many available players.
 export type NextPickInfo = {
   label: string;
   availableBefore: number;
   configured: boolean;
   /** How many of my owned picks are still in the future. */
   picksRemaining: number;
+  /** Mine-vs-pick-list mismatch: picked more times than the list allows
+   *  by this point ("extra"), or more than one pick behind ("behind"). */
+  mismatch: "extra" | "behind" | null;
 };
 
 export function computeNextPick(
   cfg: DraftPicksConfig | undefined,
   fallbackTeams: number,
   fallbackRounds: number,
-  takenCount: number
+  takenCount: number,
+  mineCount: number
 ): NextPickInfo | null {
   const configured = !!cfg?.picks?.length;
   const teams = (configured ? cfg.teams : fallbackTeams) || fallbackTeams;
@@ -115,14 +124,33 @@ export function computeNextPick(
     .map((s) => parseDraftPick(s, teams))
     .filter((p): p is NonNullable<typeof p> => p !== null)
     .sort((a, b) => a.overall - b.overall);
-  const future = parsed.filter((pk) => pk.overall > takenCount);
-  const next = future[0];
+
+  // Owned picks elapsed by board count vs. consumed by my own Mine checks
+  const elapsedOwned = parsed.filter((pk) => pk.overall <= takenCount).length;
+  const nextIdx = Math.max(mineCount, elapsedOwned);
+
+  // Mismatch check with a one-round tolerance: checking Mine at your turn
+  // before every preceding League pick is entered (or the reverse) is the
+  // normal transient state, not an error. Beyond a full round the board is
+  // genuinely inconsistent with the pick list.
+  const round = teams;
+  let mismatch: NextPickInfo["mismatch"] = null;
+  if (mineCount > parsed.length) {
+    mismatch = "extra"; // more picks made than the list contains at all
+  } else if (mineCount > 0 && parsed[mineCount - 1].overall - takenCount >= round) {
+    mismatch = "extra"; // latest claimed pick is a full round ahead of the board
+  } else if (mineCount < parsed.length && takenCount - parsed[mineCount].overall >= round) {
+    mismatch = "behind"; // an owned pick passed a full round ago, unmarked
+  }
+
+  const next = parsed[nextIdx];
   if (!next) return null;
   return {
     label: next.raw,
     availableBefore: Math.max(0, next.overall - 1 - takenCount),
     configured,
-    picksRemaining: future.length,
+    picksRemaining: parsed.length - nextIdx,
+    mismatch,
   };
 }
 
@@ -255,6 +283,47 @@ export function DraftPanel({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Informational (never blocking) notice when the Mine count disagrees with
+ * the pick list. Dismissible; reappears if the mismatch kind changes.
+ */
+export function DraftConsistencyNotice({ kind }: { kind: "extra" | "behind" | null }) {
+  const [dismissedKind, setDismissedKind] = useState<"extra" | "behind" | null>(null);
+  if (!kind || dismissedKind === kind) return null;
+  return (
+    <div
+      className="flex items-start gap-2 rounded-lg border px-3 py-2 mb-3 text-xs"
+      style={{ borderColor: "var(--color-primary)", background: "var(--color-surface)", color: "var(--color-text)" }}
+      role="status"
+    >
+      <span aria-hidden>ℹ️</span>
+      <span className="flex-1">
+        {kind === "extra" ? (
+          <>
+            You&apos;ve picked more times than your draft slots suggest. Have an extra pick
+            from a trade? Update your picks in{" "}
+            <Link href="/settings" className="link-primary">draft settings</Link>.
+          </>
+        ) : (
+          <>
+            It looks like one of your picks may not be marked. Check that your players are
+            checked as Mine, or update your picks in{" "}
+            <Link href="/settings" className="link-primary">draft settings</Link>.
+          </>
+        )}
+      </span>
+      <button
+        onClick={() => setDismissedKind(kind)}
+        className="leading-none font-semibold"
+        style={{ color: "var(--color-muted)" }}
+        aria-label="Dismiss notice"
+      >
+        ×
+      </button>
     </div>
   );
 }

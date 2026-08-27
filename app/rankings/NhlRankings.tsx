@@ -27,7 +27,7 @@ import {
 import { draftRounds } from "@/lib/draft";
 import {
   REC_STYLES, OVERWHELM, recTiersFor, useDraftState, computeNextPick, computeMarkerIndex,
-  DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells,
+  DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells, DraftConsistencyNotice,
   type RecTier,
 } from "./draft-shared";
 
@@ -296,8 +296,8 @@ export default function NhlRankings() {
   // ── Next-pick marker ──────────────────────────────────────
   const nextPick = useMemo(() => {
     if (!draftActive) return null;
-    return computeNextPick(league.draftPicks, league.teams, draftRounds(league.roster), takenCount);
-  }, [draftActive, league.draftPicks, league.teams, league.roster, takenCount]);
+    return computeNextPick(league.draftPicks, league.teams, draftRounds(league.roster), takenCount, mineCount);
+  }, [draftActive, league.draftPicks, league.teams, league.roster, takenCount, mineCount]);
 
   // ── Filters ───────────────────────────────────────────────
   const [posFilter, setPosFilter] = useState<(typeof POSITIONS)[number] | "ALL">("ALL");
@@ -430,6 +430,8 @@ export default function NhlRankings() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
+
+      {draftActive && nextPick && <DraftConsistencyNotice kind={nextPick.mismatch} />}
 
       {dbStatus === "loading" && (
         <div className="text-sm" style={{ color: "var(--color-muted)" }}>Loading NHL data…</div>
