@@ -13,6 +13,19 @@ export type NewsItem = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    title: 'Draft Mode now covers NFL',
+    date: '2026-08-27',
+    body:
+      'Draft Mode is live on NFL Rankings for all paid tiers, right in time for ' +
+      'draft season. Check players off as they come off the board and the ' +
+      'recommendations recalculate against your scoring format, roster slots, and ' +
+      'what your team still needs, including flex and superflex handling and RB/TE ' +
+      'scarcity. Rankings now run on full-season projections scored under your ' +
+      'league settings, not last year\'s totals.',
+    href: '/rankings',
+    linkLabel: 'Open Rankings',
+  },
+  {
     title: 'Draft Assistant is live for paid accounts',
     date: '2026-08-27',
     body:

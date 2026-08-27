@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
@@ -17,7 +17,14 @@ import {
   projectedNflValue,
   replacementLevelValue,
   valueAboveReplacement,
+  rbScarcityMultiplier,
+  teScarcityMultiplier,
 } from "@/lib/nfl-valuation";
+import { draftRounds } from "@/lib/draft";
+import {
+  REC_STYLES, OVERWHELM, recTiersFor, useDraftState, computeNextPick, computeMarkerIndex,
+  DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells,
+} from "./draft-shared";
 
 // ============================================================
 // NFL LEAGUE RANKINGS
@@ -28,11 +35,26 @@ import {
 // the stats where a player beats the average of the DRAFTABLE pool — the
 // top (teams × roster spots) players — at his position.
 
-type DataMode  = "thisTotal" | "thisAvg" | "lastTotal" | "lastAvg";
+// Data modes: two actuals seasons plus two Sleeper-projection modes.
+// Projections are raw stat lines scored under the user's league settings,
+// exactly like real stats — see /api/nfl?endpoint=projections.
+type DataMode  = "lastTotal" | "thisTotal" | "thisProj" | "restProj";
 type DbStatus  = "loading" | "ready" | "error";
 type LeagueRow = { id: string; name: string; sport: string; settings: unknown };
 
-const LS_NFL_DATA_MODE = "fta-nfl-data-mode"; // shared with the analyzer
+// The rankings mode set diverges from the analyzer's (projection modes),
+// so it gets its own storage key rather than sharing fta-nfl-data-mode.
+const LS_NFL_RANKINGS_MODE = "fta-nfl-rankings-mode";
+
+type ProjPayload = {
+  seasonId: string;
+  week: number; // completed regular-season weeks (0 in pre-season)
+  players: NflDbPlayer[];
+  restOfSeason: NflDbPlayer[];
+  source: "sleeper" | "cache" | "fallback";
+  fetchedAt: string | null;
+  fallbackGeneratedAt?: string | null;
+};
 
 const NFL_POSITIONS: NflPlayerPosition[] = ["QB", "RB", "WR", "TE", "K", "DST"];
 
@@ -78,18 +100,7 @@ const NEGATIVE_STATS = new Set<keyof NflPlayerStats>([
   "passInt", "fumblesLost", "fgMissed", "patMissed", "ptsAllowed",
 ]);
 
-// ── Season normalization (same as the analyzer) ─────────────
-function normalizePlayerTo17(player: NflDbPlayer): NflDbPlayer {
-  if (player.gamesPlayed === 0) return player;
-  const gp = player.gamesPlayed;
-  const stats: NflDbPlayer["stats"] = {};
-  for (const [key, val] of Object.entries(player.stats) as [string, number | undefined][]) {
-    if (val !== undefined) {
-      (stats as Record<string, number>)[key] = (val / gp) * 17;
-    }
-  }
-  return { ...player, gamesPlayed: 17, stats };
-}
+const DATA_MODES: DataMode[] = ["lastTotal", "thisTotal", "thisProj", "restProj"];
 
 export default function NflRankings() {
   const { user, isLoaded: clerkLoaded } = useUser();
@@ -149,10 +160,19 @@ export default function NflRankings() {
   const [currentSeasonId, setCurrentSeasonId] = useState("");
   const [priorSeasonId,   setPriorSeasonId]   = useState("");
   const [dbStatus, setDbStatus] = useState<DbStatus>("loading");
-  const [dataMode, setDataMode] = useState<DataMode>(() => {
-    try { return (localStorage.getItem(LS_NFL_DATA_MODE) as DataMode) || "thisTotal"; }
-    catch { return "thisTotal"; }
+  const [projections, setProjections] = useState<ProjPayload | null>(null);
+  const [projStatus, setProjStatus] = useState<DbStatus>("loading");
+  const [dataMode, setDataModeState] = useState<DataMode>(() => {
+    try {
+      const v = localStorage.getItem(LS_NFL_RANKINGS_MODE) as DataMode | null;
+      if (v && DATA_MODES.includes(v)) return v;
+    } catch {}
+    return "thisProj"; // pre-season/draft default; corrected below if unavailable
   });
+  const setDataMode = (m: DataMode) => {
+    setDataModeState(m);
+    try { localStorage.setItem(LS_NFL_RANKINGS_MODE, m); } catch {}
+  };
 
   useEffect(() => {
     type SeasonPayload = { seasonId: string; players: NflDbPlayer[]; hasData: boolean };
@@ -165,24 +185,64 @@ export default function NflRankings() {
         setPriorSeasonDb(json.priorSeason.players);
         setCurrentSeasonId(json.currentSeason.seasonId);
         setPriorSeasonId(json.priorSeason.seasonId);
-        if (!json.currentSeason.hasData) {
-          setDataMode((prev) =>
-            prev === "thisTotal" || prev === "thisAvg" ? "lastTotal" : prev);
-        }
         setDbStatus("ready");
       })
       .catch(() => { if (!cancelled) setDbStatus("error"); });
     return () => { cancelled = true; };
   }, []);
 
-  const playerDb = useMemo(() => {
-    const base = (dataMode === "thisTotal" || dataMode === "thisAvg")
-      ? currentSeasonDb : priorSeasonDb;
-    return (dataMode === "thisAvg" || dataMode === "lastAvg")
-      ? base.map(normalizePlayerTo17) : base;
-  }, [dataMode, currentSeasonDb, priorSeasonDb]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/nfl?endpoint=projections")
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((json: ProjPayload) => {
+        if (cancelled) return;
+        // Shape check: the upstream endpoints are undocumented, so never
+        // trust the payload blindly.
+        if (!Array.isArray(json.players) || !Array.isArray(json.restOfSeason)) throw new Error();
+        setProjections(json);
+        setProjStatus(json.players.length > 0 ? "ready" : "error");
+      })
+      .catch(() => { if (!cancelled) setProjStatus("error"); });
+    return () => { cancelled = true; };
+  }, []);
 
-  const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
+  const projAvailable = projStatus === "ready" && (projections?.players.length ?? 0) > 0;
+
+  // "This year" is the projection season. Before the September data
+  // rollover the stats route's "current" season is still last year's, so
+  // map seasons by id instead of trusting current/prior labels.
+  const thisYearId = projections?.seasonId || currentSeasonId;
+  const lastYearId = thisYearId ? String(Number(thisYearId) - 1) : priorSeasonId;
+  const dbFor = (id: string): NflDbPlayer[] =>
+    id === currentSeasonId ? currentSeasonDb : id === priorSeasonId ? priorSeasonDb : [];
+  const thisYearDb = dbFor(thisYearId);
+  const lastYearDb = dbFor(lastYearId).length > 0 ? dbFor(lastYearId) : currentSeasonDb;
+  const hasThisYearData = thisYearDb.length > 0;
+
+  // Kick the mode off unavailable choices once both fetches settle.
+  useEffect(() => {
+    if (dbStatus !== "ready" || projStatus === "loading") return;
+    setDataModeState((prev) => {
+      if ((prev === "thisProj" || prev === "restProj") && !projAvailable) return "lastTotal";
+      if (prev === "thisTotal" && !hasThisYearData) return projAvailable ? "thisProj" : "lastTotal";
+      return prev;
+    });
+  }, [dbStatus, projStatus, projAvailable, hasThisYearData]);
+
+  const playerDb = useMemo(() => {
+    switch (dataMode) {
+      case "thisProj": return projections?.players ?? [];
+      case "restProj": return projections?.restOfSeason ?? [];
+      case "thisTotal": return thisYearDb;
+      default: return lastYearDb;
+    }
+  }, [dataMode, projections, thisYearDb, lastYearDb]);
+
+  // All four modes are season-shaped totals (projections included), so the
+  // engine never per-game normalizes here.
+  const useRates = false;
+  const isProjMode = dataMode === "thisProj" || dataMode === "restProj";
 
   // ── Rankings ──────────────────────────────────────────────
   const replacementLevels = useMemo(() => {
@@ -238,6 +298,145 @@ export default function NflRankings() {
     return byPos;
   }, [ranked, draftableN]);
 
+  // ── Draft Mode (shared state/UI in ./draft-shared) ────────
+  const {
+    draftOn, setDraftOn: setDraftOnRaw, taken, setPlayerTaken, resetTaken,
+    hideDrafted, setHideDrafted, confirmReset, setConfirmReset,
+    takenCount, mineCount,
+  } = useDraftState("nfl", activeLeagueId);
+  const draftActive = draftOn && isPro;
+  const setDraftOn = (on: boolean) => {
+    setDraftOnRaw(on);
+    // Projections are the default basis whenever Draft Mode is on.
+    if (on && projAvailable) setDataMode("thisProj");
+  };
+
+  // ── Next-pick marker ──────────────────────────────────────
+  const nextPick = useMemo(() => {
+    if (!draftActive) return null;
+    return computeNextPick(league.draftPicks, league.teams, draftRounds(league.roster), takenCount);
+  }, [draftActive, league.draftPicks, league.teams, league.roster, takenCount]);
+
+  // ── Recommendations: recomputed on every checkbox change ──
+  // Same VAR engine as the table, but priced against the AVAILABLE pool
+  // only (bars shift as players come off the board), with RB/TE scarcity
+  // multipliers applied and roster-need awareness for my picks.
+  const draftRec = useMemo(() => {
+    if (!draftActive || playerDb.length === 0) return null;
+    const available = playerDb.filter((p) => taken[p.id] === undefined);
+    if (available.length === 0) return null;
+    const weights = league.scoringWeights;
+    const roster = league.roster as NflRoster;
+
+    const repl = new Map<NflPlayerPosition, number>();
+    for (const pos of NFL_POSITIONS) {
+      repl.set(pos, replacementLevelValue(
+        pos, available, weights, roster, league.teams, league.qbFormat, useRates));
+    }
+    const projOf = new Map(available.map((p) => [p.id, projectedNflValue(p, weights, useRates)]));
+    const baseVar = (p: NflDbPlayer) =>
+      valueAboveReplacement(projOf.get(p.id) ?? 0, repl.get(p.position) ?? 0);
+
+    // RB/TE scarcity multipliers by VAR rank among available at the position
+    const scarcityRank = new Map<number, number>();
+    for (const pos of ["RB", "TE", "QB"] as const) {
+      available
+        .filter((p) => p.position === pos)
+        .sort((a, b) => baseVar(b) - baseVar(a))
+        .forEach((p, i) => scarcityRank.set(p.id, i + 1));
+    }
+    // Superflex/2QB: QBs are the scarcest superflex asset, but raw VAR
+    // against the QB pool alone leaves them behind scarcity-boosted RBs.
+    // Mirror the RB/TE market-calibration tiers so top QBs surface early
+    // the way superflex drafts actually run. Recommendation layer only —
+    // the shared engine and trade values are untouched, and 1QB leagues
+    // never apply it.
+    const qbSuperflexMultiplier = (rank: number): number =>
+      rank <= 5 ? 1.40 : rank <= 10 ? 1.25 : rank <= 15 ? 1.10 : 1.0;
+    const adjVar = (p: NflDbPlayer) => {
+      const v = baseVar(p);
+      const rank = scarcityRank.get(p.id);
+      if (!rank) return v;
+      if (p.position === "RB") return v * rbScarcityMultiplier(rank);
+      if (p.position === "TE") return v * teScarcityMultiplier(rank);
+      if (p.position === "QB" && league.qbFormat === "2QB") return v * qbSuperflexMultiplier(rank);
+      return v;
+    };
+
+    // Fill my roster slots with my drafted players, best first. Dedicated
+    // slots fill first; FLEX only once a skill player's dedicated slots are
+    // full; in 2QB/Superflex the second QB slot prefers QBs by value (mine
+    // are processed in value order). Everything else lands on the bench.
+    const qbSlots = league.qbFormat === "2QB" ? Math.max(roster.QB ?? 1, 2) : (roster.QB ?? 1);
+    const open: Record<string, number> = {
+      QB: qbSlots, RB: roster.RB ?? 0, WR: roster.WR ?? 0, TE: roster.TE ?? 0,
+      K: roster.K ?? 0, DST: roster.DST ?? 0, FLEX: roster.FLEX ?? 0, BN: roster.BN ?? 0,
+    };
+    const slotOrder = (pos: NflPlayerPosition): string[] =>
+      pos === "QB" ? ["QB", "BN"]
+      : pos === "K" || pos === "DST" ? [pos, "BN"]
+      : [pos, "FLEX", "BN"];
+    const mine = playerDb.filter((p) => taken[p.id] === "mine");
+    const mineByValue = [...mine].sort(
+      (a, b) => projectedNflValue(b, weights, useRates) - projectedNflValue(a, weights, useRates));
+    for (const p of mineByValue) {
+      for (const s of slotOrder(p.position)) {
+        if (open[s] > 0) { open[s]--; break; }
+      }
+    }
+
+    // Positional targets: starters + bench share, mirroring the engine's
+    // bench-aware replacement (1 bench to QB, rest proportional RB/WR/TE).
+    const bench = roster.BN ?? 0;
+    const qbBench = Math.min(1, bench);
+    const remainingBench = Math.max(0, bench - qbBench);
+    const flex = roster.FLEX ?? 0;
+    const rbSF = (roster.RB ?? 0) + flex * 0.5;
+    const wrSF = (roster.WR ?? 0) + flex * 0.4;
+    const teSF = (roster.TE ?? 0) + flex * 0.1;
+    const sfTotal = rbSF + wrSF + teSF;
+    const benchFor = (sf: number) => (sfTotal > 0 ? remainingBench * (sf / sfTotal) : 0);
+    const target: Record<NflPlayerPosition, number> = {
+      QB: qbSlots + qbBench,
+      RB: rbSF + benchFor(rbSF),
+      WR: wrSF + benchFor(wrSF),
+      TE: teSF + benchFor(teSF),
+      K: roster.K ?? 0,
+      DST: roster.DST ?? 0,
+    };
+    const myCount: Record<string, number> = {};
+    for (const p of mine) myCount[p.position] = (myCount[p.position] ?? 0) + 1;
+    const needs = (pos: NflPlayerPosition) => (myCount[pos] ?? 0) < target[pos] - 1e-9;
+
+    // K/DST suppression: never recommend until my final two owned picks,
+    // unless every skill-position need is already fully covered.
+    const skillNeedsRemain = (["QB", "RB", "WR", "TE"] as const).some(needs);
+    const picksRemaining = nextPick?.picksRemaining ?? 0;
+    const allowKDst = picksRemaining > 0 && (picksRemaining <= 2 || !skillNeedsRemain);
+
+    const candidates = available.filter((p) =>
+      p.position === "K" || p.position === "DST" ? allowKDst : true);
+    const scored = candidates
+      .map((p) => ({ p, value: adjVar(p), need: needs(p.position) }))
+      .sort((a, b) => b.value - a.value);
+    const bestNeed = scored.find((s) => s.need)?.value ?? 0;
+    let recs = scored.filter((s) => s.need || s.value >= bestNeed * OVERWHELM).slice(0, 5);
+
+    // Final two owned picks: unfilled K/DST slots lead the recommendations
+    // (raw VAR would keep burying them under leftover skill players).
+    if (picksRemaining > 0 && picksRemaining <= 2) {
+      const kdBest = (["K", "DST"] as const)
+        .filter(needs)
+        .map((pos) => scored.find((s) => s.p.position === pos))
+        .filter((s): s is NonNullable<typeof s> => s !== undefined);
+      if (kdBest.length > 0) {
+        const rest = recs.filter((r) => !kdBest.includes(r));
+        recs = [...kdBest, ...rest].slice(0, 5);
+      }
+    }
+    return recTiersFor(recs.map((r) => r.p.id));
+  }, [draftActive, playerDb, taken, league, useRates, nextPick]);
+
   // ── Filters ───────────────────────────────────────────────
   const [posFilter, setPosFilter] = useState<NflPlayerPosition | "ALL">("ALL");
   const [search, setSearch] = useState("");
@@ -247,38 +446,78 @@ export default function NflRankings() {
     if (posFilter !== "ALL") rows = rows.filter((r) => r.p.position === posFilter);
     const q = search.trim().toLowerCase();
     if (q) rows = rows.filter((r) => r.p.name.toLowerCase().includes(q));
+    if (draftActive && hideDrafted) rows = rows.filter((r) => taken[r.p.id] === undefined);
     return rows;
-  }, [ranked, posFilter, search]);
+  }, [ranked, posFilter, search, draftActive, hideDrafted, taken]);
 
-  const activeSeason = (dataMode === "thisTotal" || dataMode === "thisAvg")
-    ? currentSeasonId : priorSeasonId;
+  const seasonLabel =
+    dataMode === "thisProj" ? `${thisYearId} projections`
+    : dataMode === "restProj" ? `${thisYearId} rest of season`
+    : dataMode === "thisTotal" ? thisYearId
+    : lastYearId;
+
+  // Projection modes gate on the projections fetch; actuals on the stats fetch.
+  const activeStatus: DbStatus = isProjMode
+    ? (projStatus === "ready" && !projAvailable ? "error" : projStatus)
+    : dbStatus;
 
   const columns = posFilter === "ALL" ? [] : POSITION_COLUMNS[posFilter];
   const avgForPos = posFilter === "ALL" ? undefined : poolAverages.get(posFilter);
+  const colCount =
+    (draftActive ? 2 : 0) + 6 + (posFilter === "ALL" ? 1 : 0) + columns.length;
+
+  // Marker only renders on the unfiltered list — a filtered or searched view
+  // hides players, so "N available players from the top" would be misleading.
+  const showMarker = draftActive && nextPick !== null && posFilter === "ALL" && !search.trim();
+  const markerBeforeIdx = showMarker && nextPick
+    ? computeMarkerIndex(visible.map((r) => taken[r.p.id] !== undefined), nextPick.availableBefore)
+    : null;
+  const markerRow = showMarker && nextPick
+    ? <MarkerRow colCount={colCount} label={nextPick.label} />
+    : null;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
         <div />
         <div className="flex items-center gap-3 text-xs" style={{ color: "var(--color-muted)" }}>
-          {dbStatus === "ready" && <span>{playerDb.length} players · Season {activeSeason}</span>}
+          {activeStatus === "ready" && <span>{playerDb.length} players · {seasonLabel}</span>}
           <select
             className="form-input text-xs"
             style={{ paddingTop: "0.25rem", paddingBottom: "0.25rem" }}
             value={dataMode}
-            onChange={(e) => {
-              const m = e.target.value as DataMode;
-              setDataMode(m);
-              try { localStorage.setItem(LS_NFL_DATA_MODE, m); } catch {}
-            }}
+            onChange={(e) => setDataMode(e.target.value as DataMode)}
           >
-            <option value="thisTotal">This Year – Total</option>
-            <option value="thisAvg">This Year – Per-Game Proj.</option>
             <option value="lastTotal">Last Year – Total</option>
-            <option value="lastAvg">Last Year – Per-Game Proj.</option>
+            <option value="thisTotal" disabled={!hasThisYearData}>
+              This Year – Total{!hasThisYearData ? " (season not started)" : ""}
+            </option>
+            <option value="thisProj" disabled={!projAvailable}>
+              This Year – Projected{!projAvailable && projStatus !== "loading" ? " (unavailable)" : ""}
+            </option>
+            <option value="restProj" disabled={!projAvailable}>
+              Rest of Season{!projAvailable && projStatus !== "loading" ? " (unavailable)" : ""}
+            </option>
           </select>
         </div>
       </div>
+
+      {/* Staleness warning: projections come from undocumented Sleeper
+          endpoints, so a failed or shape-changed fetch serves the stamped
+          snapshot instead. */}
+      {isProjMode && projections && projections.source !== "sleeper" && (
+        <p
+          className="text-xs mb-2 rounded-lg border px-3 py-2"
+          style={{ borderColor: "#D4843B", color: "#D4843B" }}
+        >
+          ⚠ Live Sleeper projections are unavailable: showing the saved snapshot
+          {projections.source === "fallback" && projections.fallbackGeneratedAt
+            ? ` from ${projections.fallbackGeneratedAt}`
+            : projections.fetchedAt
+              ? ` from ${projections.fetchedAt.slice(0, 10)}`
+              : ""}. Values may be stale.
+        </p>
+      )}
 
       <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
         Ranked by projected points under {isPro ? "your saved league settings" : "standard league settings"}
@@ -290,6 +529,26 @@ export default function NflRankings() {
         >Highlighted</span> stats beat the draftable-pool average at that position.
         {!isPro && <> Set up your own scoring in the <Link href="/nfl" className="link-primary">analyzer</Link> with a Pro plan.</>}
       </p>
+
+      {/* ── Draft Mode toggle + panel (shared UI) ─────────── */}
+      <DraftToggleRow
+        isPro={isPro}
+        checked={draftActive}
+        onChange={setDraftOn}
+        proDescription="Track your draft live: check players off the board and get roster-aware pick recommendations under your scoring format."
+      />
+      {draftActive && (
+        <DraftPanel
+          unconfiguredWarning={!!nextPick && !nextPick.configured}
+          hideDrafted={hideDrafted}
+          setHideDrafted={setHideDrafted}
+          takenCount={takenCount}
+          mineCount={mineCount}
+          confirmReset={confirmReset}
+          setConfirmReset={setConfirmReset}
+          onReset={resetTaken}
+        />
+      )}
 
       {/* Tier 2/3: league selector */}
       {isPro && leagues.length > 0 && (
@@ -332,14 +591,14 @@ export default function NflRankings() {
         />
       </div>
 
-      {dbStatus === "loading" && (
+      {activeStatus === "loading" && (
         <div className="text-sm" style={{ color: "var(--color-muted)" }}>Loading NFL data…</div>
       )}
-      {dbStatus === "error" && (
+      {activeStatus === "error" && (
         <div className="text-sm" style={{ color: "var(--color-danger)" }}>NFL API unavailable — please refresh</div>
       )}
 
-      {dbStatus === "ready" && (
+      {activeStatus === "ready" && (
         <div className="overflow-x-auto rounded-xl border" style={{ borderColor: "var(--color-border)" }}>
           <table className="w-full text-xs" style={{ color: "var(--color-text)" }}>
             <thead>
@@ -347,6 +606,8 @@ export default function NflRankings() {
                 className="text-left"
                 style={{ background: "var(--color-surface)", color: "var(--color-muted)" }}
               >
+                {draftActive && <th className="px-2 py-1.5 font-medium text-center">League</th>}
+                {draftActive && <th className="px-2 py-1.5 font-medium text-center">Mine</th>}
                 <th className="px-2 py-1.5 font-medium">Rank</th>
                 <th className="px-2 py-1.5 font-medium">Player</th>
                 {posFilter === "ALL" && <th className="px-2 py-1.5 font-medium">Pos</th>}
@@ -360,19 +621,31 @@ export default function NflRankings() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((r) => {
+              {visible.map((r, rowIdx) => {
                 const undraftable = r.rank > draftableN;
+                const isTaken = taken[r.p.id];
+                // Highlights only apply to unchecked players
+                const rec = draftActive && !isTaken ? draftRec?.get(r.p.id) : undefined;
+                const recStyle = rec ? REC_STYLES[rec] : undefined;
                 return (
+                  <React.Fragment key={r.p.id}>
+                    {markerBeforeIdx === rowIdx && markerRow}
                   <tr
-                    key={r.p.id}
                     className="border-t"
                     style={{
                       borderColor: "var(--color-border)",
-                      opacity: undraftable ? 0.55 : 1,
+                      opacity: undraftable && !recStyle ? 0.55 : draftActive && isTaken ? 0.45 : 1,
+                      background: recStyle?.row,
                     }}
                   >
+                    {draftActive && (
+                      <DraftCells id={r.p.id} name={r.p.name} taken={taken} setPlayerTaken={setPlayerTaken} />
+                    )}
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.rank}</td>
-                    <td className="px-2 py-1 font-medium whitespace-nowrap">{r.p.name}</td>
+                    <td className="px-2 py-1 font-medium whitespace-nowrap">
+                      {r.p.name}
+                      {rec && <RecBadge tier={rec} />}
+                    </td>
                     {posFilter === "ALL" && <td className="px-2 py-1">{r.p.position}</td>}
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.p.team}</td>
                     <td className="px-2 py-1 text-right" style={{ color: "var(--color-muted)" }}>{r.p.gamesPlayed}</td>
@@ -399,8 +672,10 @@ export default function NflRankings() {
                       );
                     })}
                   </tr>
+                  </React.Fragment>
                 );
               })}
+              {markerBeforeIdx === visible.length && markerRow}
             </tbody>
           </table>
         </div>

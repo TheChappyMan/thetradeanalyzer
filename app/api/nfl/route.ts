@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NflDbPlayer, NflPlayerPosition, NflPlayerStats } from '@/lib/nfl-types'
 import nflPlayersJson from '@/lib/nfl-players.json'
+import nflProjectionsJson from '@/lib/nfl-projections.json'
 
 // ── NFL API Proxy ────────────────────────────────────────────────────────────
 // Fetches live data from the Sleeper API at request time, matching the
@@ -139,6 +140,240 @@ async function fetchSeasonStats(season: number): Promise<SeasonTotals> {
   return { totals, gpCounts }
 }
 
+// ── Projections (UNDOCUMENTED Sleeper endpoints) ────────────────────────────
+// api.sleeper.com/projections/nfl/<season>?season_type=regular       (season)
+// api.sleeper.com/projections/nfl/<season>/<week>?season_type=regular (weekly)
+// These are not in docs.sleeper.com and could change without notice, so every
+// response is shape-validated before use and wrapped in the same stamped-
+// fallback pattern as the player data: last good response is cached in-memory
+// with a timestamp; on failure we serve that snapshot (marked stale), and as
+// a last resort the committed lib/nfl-projections.json snapshot.
+// Projections return raw stat lines in the SAME key space as the stats
+// endpoints (pass_yd, rush_td, rec, ...), so league scoring applies directly.
+// Known gaps, handled below: DEF rows lack pts_allow (backfilled from the
+// previous season's actuals) and kickers report fgmiss_* instead of fga_*.
+
+const SLEEPER_PROJ = 'https://api.sleeper.com/projections/nfl'
+const PROJ_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']
+
+type NflState = { season: string; week: number; seasonType: string; previousSeason: string }
+
+async function fetchNflState(): Promise<NflState | null> {
+  try {
+    const res = await fetch(`${SLEEPER}/state/nfl`, { next: { revalidate: 3600 } })
+    if (!res.ok) return null
+    const s = (await res.json()) as Record<string, unknown>
+    if (typeof s.season !== 'string' || typeof s.week !== 'number') return null
+    return {
+      season: s.season,
+      week: s.week,
+      seasonType: typeof s.season_type === 'string' ? s.season_type : 'regular',
+      previousSeason:
+        typeof s.previous_season === 'string' ? s.previous_season : String(Number(s.season) - 1),
+    }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Validate + aggregate projection rows into the SeasonTotals shape used by
+ * buildPlayers. Returns null when the response doesn't look like projections
+ * (wrong shape, or suspiciously few valid rows) so callers fall back.
+ * When `deriveBonuses` is true (weekly rows), yard-bonus game counts are
+ * accumulated from each week's projected yardage, mirroring fetchSeasonStats.
+ */
+function projectionRowsToTotals(
+  rows: unknown,
+  into?: SeasonTotals,
+  deriveBonuses = false
+): SeasonTotals | null {
+  if (!Array.isArray(rows)) return null
+  const acc: SeasonTotals = into ?? { totals: {}, gpCounts: {} }
+  let valid = 0
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue
+    const pid = (row as { player_id?: unknown }).player_id
+    const stats = (row as { stats?: unknown }).stats
+    if (typeof pid !== 'string' || !stats || typeof stats !== 'object') continue
+    valid++
+    const t = (acc.totals[pid] ??= {})
+    for (const [key, val] of Object.entries(stats as Record<string, unknown>)) {
+      if (typeof val === 'number' && !key.startsWith('adp')) {
+        t[key] = (t[key] ?? 0) + val
+      }
+    }
+    const gp = (stats as Record<string, unknown>).gp
+    if (deriveBonuses) {
+      acc.gpCounts[pid] = (acc.gpCounts[pid] ?? 0) + 1
+      for (const [statKey, calcPrefix] of [
+        ['pass_yd', 'calc_bonus_pass_yd'],
+        ['rush_yd', 'calc_bonus_rush_yd'],
+        ['rec_yd',  'calc_bonus_rec_yd'],
+      ] as const) {
+        const yds = (stats as Record<string, unknown>)[statKey]
+        if (typeof yds !== 'number') continue
+        for (const thr of [100, 150, 200, 250, 300]) {
+          if (yds >= thr) t[`${calcPrefix}_${thr}`] = (t[`${calcPrefix}_${thr}`] ?? 0) + 1
+        }
+      }
+    } else {
+      acc.gpCounts[pid] = Math.min(18, Math.max(1,
+        typeof gp === 'number' ? Math.round(gp) : 17))
+    }
+  }
+  if (valid < 50) return null
+  return acc
+}
+
+const projPositionParams = PROJ_POSITIONS.map((p) => `position[]=${p}`).join('&')
+
+async function fetchSeasonProjections(season: string): Promise<SeasonTotals | null> {
+  try {
+    // Payload can exceed Next's 2 MB fetch-cache limit; the module-level
+    // stamped cache below is the real cache layer.
+    const res = await fetch(
+      `${SLEEPER_PROJ}/${season}?season_type=regular&${projPositionParams}`,
+      { cache: 'no-store' }
+    )
+    if (!res.ok) return null
+    return projectionRowsToTotals(await res.json())
+  } catch {
+    return null
+  }
+}
+
+async function fetchRestOfSeasonProjections(
+  season: string,
+  afterWeek: number
+): Promise<SeasonTotals | null> {
+  const weeks = Array.from({ length: NFL_WEEKS - afterWeek }, (_, i) => afterWeek + 1 + i)
+  if (weeks.length === 0) return { totals: {}, gpCounts: {} }
+  const acc: SeasonTotals = { totals: {}, gpCounts: {} }
+  let anyValid = false
+  for (const week of weeks) {
+    try {
+      const res = await fetch(
+        `${SLEEPER_PROJ}/${season}/${week}?season_type=regular&${projPositionParams}`,
+        { cache: 'no-store' }
+      )
+      if (!res.ok) continue
+      if (projectionRowsToTotals(await res.json(), acc, true)) anyValid = true
+    } catch { /* skip week */ }
+  }
+  return anyValid ? acc : null
+}
+
+/**
+ * Sleeper's DEF projections carry no pts_allow, which would score every
+ * defense as pitching shutouts. Backfill points allowed (and games) from
+ * the most recent season with actual stats.
+ */
+function backfillDstPtsAllowed(proj: SeasonTotals, actuals: SeasonTotals): void {
+  for (const abbr of NFL_TEAMS) {
+    const t = (proj.totals[abbr] ??= {})
+    if ((t.pts_allow ?? 0) === 0 && actuals.totals[abbr]?.pts_allow !== undefined) {
+      t.pts_allow = actuals.totals[abbr].pts_allow
+      proj.gpCounts[abbr] = actuals.gpCounts[abbr] ?? 17
+    }
+  }
+}
+
+type ProjectionsPayload = {
+  seasonId: string
+  week: number
+  players: NflDbPlayer[]
+  restOfSeason: NflDbPlayer[]
+}
+
+let projCache: { data: ProjectionsPayload; fetchedAt: number } | null = null
+const PROJ_TTL_MS = 3_600_000
+
+type ProjectionsFallbackJson = {
+  generatedAt?: string | null
+  seasonId: string
+  week: number
+  players: NflDbPlayer[]
+  restOfSeason: NflDbPlayer[]
+}
+const PROJ_FALLBACK = nflProjectionsJson as ProjectionsFallbackJson
+
+function projectionsResponse() {
+  return (async () => {
+    if (projCache && Date.now() - projCache.fetchedAt < PROJ_TTL_MS) {
+      return NextResponse.json({
+        ...projCache.data,
+        source: 'sleeper',
+        fetchedAt: new Date(projCache.fetchedAt).toISOString(),
+      })
+    }
+
+    const [meta, state] = await Promise.all([fetchPlayerMeta(), fetchNflState()])
+    if (meta && state) {
+      // Completed regular-season weeks: 0 outside the regular season.
+      const completedWeek = state.seasonType === 'regular' ? Math.max(0, state.week - 1) : 0
+      const seasonProj = await fetchSeasonProjections(state.season)
+      if (seasonProj) {
+        // Backfill DEF pts_allow from the most recent season with actuals.
+        const actualsYear = state.seasonType === 'pre' || completedWeek === 0
+          ? Number(state.previousSeason)
+          : Number(state.season)
+        backfillDstPtsAllowed(seasonProj, await fetchSeasonStats(actualsYear))
+
+        // Rest of season: remaining weekly projections summed. Pre-season
+        // (or a failed weekly sweep) falls back to the full-season list.
+        let restPlayers: NflDbPlayer[] | null = null
+        if (completedWeek > 0) {
+          const rest = await fetchRestOfSeasonProjections(state.season, completedWeek)
+          if (rest) {
+            backfillDstPtsAllowed(rest, await fetchSeasonStats(Number(state.season)))
+            restPlayers = buildPlayers(meta, rest)
+          }
+        }
+        const players = buildPlayers(meta, seasonProj)
+        const data: ProjectionsPayload = {
+          seasonId: state.season,
+          week: completedWeek,
+          players,
+          restOfSeason: restPlayers ?? players,
+        }
+        if (players.length > 0) {
+          projCache = { data, fetchedAt: Date.now() }
+          return NextResponse.json({
+            ...data,
+            source: 'sleeper',
+            fetchedAt: new Date(projCache.fetchedAt).toISOString(),
+          })
+        }
+      }
+    }
+
+    // Live fetch failed or shape changed: stamped in-memory snapshot first…
+    if (projCache) {
+      console.warn('[NFL API] projections unreachable — serving stale in-memory snapshot')
+      return NextResponse.json({
+        ...projCache.data,
+        source: 'cache',
+        fetchedAt: new Date(projCache.fetchedAt).toISOString(),
+      })
+    }
+    // …then the committed static snapshot.
+    console.warn(
+      '[NFL API] projections unreachable — serving STATIC fallback ' +
+      `(generated ${PROJ_FALLBACK.generatedAt ?? 'unknown date'}). Data may be stale.`
+    )
+    return NextResponse.json({
+      seasonId: PROJ_FALLBACK.seasonId,
+      week: PROJ_FALLBACK.week,
+      players: PROJ_FALLBACK.players,
+      restOfSeason: PROJ_FALLBACK.restOfSeason,
+      source: 'fallback',
+      fetchedAt: null,
+      fallbackGeneratedAt: PROJ_FALLBACK.generatedAt ?? null,
+    })
+  })()
+}
+
 // ── Stat mapping: Sleeper keys → NflPlayerStats ─────────────────────────────
 
 function round(n: number): number { return Math.round(n) }
@@ -184,16 +419,23 @@ function mapKickerStats(s: Record<string, number>): NflPlayerStats {
   const att50p     = round(s.fga_50p   ?? s.fga_50 ?? made50p)
   const xpm = round(s.xpm ?? 0)
   const xpa = round(s.xpa ?? xpm)
+  // Projections report misses as fgmiss_* buckets instead of fga_* attempts
+  const fgmissBuckets = round(
+    (s.fgmiss_0_19 ?? 0) + (s.fgmiss_20_29 ?? 0) + (s.fgmiss_30_39 ?? 0) +
+    (s.fgmiss_40_49 ?? 0) + (s.fgmiss_50p ?? 0)
+  ) || round(s.fgmiss ?? 0)
   return {
     fgMade0to39:  made0to19 + made20to29 + made30to39,
     fgMade40to49: made40to49,
     fgMade50plus: made50p,
-    fgMissed: Math.max(0,
+    fgMissed: Math.max(
       (att0to19 - made0to19) + (att20to29 - made20to29) +
       (att30to39 - made30to39) + (att40to49 - made40to49) +
-      (att50p - made50p)),
+      (att50p - made50p),
+      fgmissBuckets,
+      0),
     patMade:   xpm,
-    patMissed: Math.max(0, xpa - xpm),
+    patMissed: Math.max(0, xpa - xpm, round(s.xpmiss ?? 0)),
   }
 }
 
@@ -371,6 +613,8 @@ function fallbackResponse() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const endpoint = searchParams.get('endpoint')
+
+  if (endpoint === 'projections') return projectionsResponse()
 
   const meta = await fetchPlayerMeta()
   if (!meta) {

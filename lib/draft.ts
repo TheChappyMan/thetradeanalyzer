@@ -5,11 +5,9 @@
  * the round (snake order is baked into the generated slot numbers).
  */
 
-import type { Roster } from './types'
-
 export type DraftFormat = 'snake' | 'linear'
 
-/** Draft-pick configuration saved inside the NHL league settings. */
+/** Draft-pick configuration saved inside a league's settings (NHL and NFL). */
 export type DraftPicksConfig = {
   teams: number
   slot: number
@@ -18,11 +16,16 @@ export type DraftPicksConfig = {
   picks: string[]
 }
 
-/** Number of draft rounds a league needs: every non-IR roster spot. */
-export function draftRounds(roster: Roster): number {
-  const { IR, IRplus, ...draftable } = roster
-  void IR; void IRplus
-  return Object.values(draftable).reduce((a, b) => a + (b || 0), 0)
+/**
+ * Number of draft rounds a league needs: every non-IR roster spot.
+ * Works for any sport's roster record (NHL uses IR/IRplus, NFL uses IR).
+ */
+const NON_DRAFTABLE_SLOTS = new Set(['IR', 'IRplus'])
+export function draftRounds(roster: Record<string, number>): number {
+  return Object.entries(roster).reduce(
+    (sum, [slot, n]) => (NON_DRAFTABLE_SLOTS.has(slot) ? sum : sum + (n || 0)),
+    0
+  )
 }
 
 /** Generate the full pick list for one team (before any pick trades). */

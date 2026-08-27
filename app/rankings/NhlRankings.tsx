@@ -24,7 +24,12 @@ import {
   softReplacementValue,
   type DbPlayer,
 } from "@/lib/nhl-valuation";
-import { draftRounds, generateDraftPicks, parseDraftPick } from "@/lib/draft";
+import { draftRounds } from "@/lib/draft";
+import {
+  REC_STYLES, OVERWHELM, recTiersFor, useDraftState, computeNextPick, computeMarkerIndex,
+  DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells,
+  type RecTier,
+} from "./draft-shared";
 
 // ── NHL tab of the /rankings page ────────────────────────────
 // Ranks every player under the user's league settings: categories
@@ -53,21 +58,6 @@ const GOALIE_COLUMNS: StatColumn[] = [
 ];
 
 const POSITIONS = ["C", "LW", "RW", "D", "G"] as const;
-
-// ── Draft Mode recommendation tiers ──────────────────────────
-// Fixed brand hexes per the design spec; every color also carries a text
-// badge for colorblind accessibility. Amber and orange always use dark text.
-const REC_STYLES: Record<1 | 2 | 3, { row: string; badgeBg: string; badgeText: string; label: string }> = {
-  1: { row: "rgba(45, 134, 89, 0.16)",  badgeBg: "#2D8659", badgeText: "#FFFFFF", label: "Top pick" },
-  2: { row: "rgba(233, 180, 76, 0.16)", badgeBg: "#E9B44C", badgeText: "#1A1A1A", label: "2nd option" },
-  3: { row: "rgba(212, 132, 59, 0.16)", badgeBg: "#D4843B", badgeText: "#1A1A1A", label: "3rd option" },
-};
-
-// A player at a position the roster already covers is only recommended when
-// its value overwhelms the best need-filling option by this factor.
-const OVERWHELM = 1.5;
-
-type TakenMap = Record<number, "league" | "mine">;
 
 function mergeLeague(saved: League): League {
   return {
@@ -223,52 +213,13 @@ export default function NhlRankings() {
     return byPos;
   }, [ranked, draftableN]);
 
-  // ── Draft Mode ────────────────────────────────────────────
-  // Paid tiers only. Checkbox state is stored per saved league so it
-  // survives refreshes; writes happen inside the state updaters so a
-  // league switch can never clobber another league's stored draft.
-  const [draftOn, setDraftOnState] = useState(false);
-  const [taken, setTaken] = useState<TakenMap>({});
-  const [hideDrafted, setHideDrafted] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
-  const draftKey = `fta-draft-nhl-${activeLeagueId ?? "default"}`;
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(draftKey);
-      const store = raw ? (JSON.parse(raw) as { on?: boolean; taken?: TakenMap }) : null;
-      setTaken(store?.taken ?? {});
-      setDraftOnState(!!store?.on);
-    } catch {
-      setTaken({});
-      setDraftOnState(false);
-    }
-  }, [draftKey]);
-
-  const persistDraft = (on: boolean, takenMap: TakenMap) => {
-    try { localStorage.setItem(draftKey, JSON.stringify({ on, taken: takenMap })); } catch {}
-  };
-  const setDraftOn = (on: boolean) => {
-    setDraftOnState(on);
-    persistDraft(on, taken);
-  };
-  const mutateTaken = (updater: (prev: TakenMap) => TakenMap) =>
-    setTaken((prev) => {
-      const next = updater(prev);
-      persistDraft(draftOn, next);
-      return next;
-    });
-  const setPlayerTaken = (id: number, kind: "league" | "mine", checked: boolean) =>
-    mutateTaken((prev) => {
-      const next = { ...prev };
-      if (checked) next[id] = kind;           // checking one side unchecks the other
-      else if (next[id] === kind) delete next[id];
-      return next;
-    });
-
+  // ── Draft Mode (shared state/UI in ./draft-shared) ────────
+  const {
+    draftOn, setDraftOn, taken, setPlayerTaken, resetTaken,
+    hideDrafted, setHideDrafted, confirmReset, setConfirmReset,
+    takenCount, mineCount,
+  } = useDraftState("nhl", activeLeagueId);
   const draftActive = draftOn && isPro;
-  const takenCount = Object.keys(taken).length;
-  const mineCount = Object.values(taken).filter((k) => k === "mine").length;
 
   // ── Recommendations: recomputed on every checkbox change ──
   // Values come from the SAME engine as the analyzer, but priced against
@@ -326,33 +277,13 @@ export default function NhlRankings() {
     const bestNeed = scored.find((s) => s.need)?.value ?? 0;
     const recs = scored.filter((s) => s.need || s.value >= bestNeed * OVERWHELM).slice(0, 5);
 
-    const tiers = new Map<number, 1 | 2 | 3>();
-    recs.forEach((r, i) => tiers.set(r.p.id, i === 0 ? 1 : i <= 2 ? 2 : 3));
-    return tiers;
+    return recTiersFor(recs.map((r) => r.p.id));
   }, [draftActive, playerDb, taken, isCatMode, league, useRates]);
 
   // ── Next-pick marker ──────────────────────────────────────
-  // Picks that happen before my next owned pick = overall − 1 − players
-  // already checked; the marker sits after that many available players.
   const nextPick = useMemo(() => {
     if (!draftActive) return null;
-    const cfg = league.draftPicks;
-    const configured = !!cfg?.picks?.length;
-    const teams = (configured ? cfg.teams : league.teams) || league.teams;
-    const pickStrs = configured
-      ? cfg.picks
-      : generateDraftPicks(league.teams, 1, "snake", draftRounds(league.roster)); // placeholder until configured
-    const parsed = pickStrs
-      .map((s) => parseDraftPick(s, teams))
-      .filter((p): p is NonNullable<typeof p> => p !== null)
-      .sort((a, b) => a.overall - b.overall);
-    const next = parsed.find((pk) => pk.overall > takenCount);
-    if (!next) return null;
-    return {
-      label: next.raw,
-      availableBefore: Math.max(0, next.overall - 1 - takenCount),
-      configured,
-    };
+    return computeNextPick(league.draftPicks, league.teams, draftRounds(league.roster), takenCount);
   }, [draftActive, league.draftPicks, league.teams, league.roster, takenCount]);
 
   // ── Filters ───────────────────────────────────────────────
@@ -385,31 +316,12 @@ export default function NhlRankings() {
   // Marker only renders on the unfiltered list — a filtered or searched view
   // hides players, so "N available players from the top" would be misleading.
   const showMarker = draftActive && nextPick !== null && posFilter === "ALL" && !search.trim();
-  let markerBeforeIdx: number | null = null;
-  if (showMarker && nextPick) {
-    markerBeforeIdx = visible.length; // fall back to the end of the list
-    let availableSeen = 0;
-    for (let i = 0; i < visible.length; i++) {
-      if (taken[visible[i].p.id] === undefined) {
-        if (availableSeen === nextPick.availableBefore) { markerBeforeIdx = i; break; }
-        availableSeen++;
-      }
-    }
-  }
-  const markerRow = showMarker && nextPick && (
-    <tr key="next-pick-marker">
-      <td colSpan={colCount} className="px-2 py-1">
-        <div
-          className="flex items-center gap-2 text-xs font-semibold whitespace-nowrap"
-          style={{ color: "var(--color-primary)" }}
-        >
-          <span className="flex-1 border-t-2" style={{ borderColor: "var(--color-primary)" }} />
-          Your next pick: {nextPick.label}
-          <span className="flex-1 border-t-2" style={{ borderColor: "var(--color-primary)" }} />
-        </div>
-      </td>
-    </tr>
-  );
+  const markerBeforeIdx = showMarker && nextPick
+    ? computeMarkerIndex(visible.map((r) => taken[r.p.id] !== undefined), nextPick.availableBefore)
+    : null;
+  const markerRow = showMarker && nextPick
+    ? <MarkerRow colCount={colCount} label={nextPick.label} />
+    : null;
 
   return (
     <div>
@@ -447,98 +359,24 @@ export default function NhlRankings() {
         {!isPro && <> Configure scoring in the <Link href="/nhl" className="link-primary">analyzer</Link> with a Pro plan.</>}
       </p>
 
-      {/* ── Draft Mode toggle ─────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3">
-        <label
-          className={`flex items-center gap-2 text-sm font-medium ${isPro ? "cursor-pointer" : "opacity-60 cursor-not-allowed"}`}
-          style={{ color: "var(--color-text)" }}
-        >
-          <input
-            type="checkbox"
-            disabled={!isPro}
-            checked={draftActive}
-            onChange={(e) => setDraftOn(e.target.checked)}
-          />
-          Turn on Draft Mode
-          {!isPro && <span aria-hidden>🔒</span>}
-        </label>
-        <span className="text-xs" style={{ color: "var(--color-muted)" }}>
-          {isPro ? (
-            "Track your draft live: check players off the board and get roster-aware pick recommendations."
-          ) : (
-            <>
-              Draft Mode is a paid feature:{" "}
-              <a href="https://thetradeanalyzer.com/pricing/" className="link-primary">
-                upgrade to unlock it
-              </a>.
-            </>
-          )}
-        </span>
-      </div>
-
-      {/* ── Draft Mode instructions + controls ────────────── */}
+      {/* ── Draft Mode toggle + panel (shared UI) ─────────── */}
+      <DraftToggleRow
+        isPro={isPro}
+        checked={draftActive}
+        onChange={setDraftOn}
+        proDescription="Track your draft live: check players off the board and get roster-aware pick recommendations."
+      />
       {draftActive && (
-        <div
-          className="rounded-xl border px-4 py-3 mb-3 text-xs"
-          style={{ borderColor: "var(--color-primary)", background: "var(--color-surface)", color: "var(--color-muted)" }}
-        >
-          <p className="font-semibold mb-1" style={{ color: "var(--color-text)" }}>
-            How Draft Mode works
-          </p>
-          <ul className="list-disc ml-4 space-y-0.5">
-            <li>Check <span className="font-semibold">League</span> when another manager drafts a player.</li>
-            <li>Check <span className="font-semibold">Mine</span> when you draft a player.</li>
-            <li>Keepers get checked the same way before the draft starts.</li>
-            <li>The colored highlights show your recommended picks: green is the top pick, amber and orange are ranked fallbacks likely to still be available later.</li>
-          </ul>
-          {nextPick && !nextPick.configured && (
-            <p className="mt-2" style={{ color: "#D4843B" }}>
-              No draft picks configured for this league: using slot 1 (snake) as a placeholder.
-              Set your picks under Draft Picks in <Link href="/settings" className="link-primary">Settings</Link>.
-            </p>
-          )}
-          <div
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 pt-2 border-t"
-            style={{ borderColor: "var(--color-border)" }}
-          >
-            <label className="flex items-center gap-1.5 cursor-pointer" style={{ color: "var(--color-text)" }}>
-              <input
-                type="checkbox"
-                checked={hideDrafted}
-                onChange={(e) => setHideDrafted(e.target.checked)}
-              />
-              Hide drafted players
-            </label>
-            <span>{takenCount} drafted · {mineCount} mine</span>
-            {confirmReset ? (
-              <span className="flex items-center gap-2">
-                Clear all checkboxes?
-                <button
-                  className="rounded-lg px-2.5 py-1 text-xs font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: "var(--color-danger)", color: "#fff" }}
-                  onClick={() => { mutateTaken(() => ({})); setConfirmReset(false); }}
-                >
-                  Yes, Reset
-                </button>
-                <button
-                  className="rounded-lg border px-2.5 py-1 text-xs font-medium"
-                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
-                  onClick={() => setConfirmReset(false)}
-                >
-                  Cancel
-                </button>
-              </span>
-            ) : (
-              <button
-                className="rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors"
-                style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }}
-                onClick={() => setConfirmReset(true)}
-              >
-                Reset Draft
-              </button>
-            )}
-          </div>
-        </div>
+        <DraftPanel
+          unconfiguredWarning={!!nextPick && !nextPick.configured}
+          hideDrafted={hideDrafted}
+          setHideDrafted={setHideDrafted}
+          takenCount={takenCount}
+          mineCount={mineCount}
+          confirmReset={confirmReset}
+          setConfirmReset={setConfirmReset}
+          onReset={resetTaken}
+        />
       )}
 
       {isPro && leagues.length > 0 && (
@@ -624,36 +462,12 @@ export default function NhlRankings() {
                     }}
                   >
                     {draftActive && (
-                      <td className="px-2 py-1 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isTaken === "league"}
-                          onChange={(e) => setPlayerTaken(r.p.id, "league", e.target.checked)}
-                          aria-label={`${r.p.name} drafted by another team`}
-                        />
-                      </td>
-                    )}
-                    {draftActive && (
-                      <td className="px-2 py-1 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isTaken === "mine"}
-                          onChange={(e) => setPlayerTaken(r.p.id, "mine", e.target.checked)}
-                          aria-label={`${r.p.name} on my roster`}
-                        />
-                      </td>
+                      <DraftCells id={r.p.id} name={r.p.name} taken={taken} setPlayerTaken={setPlayerTaken} />
                     )}
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.rank}</td>
                     <td className="px-2 py-1 font-medium whitespace-nowrap">
                       {r.p.name}
-                      {recStyle && (
-                        <span
-                          className="ml-1.5 rounded px-1 py-0.5 text-[10px] font-semibold align-middle whitespace-nowrap"
-                          style={{ background: recStyle.badgeBg, color: recStyle.badgeText }}
-                        >
-                          {recStyle.label}
-                        </span>
-                      )}
+                      {rec && <RecBadge tier={rec} />}
                     </td>
                     {posFilter === "ALL" && <td className="px-2 py-1">{r.p.isGoalie ? "G" : r.p.position}</td>}
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.p.team}</td>

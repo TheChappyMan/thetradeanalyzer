@@ -152,6 +152,8 @@ export type NflLeague = {
   pprFormat: "standard" | "half" | "full";
   roster: NflRoster;
   scoringWeights: NflScoringWeights;
+  /** Owned draft picks for Rankings Draft Mode (optional; see lib/draft.ts). */
+  draftPicks?: import("./draft").DraftPicksConfig;
 };
 
 // ============================================================
