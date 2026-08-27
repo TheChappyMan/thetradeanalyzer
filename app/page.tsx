@@ -294,10 +294,12 @@ export default function Dashboard() {
               </div>
             </>
           )}
-
-          <NewsSection />
         </>
       )}
+
+      {/* News renders for every visitor — logged out, free, and all paid
+          tiers — below whichever dashboard/CTA block applies. */}
+      <NewsSection />
     </div>
   );
 }
