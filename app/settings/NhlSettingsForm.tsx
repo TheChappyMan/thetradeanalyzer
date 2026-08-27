@@ -26,6 +26,12 @@ import type {
   SkaterStatKey,
 } from "@/lib/types";
 import {
+  draftRounds,
+  generateDraftPicks,
+  parseDraftPick,
+  type DraftPicksConfig,
+} from "@/lib/draft";
+import {
   DEFAULT_NFL_LEAGUE,
   type NflLeague,
   type NflScoringWeights,
@@ -263,6 +269,46 @@ export default function NhlSettingsForm({
 
   // ── NHL updaters ──────────────────────────────────────────
   const updateLeague         = (patch: Partial<League>) => setLeague((p) => ({ ...p, ...patch }));
+
+  // ── NHL draft picks (used by Rankings Draft Mode) ─────────
+  const nhlDraftPicks: DraftPicksConfig = league.draftPicks ?? {
+    teams: league.teams, slot: 1, format: "snake", picks: [],
+  };
+  const [newNhlPick, setNewNhlPick] = useState("");
+  const [newNhlPickError, setNewNhlPickError] = useState<string | null>(null);
+  const updateDraftPicks = (patch: Partial<DraftPicksConfig>) =>
+    setLeague((p) => ({
+      ...p,
+      draftPicks: {
+        ...(p.draftPicks ?? { teams: p.teams, slot: 1, format: "snake", picks: [] }),
+        ...patch,
+      },
+    }));
+  const generateNhlPickList = () => {
+    const teams = Math.max(2, nhlDraftPicks.teams);
+    const slot = Math.min(Math.max(1, nhlDraftPicks.slot), teams);
+    updateDraftPicks({
+      teams,
+      slot,
+      picks: generateDraftPicks(teams, slot, nhlDraftPicks.format, draftRounds(league.roster)),
+    });
+  };
+  const addNhlPick = () => {
+    const parsed = parseDraftPick(newNhlPick, nhlDraftPicks.teams);
+    if (!parsed) {
+      setNewNhlPickError(`Use round.slot with a slot between 1 and ${nhlDraftPicks.teams} (e.g. 3.05)`);
+      return;
+    }
+    setNewNhlPickError(null);
+    setNewNhlPick("");
+    if (nhlDraftPicks.picks.some((p) => parseDraftPick(p, nhlDraftPicks.teams)?.overall === parsed.overall)) return;
+    const picks = [...nhlDraftPicks.picks, parsed.raw].sort((a, b) =>
+      (parseDraftPick(a, nhlDraftPicks.teams)?.overall ?? 0) - (parseDraftPick(b, nhlDraftPicks.teams)?.overall ?? 0)
+    );
+    updateDraftPicks({ picks });
+  };
+  const removeNhlPick = (pick: string) =>
+    updateDraftPicks({ picks: nhlDraftPicks.picks.filter((p) => p !== pick) });
   const updateRoster         = (pos: RosterKey, val: number) =>
     setLeague((p) => ({ ...p, roster: { ...p.roster, [pos]: val } }));
   const updateSkaterWeight   = (stat: SkaterStatKey, val: number) =>
@@ -991,6 +1037,102 @@ export default function NhlSettingsForm({
                 </>
               )}
             </div>
+          </div>
+
+          {/* ── Draft Picks (used by Rankings Draft Mode) ────── */}
+          <div className="card mt-4">
+            <h2 className="font-medium mb-1" style={{ color: "var(--color-text)" }}>
+              Draft Picks
+            </h2>
+            <p className="text-xs mb-3" style={{ color: "var(--color-muted)" }}>
+              Draft Mode on the Rankings page uses this list to place your next-pick marker.
+              Generate your picks from your draft slot, then add or remove individual picks
+              as they get traded. Picks use <span className="font-mono">round.slot</span> format
+              (e.g. 1.09 is the ninth pick of round one).
+            </p>
+
+            <div className="flex flex-wrap items-end gap-3 mb-3">
+              <div>
+                <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                  Teams
+                </label>
+                <input
+                  type="number" min={2} max={32}
+                  className="form-input w-20"
+                  value={nhlDraftPicks.teams}
+                  onChange={(e) => updateDraftPicks({ teams: parseInt(e.target.value, 10) || 0 })}
+                />
+              </div>
+              <div>
+                <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                  Your slot
+                </label>
+                <input
+                  type="number" min={1} max={nhlDraftPicks.teams}
+                  className="form-input w-20"
+                  value={nhlDraftPicks.slot}
+                  onChange={(e) => updateDraftPicks({ slot: parseInt(e.target.value, 10) || 0 })}
+                />
+              </div>
+              <div>
+                <label className="text-sm block mb-1" style={{ color: "var(--color-muted)" }}>
+                  Order
+                </label>
+                <select
+                  className="form-input"
+                  value={nhlDraftPicks.format}
+                  onChange={(e) => updateDraftPicks({ format: e.target.value as "snake" | "linear" })}
+                >
+                  <option value="snake">Snake</option>
+                  <option value="linear">Linear</option>
+                </select>
+              </div>
+              <button onClick={generateNhlPickList} className="btn-secondary">
+                Generate pick list
+              </button>
+            </div>
+
+            {nhlDraftPicks.picks.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {nhlDraftPicks.picks.map((pick) => (
+                  <span
+                    key={pick}
+                    className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-mono"
+                    style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                  >
+                    {pick}
+                    <button
+                      onClick={() => removeNhlPick(pick)}
+                      className="leading-none"
+                      style={{ color: "var(--color-muted)" }}
+                      aria-label={`Remove pick ${pick}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                className="form-input w-28 font-mono"
+                placeholder="e.g. 3.05"
+                value={newNhlPick}
+                onChange={(e) => { setNewNhlPick(e.target.value); setNewNhlPickError(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") addNhlPick(); }}
+              />
+              <button onClick={addNhlPick} className="link-primary text-sm font-medium">
+                + Add pick
+              </button>
+            </div>
+            {newNhlPickError && (
+              <p className="text-xs mt-1" style={{ color: "var(--color-danger)" }}>{newNhlPickError}</p>
+            )}
+            <p className="text-xs mt-2" style={{ color: "var(--color-muted)" }}>
+              Remember to save your settings below — the pick list is stored with this league.
+            </p>
           </div>
         </>
       )}

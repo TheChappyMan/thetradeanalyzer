@@ -57,6 +57,8 @@ export type League = {
   skaterCategories: Record<SkaterStatKey, CategoryConfig | null>;
   goalieCategories: Record<GoalieStatKey, CategoryConfig | null>;
   positionBonuses: PositionBonuses;
+  /** Owned draft picks for Rankings Draft Mode (optional; see lib/draft.ts). */
+  draftPicks?: import("./draft").DraftPicksConfig;
 };
 
 // ============================================================

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { SPORTS_CONFIG } from "@/lib/sports-config";
 import { useLeagueContext } from "@/lib/league-context";
+import { NEWS_ITEMS } from "@/lib/news";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -293,8 +294,56 @@ export default function Dashboard() {
               </div>
             </>
           )}
+
+          <NewsSection />
         </>
       )}
+    </div>
+  );
+}
+
+// ── News ───────────────────────────────────────────────────────────────────
+// Items live in lib/news.ts — add news by editing that one file.
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function formatNewsDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${MONTHS[(m || 1) - 1]} ${d}, ${y}`;
+}
+
+function NewsSection() {
+  if (NEWS_ITEMS.length === 0) return null;
+  return (
+    <div className="mt-8 max-w-2xl mx-auto text-left">
+      <h2 className="text-lg font-semibold mb-3" style={{ color: "var(--color-text)" }}>
+        News
+      </h2>
+      <div className="flex flex-col gap-3">
+        {NEWS_ITEMS.map((item) => (
+          <article key={item.title} className="card">
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-x-3 mb-1">
+              <h3 className="font-medium" style={{ color: "var(--color-primary)" }}>
+                {item.title}
+              </h3>
+              <span className="text-xs whitespace-nowrap" style={{ color: "var(--color-muted)" }}>
+                {formatNewsDate(item.date)}
+              </span>
+            </div>
+            <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+              {item.body}
+            </p>
+            {item.href && (
+              <Link href={item.href} className="link-primary text-sm font-medium mt-2 inline-block">
+                {item.linkLabel ?? "Learn more"} →
+              </Link>
+            )}
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
