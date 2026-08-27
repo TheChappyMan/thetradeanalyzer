@@ -514,17 +514,27 @@ export default function NhlRankings() {
               <span className="flex items-center gap-2">
                 Clear all checkboxes?
                 <button
-                  className="font-semibold"
-                  style={{ color: "var(--color-danger)" }}
+                  className="rounded-lg px-2.5 py-1 text-xs font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: "var(--color-danger)", color: "#fff" }}
                   onClick={() => { mutateTaken(() => ({})); setConfirmReset(false); }}
                 >
-                  Yes, reset
+                  Yes, uncheck all
                 </button>
-                <button onClick={() => setConfirmReset(false)}>Cancel</button>
+                <button
+                  className="rounded-lg border px-2.5 py-1 text-xs font-medium"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                  onClick={() => setConfirmReset(false)}
+                >
+                  Cancel
+                </button>
               </span>
             ) : (
-              <button className="link-primary" onClick={() => setConfirmReset(true)}>
-                Reset draft
+              <button
+                className="rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors"
+                style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }}
+                onClick={() => setConfirmReset(true)}
+              >
+                Reset draft — uncheck all
               </button>
             )}
           </div>
