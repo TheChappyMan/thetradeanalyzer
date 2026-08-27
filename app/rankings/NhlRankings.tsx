@@ -464,10 +464,10 @@ export default function NhlRankings() {
         </label>
         <span className="text-xs" style={{ color: "var(--color-muted)" }}>
           {isPro ? (
-            "Track your draft live — check players off the board and get roster-aware pick recommendations."
+            "Track your draft live: check players off the board and get roster-aware pick recommendations."
           ) : (
             <>
-              Draft Mode is a paid feature —{" "}
+              Draft Mode is a paid feature:{" "}
               <a href="https://thetradeanalyzer.com/pricing/" className="link-primary">
                 upgrade to unlock it
               </a>.
@@ -489,11 +489,11 @@ export default function NhlRankings() {
             <li>Check <span className="font-semibold">League</span> when another manager drafts a player.</li>
             <li>Check <span className="font-semibold">Mine</span> when you draft a player.</li>
             <li>Keepers get checked the same way before the draft starts.</li>
-            <li>The colored highlights show your recommended picks — green is the top pick, amber and orange are ranked fallbacks likely to still be available later.</li>
+            <li>The colored highlights show your recommended picks: green is the top pick, amber and orange are ranked fallbacks likely to still be available later.</li>
           </ul>
           {nextPick && !nextPick.configured && (
             <p className="mt-2" style={{ color: "#D4843B" }}>
-              No draft picks configured for this league — using slot 1 (snake) as a placeholder.
+              No draft picks configured for this league: using slot 1 (snake) as a placeholder.
               Set your picks under Draft Picks in <Link href="/settings" className="link-primary">Settings</Link>.
             </p>
           )}
@@ -518,7 +518,7 @@ export default function NhlRankings() {
                   style={{ background: "var(--color-danger)", color: "#fff" }}
                   onClick={() => { mutateTaken(() => ({})); setConfirmReset(false); }}
                 >
-                  Yes, uncheck all
+                  Yes, Reset
                 </button>
                 <button
                   className="rounded-lg border px-2.5 py-1 text-xs font-medium"
@@ -534,7 +534,7 @@ export default function NhlRankings() {
                 style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }}
                 onClick={() => setConfirmReset(true)}
               >
-                Reset draft — uncheck all
+                Reset Draft
               </button>
             )}
           </div>

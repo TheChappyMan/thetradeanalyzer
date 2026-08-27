@@ -679,7 +679,7 @@ export default function NhlSettingsForm({
                 </p>
                 <p className="text-sm mb-4">
                   🎉 Use code <span className="font-bold">BIG50</span> before December 31, 2026
-                  and get 50% off forever — no price changes as long as you&apos;re subscribed.
+                  and get 50% off forever: no price changes as long as you&apos;re subscribed.
                 </p>
                 <a
                   href="https://thetradeanalyzer.com/pricing"
@@ -1131,7 +1131,7 @@ export default function NhlSettingsForm({
               <p className="text-xs mt-1" style={{ color: "var(--color-danger)" }}>{newNhlPickError}</p>
             )}
             <p className="text-xs mt-2" style={{ color: "var(--color-muted)" }}>
-              Remember to save your settings below — the pick list is stored with this league.
+              Remember to save your settings below: the pick list is stored with this league.
             </p>
           </div>
         </>
