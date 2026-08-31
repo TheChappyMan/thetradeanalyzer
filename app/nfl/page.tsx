@@ -7,6 +7,7 @@ import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import { fireRedditTradeAnalyzed } from "@/lib/reddit";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
 import { NFL_WEIGHT_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
@@ -669,15 +670,17 @@ export default function NflTradeAnalyzer() {
     const hasRecv = recvPlayers.length > 0 || recvPicks.trim() !== "";
     if (!hasSend || !hasRecv || tradeRating === 0) return;
     const timer = setTimeout(() => {
-      if (typeof window.gtag !== "function") return;
-      window.gtag("event", "trade_analyzed_NFL", {
-        sport: "nfl",
-        user_tier: tier,
-        is_logged_in: !!user,
-        league_format: league.pprFormat,
-        trade_rating: tradeRating,
-        has_picks: sendPicks.trim() !== "" || recvPicks.trim() !== "",
-      });
+      if (typeof window.gtag === "function") {
+        window.gtag("event", "trade_analyzed_NFL", {
+          sport: "nfl",
+          user_tier: tier,
+          is_logged_in: !!user,
+          league_format: league.pprFormat,
+          trade_rating: tradeRating,
+          has_picks: sendPicks.trim() !== "" || recvPicks.trim() !== "",
+        });
+      }
+      fireRedditTradeAnalyzed();
     }, 3000);
     return () => clearTimeout(timer);
   }, [tradeRating, sendPlayers, recvPlayers, sendPicks, recvPicks, tier, user, league.pprFormat]);

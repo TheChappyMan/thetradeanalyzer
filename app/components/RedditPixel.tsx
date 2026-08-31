@@ -63,6 +63,7 @@ function RedditPixelInner() {
     const created = user.createdAt ? new Date(user.createdAt).getTime() : 0;
     if (!created || Date.now() - created > 10 * 60 * 1000) return;
     const key = `rdt-signup-${user.id}`;
+    const userId = user.id;
     try {
       if (localStorage.getItem(key)) return;
       localStorage.setItem(key, "1");
@@ -70,7 +71,9 @@ function RedditPixelInner() {
       return; // no storage → can't dedupe, skip rather than risk refiring
     }
     whenRdtReady(() => {
-      window.rdt("track", "SignUp");
+      // conversionId = Clerk user ID: one account = one signup, so Reddit
+      // dedupes even if this somehow fires twice for the same account.
+      window.rdt("track", "SignUp", { conversionId: userId });
     });
   }, [isLoaded, user]);
 
