@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import GlobalNav from "./components/GlobalNav";
 import GlobalFooter from "./components/GlobalFooter";
+import RedditPixel from "./components/RedditPixel";
 import { LeagueProvider } from "@/lib/league-context";
 import { isAdminId } from "@/lib/auth";
 import Script from "next/script";
@@ -164,6 +165,10 @@ export default async function RootLayout({
 
         <ClerkProvider>
           <LeagueProvider>
+            {/* ── Reddit Pixel — inside ClerkProvider (uses useUser for
+                   advanced matching), unlike the other analytics scripts ── */}
+            <RedditPixel />
+
             {/* ── Global top bar — always rendered for all visitors ── */}
             <GlobalNav isAdmin={adminUser} />
 

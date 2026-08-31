@@ -10,4 +10,14 @@ interface Window {
     targetIdOrEventName: string,
     params?: Record<string, unknown>
   ) => void;
+
+  /**
+   * Reddit Pixel function, injected by app/components/RedditPixel.tsx.
+   * Commands: rdt('init', pixelId, matchKeys?) and rdt('track', event, params?).
+   */
+  rdt: (
+    command: "init" | "track",
+    pixelIdOrEventName: string,
+    params?: Record<string, unknown>
+  ) => void;
 }

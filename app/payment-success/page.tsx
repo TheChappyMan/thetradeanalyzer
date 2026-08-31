@@ -43,7 +43,7 @@ const TIER_INFO: Record<string, { value: number; name: string }> = {
   commissioner:    { value: 200,  name: "Commissioner Annual" },
 };
 
-const FIRED_KEY = "fta-ga4-purchase-fired"; // sessionStorage: JSON array of order_ids
+const FIRED_KEY = "fta-purchase-fired"; // sessionStorage: JSON array of order_ids (GA4 + Reddit dedupe)
 
 function firePurchaseEvent() {
   const params  = new URLSearchParams(window.location.search);
@@ -59,21 +59,38 @@ function firePurchaseEvent() {
   try { fired = JSON.parse(sessionStorage.getItem(FIRED_KEY) ?? "[]"); } catch {}
   if (fired.includes(orderId)) return;
 
-  // The base gtag script loads afterInteractive and may not be ready when
-  // this effect runs — poll briefly instead of firing into the void.
+  // The pixel scripts load afterInteractive and may not be ready when this
+  // effect runs — poll until BOTH GA4 and Reddit are available (or ~5 s),
+  // then fire whichever loaded and mark the order fired once for both.
   let attempts = 0;
   const send = () => {
-    if (typeof window.gtag === "function") {
-      window.gtag("event", "purchase", {
-        transaction_id: orderId,
-        value: info.value,
-        currency: "CAD",
-        items: [{ item_id: tier, item_name: info.name, price: info.value, quantity: 1 }],
-      });
-      try { sessionStorage.setItem(FIRED_KEY, JSON.stringify([...fired, orderId])); } catch {}
+    const gaReady  = typeof window.gtag === "function";
+    const rdtReady = typeof window.rdt === "function";
+
+    if ((gaReady && rdtReady) || attempts >= 25) {
+      if (gaReady) {
+        window.gtag("event", "purchase", {
+          transaction_id: orderId,
+          value: info.value,
+          currency: "CAD",
+          items: [{ item_id: tier, item_name: info.name, price: info.value, quantity: 1 }],
+        });
+      }
+      if (rdtReady) {
+        window.rdt("track", "Purchase", {
+          value: info.value,
+          currency: "CAD",
+          itemCount: 1,
+          conversionId: orderId, // Reddit-side dedupe key
+        });
+      }
+      if (gaReady || rdtReady) {
+        try { sessionStorage.setItem(FIRED_KEY, JSON.stringify([...fired, orderId])); } catch {}
+      }
       return;
     }
-    if (attempts++ < 25) setTimeout(send, 200); // retry for up to ~5 s
+    attempts++;
+    setTimeout(send, 200); // retry for up to ~5 s
   };
   send();
 }
