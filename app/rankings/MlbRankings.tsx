@@ -1,5 +1,6 @@
 "use client";
 
+import ClearableSearch from "@/app/components/ClearableSearch";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
@@ -305,14 +306,7 @@ export default function MlbRankings() {
             {pos}
           </button>
         ))}
-        <input
-          type="text"
-          className="form-input text-xs ml-auto"
-          style={{ maxWidth: "14rem", paddingTop: "0.25rem", paddingBottom: "0.25rem" }}
-          placeholder="Search players…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <ClearableSearch value={search} onChange={setSearch} placeholder="Search players…" />
       </div>
 
       {dbStatus === "loading" && (

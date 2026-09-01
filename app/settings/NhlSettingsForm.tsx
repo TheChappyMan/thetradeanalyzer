@@ -175,6 +175,31 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 // Component
 // ============================================================
 
+/** Save/Create button row — duplicated at the bottom of each sport tab so
+ *  users don't have to scroll back up after editing long forms. */
+function SaveRow({
+  status, error, isNew, onSave,
+}: {
+  status: SaveStatus;
+  error: string | null;
+  isNew: boolean;
+  onSave: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-3 mt-6">
+      {status === "saved" && (
+        <span className="text-xs" style={{ color: "var(--color-success)" }}>✓ Saved!</span>
+      )}
+      {status === "error" && (
+        <span className="text-xs" style={{ color: "var(--color-danger)" }}>{error}</span>
+      )}
+      <button className="btn-accent" onClick={onSave} disabled={status === "saving"}>
+        {status === "saving" ? "Saving…" : isNew ? "Create League" : "Save Settings"}
+      </button>
+    </div>
+  );
+}
+
 export default function NhlSettingsForm({
   initialLeague,
   initialNflLeague,
@@ -1002,6 +1027,8 @@ export default function NhlSettingsForm({
             roster={league.roster}
             onChange={(cfg) => updateLeague({ draftPicks: cfg })}
           />
+
+          <SaveRow status={nhlStatus} error={nhlSaveError} isNew={nhlIsNew} onSave={handleNhlSave} />
         </>
       )}
 
@@ -1209,6 +1236,8 @@ export default function NhlSettingsForm({
             roster={nflLeague.roster}
             onChange={(cfg) => updateNflLeague({ draftPicks: cfg })}
           />
+
+          <SaveRow status={nflStatus} error={nflSaveError} isNew={nflIsNew} onSave={handleNflSave} />
         </>
       )}
 
@@ -1486,6 +1515,8 @@ export default function NhlSettingsForm({
               )}
             </div>
           </div>
+
+          <SaveRow status={mlbStatus} error={mlbSaveError} isNew={mlbIsNew} onSave={handleMlbSave} />
         </>
       )}
     </div>
