@@ -335,6 +335,9 @@ export default function NflTradeAnalyzer() {
   const [dbStatus,  setDbStatus]  = useState<DbStatus>("loading");
   const [dataSource, setDataSource] = useState<"sleeper" | "fallback">("sleeper");
   const [fallbackGeneratedAt, setFallbackGeneratedAt] = useState<string | null>(null);
+  // Pre-season: This Year modes are backed by Sleeper season projections
+  // until week 1 completes and real stats exist (then this stays false).
+  const [currentIsProjected, setCurrentIsProjected] = useState(false);
 
   // ── Tier 2: multi-league state ───────────────────────────────
   const [t2Leagues,      setT2Leagues]      = useState<LeagueRow[]>([]);
@@ -377,18 +380,42 @@ export default function NflTradeAnalyzer() {
             `(generated ${json.fallbackGeneratedAt ?? "unknown date"}). Data may be stale.`
           );
         }
-        // If the current season has NO data at all (pre-season / week 0),
-        // force a prior-year mode regardless of any saved preference so the
-        // analyzer never shows every player at zero. A merely thin season
-        // only overrides when the user has no saved preference.
+        // A merely thin season only overrides when the user has no saved
+        // preference. A season with NO data at all (pre-season / week 0)
+        // is handled below: This Year modes get backed by projections.
         const savedMode = (() => { try { return localStorage.getItem(LS_NFL_DATA_MODE); } catch { return null; } })();
         const significant = currentSeason.players.filter((p) => p.gamesPlayed >= 3).length;
         setDataMode((prev) => {
-          const usingThis = prev === "thisTotal" || prev === "thisAvg";
-          if (!currentSeason.hasData && usingThis) return "lastTotal";
+          if (!currentSeason.hasData) return prev; // resolved by the projections fetch
           if (!savedMode && significant < 100) return "lastTotal";
           return prev;
         });
+
+        // Pre-season: no real stats yet — substitute Sleeper season
+        // projections as the This Year dataset so "This Year" modes show
+        // projected numbers instead of 32 zero-stat DSTs. Once week 1
+        // completes, hasData flips true and live stats take over.
+        if (!currentSeason.hasData) {
+          fetch("/api/nfl?endpoint=projections")
+            .then((res) => (res.ok ? res.json() : Promise.reject()))
+            .then((proj: { seasonId: string; players: NflDbPlayer[] }) => {
+              if (cancelled) return;
+              if (Array.isArray(proj.players) && proj.players.length > 0) {
+                setCurrentSeasonDb(proj.players);
+                if (proj.seasonId) setCurrentSeasonIdStr(proj.seasonId);
+                setCurrentIsProjected(true);
+              } else {
+                throw new Error("empty projections");
+              }
+            })
+            .catch(() => {
+              // No projections either — bounce This Year modes to last season
+              if (cancelled) return;
+              setDataMode((prev) =>
+                prev === "thisTotal" || prev === "thisAvg" ? "lastTotal" : prev
+              );
+            });
+        }
         setDbStatus("ready");
       })
       .catch(() => { if (!cancelled) setDbStatus("error"); });
@@ -818,6 +845,7 @@ export default function NflTradeAnalyzer() {
             setDataMode={setDataMode}
             source={dataSource}
             fallbackGeneratedAt={fallbackGeneratedAt}
+            currentIsProjected={currentIsProjected}
           />
         </div>
 
@@ -1165,7 +1193,7 @@ export default function NflTradeAnalyzer() {
 
 function NflApiStatus({
   status, playerCount, currentSeasonId, priorSeasonId, dataMode, setDataMode,
-  source, fallbackGeneratedAt,
+  source, fallbackGeneratedAt, currentIsProjected,
 }: {
   status: DbStatus;
   playerCount: number;
@@ -1175,17 +1203,22 @@ function NflApiStatus({
   setDataMode: (m: DataMode) => void;
   source: "sleeper" | "fallback";
   fallbackGeneratedAt: string | null;
+  currentIsProjected: boolean;
 }) {
   if (status === "loading") return <div className="text-xs" style={{ color: "var(--color-muted)" }}>Loading NFL data…</div>;
   if (status === "error")   return <div className="text-xs" style={{ color: "var(--color-danger)" }}>NFL API unavailable — please refresh</div>;
-  const activeId = (dataMode === "thisTotal" || dataMode === "thisAvg")
-    ? currentSeasonId
-    : priorSeasonId;
+  const usingThis = dataMode === "thisTotal" || dataMode === "thisAvg";
+  const activeId  = usingThis ? currentSeasonId : priorSeasonId;
   return (
     <div className="text-xs text-left sm:text-right flex items-center gap-3 shrink-0" style={{ color: "var(--color-muted)" }}>
       <div className="whitespace-nowrap">
         <div>{playerCount} players loaded</div>
-        {activeId && <div>Season: {activeId}</div>}
+        {activeId && (
+          <div>
+            Season: {activeId}
+            {usingThis && currentIsProjected && " (projections)"}
+          </div>
+        )}
         {source === "fallback" && (
           <div className="text-amber-600">
             ⚠ Live data unavailable — cached data
@@ -1199,8 +1232,8 @@ function NflApiStatus({
         value={dataMode}
         onChange={(e) => setDataMode(e.target.value as DataMode)}
       >
-        <option value="thisTotal">This Year – Total</option>
-        <option value="thisAvg">This Year – Per-Game Proj.</option>
+        <option value="thisTotal">{currentIsProjected ? "This Year – Projected Total" : "This Year – Total"}</option>
+        <option value="thisAvg">{currentIsProjected ? "This Year – Projected Per-Game" : "This Year – Per-Game Proj."}</option>
         <option value="lastTotal">Last Year – Total</option>
         <option value="lastAvg">Last Year – Per-Game Proj.</option>
       </select>
