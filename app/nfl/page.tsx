@@ -78,7 +78,9 @@ function NflInjuryBadge({ status, mult, isRedraft }: {
   return (
     <span
       className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
-      title={showDiscount ? `Value discounted ×${mult.toFixed(2)} for redraft` : "Full value retained"}
+      title={showDiscount
+        ? `Value discounted ×${mult.toFixed(2)} for availability`
+        : "No value discount applied (keeper league, or projections already reflect the absence)"}
     >
       {label}
     </span>
@@ -623,6 +625,14 @@ export default function NflTradeAnalyzer() {
   // ── Trade values ───────────────────────────────────────────
   const keepersPerTeam = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
 
+  // Availability discounts (injury/suspension/NA) apply in redraft leagues —
+  // EXCEPT when the active dataset is Sleeper projections: Sleeper already
+  // bakes expected absences into projected totals (confirmed: Jacobs' NA
+  // dropped his projection), so discounting again would double-count.
+  const usingThisSeason = dataMode === "thisTotal" || dataMode === "thisAvg";
+  const availabilityDiscountActive =
+    league.leagueType === "redraft" && !(currentIsProjected && usingThisSeason);
+
   const sendValue = useMemo(() => {
     const playerTotal = sendPlayers.reduce((sum, p) => {
       const db = playerDb.find((x) => x.id === p.id);
@@ -635,7 +645,7 @@ export default function NflTradeAnalyzer() {
         p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
         1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      const iMult = nflInjuryMultiplier(db.injuryStatus, league.leagueType === "redraft");
+      const iMult = nflInjuryMultiplier(db.injuryStatus, availabilityDiscountActive);
       return sum + baseVar * scarcityMult * kMult * iMult;
     }, 0);
     const pickTotal = sendPicksParsed.reduce(
@@ -643,7 +653,7 @@ export default function NflTradeAnalyzer() {
     return playerTotal + pickTotal;
   }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
       replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap,
-      useRates, league.leagueType]);
+      useRates, availabilityDiscountActive]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -657,7 +667,7 @@ export default function NflTradeAnalyzer() {
         p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
         1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      const iMult = nflInjuryMultiplier(db.injuryStatus, league.leagueType === "redraft");
+      const iMult = nflInjuryMultiplier(db.injuryStatus, availabilityDiscountActive);
       return sum + baseVar * scarcityMult * kMult * iMult;
     }, 0);
     const pickTotal = recvPicksParsed.reduce(
@@ -665,7 +675,7 @@ export default function NflTradeAnalyzer() {
     return playerTotal + pickTotal;
   }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
       replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap,
-      useRates, league.leagueType]);
+      useRates, availabilityDiscountActive]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -1120,7 +1130,7 @@ export default function NflTradeAnalyzer() {
               talentRanking={talentRanking}
               teams={league.teams}
               keepersPerTeam={keepersPerTeam}
-            isRedraft={league.leagueType === "redraft"}
+            isRedraft={availabilityDiscountActive}
               playerDb={playerDb}
               dbStatus={dbStatus}
               scoringWeights={league.scoringWeights}
@@ -1142,7 +1152,7 @@ export default function NflTradeAnalyzer() {
               talentRanking={talentRanking}
               teams={league.teams}
               keepersPerTeam={keepersPerTeam}
-            isRedraft={league.leagueType === "redraft"}
+            isRedraft={availabilityDiscountActive}
               playerDb={playerDb}
               dbStatus={dbStatus}
               scoringWeights={league.scoringWeights}
