@@ -632,29 +632,36 @@ export async function GET(request: Request) {
   const currentPlayers = buildPlayers(meta, currentStats)
   const priorPlayers   = buildPlayers(meta, priorStats)
 
+  // buildPlayers appends all 32 DSTs unconditionally (even with zero stats),
+  // so a raw length check can never see an "empty" season. A season only has
+  // real data when at least one skill player survived the stat filters —
+  // otherwise (pre-season, before week 1 completes) it's just phantom DSTs.
+  const hasRealPlayers = (players: NflDbPlayer[]) =>
+    players.some((p) => p.position !== 'DST')
+
   // Both seasons empty means the stats API is down even though metadata
   // loaded — treat as unreachable rather than serving an empty analyzer.
-  if (currentPlayers.length === 0 && priorPlayers.length === 0) {
+  if (!hasRealPlayers(currentPlayers) && !hasRealPlayers(priorPlayers)) {
     if (endpoint === 'all-seasons') return fallbackResponse()
     return NextResponse.json({ data: FALLBACK.currentSeason.players, source: 'fallback' })
   }
 
   if (endpoint === 'all-seasons') {
     // Pre-season: the current year's stats endpoint legitimately returns
-    // nothing until week 1 — return it empty with hasData: false and let
-    // the client fall back to prior-season modes.
+    // nothing until week 1 — return it with hasData: false and let the
+    // client fall back to prior-season modes.
     return NextResponse.json({
       currentSeason: {
         seasonId: String(currentYear),
         players:  currentPlayers,
         source:   'sleeper',
-        hasData:  currentPlayers.length > 0,
+        hasData:  hasRealPlayers(currentPlayers),
       },
       priorSeason: {
         seasonId: String(priorYear),
         players:  priorPlayers,
         source:   'sleeper',
-        hasData:  priorPlayers.length > 0,
+        hasData:  hasRealPlayers(priorPlayers),
       },
     })
   }

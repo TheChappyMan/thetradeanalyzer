@@ -186,6 +186,12 @@ export default function NflRankings() {
         setPriorSeasonDb(json.priorSeason.players);
         setCurrentSeasonId(json.currentSeason.seasonId);
         setPriorSeasonId(json.priorSeason.seasonId);
+        // Pre-season: current year has no real stats yet (only phantom DSTs)
+        // — bounce off This Year Total to last year's actuals. Session-only
+        // correction; the user's saved mode preference is left untouched.
+        if (!json.currentSeason.hasData) {
+          setDataModeState((prev) => (prev === "thisTotal" ? "lastTotal" : prev));
+        }
         setDbStatus("ready");
       })
       .catch(() => { if (!cancelled) setDbStatus("error"); });
