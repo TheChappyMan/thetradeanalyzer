@@ -30,21 +30,61 @@ import {
 } from "@/lib/nfl-valuation";
 
 // ============================================================
-// INJURY STATUS — TODO
+// INJURY / AVAILABILITY STATUS
 // ============================================================
+// Sleeper's injury_status rides on each NflDbPlayer as injuryStatus.
+// Values seen in the wild: Questionable, Doubtful, Out, IR, PUP, Sus,
+// NA, COV, DNR. Discounts apply in REDRAFT leagues only (keeper leagues
+// retain full value, badge only) — same pattern as NHL/MLB.
 //
-// NFL injury logic (Q, D, IR, PUP, Out) is planned but not yet implemented.
-// The current data source is a static roster snapshot; it does not include
-// real-time injury designations.  Injury awareness will be added here once
-// the app is connected to a live NFL data feed (e.g. ESPN, NFL.com API, or
-// a third-party sports data provider) that exposes per-player injury status.
-//
-// When that data is available the implementation pattern to follow is:
-//   • Fetch injuryMap: Record<number, string> (playerId → status) in the API route
-//   • Add nflInjuryMultiplier(status, isRedraft): number  (Q→1.0 badge, D→0.85, IR→0.35, Out→0.10)
-//   • Apply multiplier in the value calculation (redraft only, same as NHL/MLB)
-//   • Render <InjuryBadge> on each player card
-//
+// NFL discounts are scaled to a 17-game season, not copied from NHL
+// (where "Out" means out for the season): Doubtful/Out are ~1 missed
+// game (~6%); IR and PUP are a 4-game minimum (~25%); Sus is typically
+// multi-game; NA is unavailable for an unknown duration (e.g. league
+// investigation) — discounted between a 1-gamer and an IR stint.
+
+function nflInjuryMultiplier(status: string | undefined, isRedraft: boolean): number {
+  if (!status || !isRedraft) return 1.0;
+  switch (status) {
+    case "Questionable": return 1.0;   // badge only — game-time decision
+    case "Doubtful":     return 0.95;  // likely misses ~1 game
+    case "Out":          return 0.95;  // ruled out ~1 game
+    case "IR":           return 0.75;  // 4-game minimum
+    case "PUP":          return 0.75;  // 4-game minimum
+    case "Sus":          return 0.75;  // suspension, typically multi-game
+    case "NA":           return 0.80;  // unavailable, duration unknown
+    default:             return 1.0;   // COV / DNR / anything new — badge only
+  }
+}
+
+function NflInjuryBadge({ status, mult, isRedraft }: {
+  status: string | undefined;
+  mult: number;
+  isRedraft: boolean;
+}) {
+  if (!status) return null;
+  const isAmber  = status === "Questionable";
+  const isOrange = status === "Doubtful" || status === "Out";
+  const isRed    = status === "IR" || status === "PUP";
+  const isDark   = status === "Sus" || status === "NA";
+  const { border, text, bg } =
+    isAmber  ? { border: "border-amber-400",  text: "text-amber-700",  bg: "bg-amber-50"  } :
+    isOrange ? { border: "border-orange-400", text: "text-orange-700", bg: "bg-orange-50" } :
+    isRed    ? { border: "border-red-400",    text: "text-red-700",    bg: "bg-red-50"    } :
+    isDark   ? { border: "border-red-700",    text: "text-red-900",    bg: "bg-red-100"   } :
+               { border: "border-gray-300",   text: "text-gray-600",   bg: ""             };
+  const label = status === "Sus" ? "Suspended" : status;
+  const showDiscount = isRedraft && mult < 1.0;
+  return (
+    <span
+      className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
+      title={showDiscount ? `Value discounted ×${mult.toFixed(2)} for redraft` : "Full value retained"}
+    >
+      {label}
+    </span>
+  );
+}
+
 // ============================================================
 // TYPES
 // ============================================================
@@ -595,13 +635,15 @@ export default function NflTradeAnalyzer() {
         p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
         1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      return sum + baseVar * scarcityMult * kMult;
+      const iMult = nflInjuryMultiplier(db.injuryStatus, league.leagueType === "redraft");
+      return sum + baseVar * scarcityMult * kMult * iMult;
     }, 0);
     const pickTotal = sendPicksParsed.reduce(
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap, useRates]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap,
+      useRates, league.leagueType]);
 
   const recvValue = useMemo(() => {
     const playerTotal = recvPlayers.reduce((sum, p) => {
@@ -615,13 +657,15 @@ export default function NflTradeAnalyzer() {
         p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
         1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      return sum + baseVar * scarcityMult * kMult;
+      const iMult = nflInjuryMultiplier(db.injuryStatus, league.leagueType === "redraft");
+      return sum + baseVar * scarcityMult * kMult * iMult;
     }, 0);
     const pickTotal = recvPicksParsed.reduce(
       (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
     return playerTotal + pickTotal;
   }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap, useRates]);
+      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap,
+      useRates, league.leagueType]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -1076,6 +1120,7 @@ export default function NflTradeAnalyzer() {
               talentRanking={talentRanking}
               teams={league.teams}
               keepersPerTeam={keepersPerTeam}
+            isRedraft={league.leagueType === "redraft"}
               playerDb={playerDb}
               dbStatus={dbStatus}
               scoringWeights={league.scoringWeights}
@@ -1097,6 +1142,7 @@ export default function NflTradeAnalyzer() {
               talentRanking={talentRanking}
               teams={league.teams}
               keepersPerTeam={keepersPerTeam}
+            isRedraft={league.leagueType === "redraft"}
               playerDb={playerDb}
               dbStatus={dbStatus}
               scoringWeights={league.scoringWeights}
@@ -1259,6 +1305,7 @@ type NflTradeSideProps = {
   rankMap: Map<number, number>;
   rbRankMap: Map<number, number>;
   teRankMap: Map<number, number>;
+  isRedraft: boolean;
   onAdd: (p: NflDbPlayer) => void;
   onRemove: (id: number) => void;
   onToggleKeeper: (id: number) => void;
@@ -1267,7 +1314,8 @@ type NflTradeSideProps = {
 
 function NflTradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
-  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, rbRankMap, teRankMap, onAdd, onRemove, onToggleKeeper, useRates,
+  playerDb, dbStatus, scoringWeights, replacementLevels, rankMap, rbRankMap, teRankMap,
+  isRedraft, onAdd, onRemove, onToggleKeeper, useRates,
 }: NflTradeSideProps) {
   return (
     <div>
@@ -1290,6 +1338,7 @@ function NflTradeSide({
             rbRank={p.position === "RB" ? (rbRankMap.get(p.id) ?? 999) : null}
             teRank={p.position === "TE" ? (teRankMap.get(p.id) ?? 999) : null}
             totalPlayers={playerDb.length}
+            isRedraft={isRedraft}
             onRemove={() => onRemove(p.id)}
             onToggleKeeper={() => onToggleKeeper(p.id)}
             useRates={useRates}
@@ -1333,13 +1382,15 @@ type NflPlayerRowProps = {
   /** 1-based rank among all TEs by base VAR; null for non-TEs. */
   teRank: number | null;
   totalPlayers: number;
+  isRedraft: boolean;
   onRemove: () => void;
   onToggleKeeper: () => void;
   useRates: boolean;
 };
 
 function NflPlayerRow({
-  player, dbEntry, scoringWeights, replacementLevels, rank, rbRank, teRank, totalPlayers, onRemove, onToggleKeeper, useRates,
+  player, dbEntry, scoringWeights, replacementLevels, rank, rbRank, teRank, totalPlayers,
+  isRedraft, onRemove, onToggleKeeper, useRates,
 }: NflPlayerRowProps) {
   if (!dbEntry) return null;
   const projected      = projectedNflValue(dbEntry, scoringWeights, useRates);
@@ -1350,7 +1401,8 @@ function NflPlayerRow({
     teRank !== null ? teScarcityMultiplier(teRank) :
     1.0;
   const kMult          = player.isKeeper ? keeperMultiplier(rank) : 1.0;
-  const varValue       = baseVar * scarcityMult * kMult;
+  const iMult          = nflInjuryMultiplier(dbEntry.injuryStatus, isRedraft);
+  const varValue       = baseVar * scarcityMult * kMult * iMult;
   const rbTier         = rbRank !== null ? rbScarcityTier(rbRank) : null;
   const teTier         = teRank !== null ? teScarcityTier(teRank) : null;
 
@@ -1359,6 +1411,7 @@ function NflPlayerRow({
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 min-w-0">
           <span className="font-semibold" style={{ color: "var(--color-text)" }}>{player.name}</span>
+          <NflInjuryBadge status={dbEntry.injuryStatus} mult={iMult} isRedraft={isRedraft} />
           {rbTier === "elite" && (
             <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}>
               Elite RB
@@ -1397,6 +1450,9 @@ function NflPlayerRow({
           Projected: {projected.toFixed(1)}
           {rank !== null && (
             <span className="ml-3">League Ranking: {rank} / {totalPlayers}</span>
+          )}
+          {iMult < 1.0 && (
+            <span className="ml-2 text-orange-600">×{iMult.toFixed(2)} availability</span>
           )}
         </span>
         <span className="font-semibold" style={{ color: "var(--color-text)" }}>VAR: {varValue.toFixed(1)}</span>

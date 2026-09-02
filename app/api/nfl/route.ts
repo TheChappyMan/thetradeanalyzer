@@ -520,9 +520,11 @@ function buildPlayers(meta: SleeperMeta, seasonData: SeasonTotals): NflDbPlayer[
 
   for (const [pid, info] of Object.entries(meta)) {
     if (!info) continue
+    // Suspended players stay in the pool — they're still tradeable; the
+    // analyzer applies an availability discount instead of hiding them.
     const status = (info.status ?? '').toLowerCase()
     if (status && !['active', 'injured_reserve', 'physically_unable_to_perform',
-                    'ir', 'reserve', ''].includes(status)) continue
+                    'ir', 'reserve', 'suspended', ''].includes(status)) continue
 
     const positions = info.fantasy_positions ?? (info.position ? [info.position] : [])
     const pos = positions[0]
