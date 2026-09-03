@@ -101,6 +101,29 @@ function dstPtsAllowedScore(
 // ============================================================
 
 /**
+ * Convert raw bench slots per team into "effective" bench slots before any
+ * positional allocation.
+ *
+ * Rationale: the first ~3 bench players genuinely rotate into lineups
+ * during byes and injuries, so they deepen the replacement bar at full
+ * weight. Slots 4–5 are speculative stashes that only sometimes matter
+ * (half weight). Slots 6+ are lottery tickets that never set the bar for
+ * what a startable player is worth (zero weight). Counting every slot
+ * fully pushed replacement level in deep-bench leagues (e.g. 11 BN) down
+ * to players who would never crack a lineup, inflating VAR for every
+ * startable player and for late draft picks.
+ *
+ *   effectiveBench = min(BN, 3) + 0.5 × max(0, min(BN, 5) − 3)
+ *   BN=2 → 2.0   BN=3 → 3.0   BN=4 → 3.5   BN=5 → 4.0   BN=11 → 4.0
+ *
+ * NOTE: this weight table is a candidate for retuning together with the
+ * scarcity-multiplier retune.
+ */
+export function effectiveBenchSlots(rawBench: number): number {
+  return Math.min(rawBench, 3) + 0.5 * Math.max(0, Math.min(rawBench, 5) - 3)
+}
+
+/**
  * The projected value of the last startable player at a given position.
  *
  * For QB: startable count = teams × 1 (1QB) or teams × 2 (2QB).
@@ -128,13 +151,16 @@ export function replacementLevelValue(
 
   // ── Bench-aware effective counts (per team) ────────────────
   // Rostered bench players are not freely available, so replacement sits
-  // below the bench, not just below the starters. Exactly 1 bench slot per
-  // team is allocated to QB; ALL remaining bench slots distribute across
-  // RB/WR/TE in proportion to each position's starter+flex count, so the
-  // split self-adjusts to league format. K and DST receive no bench
-  // allocation (kickers and defenses are rarely benched). IR slots are
-  // excluded entirely — IR players are not acquirable replacements.
-  const bench          = roster.BN ?? 0
+  // below the bench, not just below the starters. Raw bench slots are first
+  // converted to diminishing-weight "effective" slots (see
+  // effectiveBenchSlots); then exactly 1 effective slot per team goes to QB
+  // and the remainder distributes across RB/WR/TE in proportion to each
+  // position's starter+flex count, so the split self-adjusts to league
+  // format. Fractional slots flow through the proportional math untouched.
+  // K and DST receive no bench allocation (kickers and defenses are rarely
+  // benched). IR slots are excluded entirely — IR players are not
+  // acquirable replacements.
+  const bench          = effectiveBenchSlots(roster.BN ?? 0)
   const qbBench        = Math.min(1, bench)
   const remainingBench = Math.max(0, bench - qbBench)
   const flex  = roster.FLEX ?? 0
@@ -154,17 +180,17 @@ export function replacementLevelValue(
     DST: roster.DST ?? 0,
   }
 
-  // Invariant: effective counts sum to the roster size excluding IR
-  // (with QB slots counted at the format-derived starter count). The
+  // Invariant: effective counts sum to starters + effective bench, excluding
+  // IR (with QB slots counted at the format-derived starter count). The
   // proportional method satisfies this exactly; warn if it ever drifts.
   const effectiveSum = Object.values(perTeam).reduce((a, b) => a + b, 0)
-  const rosterExclIr =
+  const startersPlusEffBench =
     qbStarters + (roster.RB ?? 0) + (roster.WR ?? 0) + (roster.TE ?? 0) +
     (roster.FLEX ?? 0) + (roster.K ?? 0) + (roster.DST ?? 0) + bench
-  if (Math.abs(effectiveSum - rosterExclIr) > 1e-6) {
+  if (Math.abs(effectiveSum - startersPlusEffBench) > 1e-6) {
     console.warn(
       `[NFL replacement] effective counts (${effectiveSum.toFixed(4)}) do not sum to ` +
-      `roster size excl. IR (${rosterExclIr}) — bench distribution is broken`
+      `starters + effective bench (${startersPlusEffBench.toFixed(4)}) — bench distribution is broken`
     )
   }
 
