@@ -340,9 +340,19 @@ export default function NflRankings() {
   }, [draftActive, league.draftPicks, league.teams, league.roster, takenCount, mineCount]);
 
   // ── Recommendations: recomputed on every checkbox change ──
-  // Same VAR engine as the table, but priced against the AVAILABLE pool
-  // only (bars shift as players come off the board), with RB/TE scarcity
-  // multipliers applied and roster-need awareness for my picks.
+  // Same VAR engine AND the same full-pool replacement bars as the table,
+  // with RB/TE scarcity multipliers applied and roster-need awareness for
+  // my picks.
+  //
+  // The bars are deliberately NOT recomputed against the available pool:
+  // per-available bars fall fastest at whichever position the board (and
+  // the user) drafted most, making leftover players at drained positions
+  // outscore genuinely better players at untouched ones — an inverted
+  // positional need. (Repro: RB bar 53.0 vs WR bar 127.4 made a 143-pt RB
+  // "worth" 90.1 while a 204-pt WR scored 76.3, and rank-1-of-available
+  // pinned the ×1.30 elite-RB multiplier onto him → green over a
+  // need-flagged, higher-VAR WR.) Scarcity ranks likewise use the full
+  // pool, matching the trade analyzer's semantics.
   const draftRec = useMemo(() => {
     if (!draftActive || playerDb.length === 0) return null;
     const available = playerDb.filter((p) => taken[p.id] === undefined);
@@ -350,19 +360,15 @@ export default function NflRankings() {
     const weights = league.scoringWeights;
     const roster = league.roster as NflRoster;
 
-    const repl = new Map<NflPlayerPosition, number>();
-    for (const pos of NFL_POSITIONS) {
-      repl.set(pos, replacementLevelValue(
-        pos, available, weights, roster, league.teams, league.qbFormat, useRates));
-    }
-    const projOf = new Map(available.map((p) => [p.id, projectedNflValue(p, weights, useRates)]));
+    const projOf = new Map(playerDb.map((p) => [p.id, projectedNflValue(p, weights, useRates)]));
     const baseVar = (p: NflDbPlayer) =>
-      valueAboveReplacement(projOf.get(p.id) ?? 0, repl.get(p.position) ?? 0);
+      valueAboveReplacement(projOf.get(p.id) ?? 0, replacementLevels.get(p.position) ?? 0);
 
-    // RB/TE scarcity multipliers by VAR rank among available at the position
+    // RB/TE/QB scarcity multipliers by VAR rank across the FULL pool —
+    // drafting the RB1 does not turn RB20 into an "elite" RB1.
     const scarcityRank = new Map<number, number>();
     for (const pos of ["RB", "TE", "QB"] as const) {
-      available
+      playerDb
         .filter((p) => p.position === pos)
         .sort((a, b) => baseVar(b) - baseVar(a))
         .forEach((p, i) => scarcityRank.set(p.id, i + 1));
@@ -467,7 +473,7 @@ export default function NflRankings() {
       }
     }
     return recTiersFor(recs.map((r) => r.p.id));
-  }, [draftActive, playerDb, taken, league, useRates, nextPick, availabilityDiscountActive]);
+  }, [draftActive, playerDb, taken, league, useRates, nextPick, availabilityDiscountActive, replacementLevels]);
 
   // ── Filters ───────────────────────────────────────────────
   const [posFilter, setPosFilter] = useState<NflPlayerPosition | "ALL">("ALL");
