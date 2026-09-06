@@ -139,6 +139,8 @@ export type NflDbPlayer = {
    * Data plumbing only for now — badges/discounts are a pending feature.
    */
   injuryStatus?: string;
+  /** Team bye week this season (1-18), derived from Sleeper weekly projections. */
+  byeWeek?: number;
   stats: NflPlayerStats;
 };
 

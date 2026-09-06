@@ -81,6 +81,14 @@ export const FIXTURES: Fixture[] = [
   { key: "sf.d.zeroQBs",     kind: "true", note: "3 QBs + final-3 window → still zero QBs (cap, 6e3f090)" },
   { key: "sf.e.qbEligible",  kind: "true", note: "2 QBs + final-3 window → QB eligible again" },
 
+  // 10. Bye-stacking (soft rec-score penalty; BYE_STACK_PENALTY in
+  //     lib/nfl-draft-rec.ts). Synthetic byes injected by the harness.
+  { key: "bye.neartie.greenIsBye10", kind: "true", note: "3 same-bye held: x0.85 flips a ~4.5% near-tie to the bye-10 rival" },
+  { key: "bye.neartie.scoreBye7",  kind: "range", min: 151.1, max: 204.5, note: "penalized score 177.8 +-15% (Gibbs x1.30 x0.85)" },
+  { key: "bye.neartie.scoreBye10", kind: "range", min: 170.1, max: 230.1, note: "rival score 200.1 +-15% (Bijan x1.30)" },
+  { key: "bye.clear.staysGreen",   kind: "true", note: "20%+ clear candidate stays green despite worst bye penalty" },
+  { key: "bye.zerooverlap.identical", kind: "true", note: "<=1 same-bye: recs byte-identical to no-bye-data run" },
+
   // 9. One-engine consistency: rankings VAR === rec-layer base VAR
   //    (available-pool divergence bug, de4fc1f).
   { key: "consistency.rankingsEqualsRec", kind: "true", note: "rankings path === rec layer, 5 samples" },

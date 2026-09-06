@@ -1402,7 +1402,7 @@ function NflPlayerRow({
             </span>
           )}
           <span className="ml-1" style={{ color: "var(--color-muted)" }}>
-            {dbEntry.team} · {player.position} · {dbEntry.gamesPlayed} GP
+            {dbEntry.team} · {player.position} · {dbEntry.gamesPlayed} GP{dbEntry.byeWeek !== undefined ? ` · Bye ${dbEntry.byeWeek}` : ""}
           </span>
         </div>
         <button
@@ -1568,7 +1568,7 @@ function NflPlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: NflPl
             >
               <span className="font-medium" style={{ color: "var(--color-text)" }}>{p.name}</span>
               <span className="text-xs" style={{ color: "var(--color-muted)" }}>
-                {p.team} · {p.position} · {p.gamesPlayed} GP
+                {p.team} · {p.position} · {p.gamesPlayed} GP{p.byeWeek !== undefined ? ` · Bye ${p.byeWeek}` : ""}
               </span>
             </div>
           ))}

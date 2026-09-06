@@ -31,6 +31,18 @@ import {
 // its value overwhelms the best need-filling option by this factor.
 export const NFL_REC_OVERWHELM = 1.5
 
+// Bye-stacking penalty on a candidate's REC SCORE (recommendation layer
+// only — the valuation engine, VAR, rankings order, and trade values never
+// see this). Soft by design: it breaks near-ties and demotes marginal picks
+// but can never override a large VAR gap — the worst factor (0.85) flips at
+// most a 1/0.85 ≈ 17.6% edge, so a candidate 20%+ clear of the alternatives
+// stays on top regardless of bye. Counts only lineup-relevant roster players
+// (K/DST are skipped on both sides). Tuning candidate.
+export const BYE_STACK_PENALTY = {
+  /** 2 same-bye players already on roster */ two: 0.95,
+  /** 3+ same-bye players already on roster */ threePlus: 0.85,
+} as const
+
 export type NflDraftRecInput = {
   playerDb: NflDbPlayer[]
   taken: Record<number, 'league' | 'mine'>
@@ -57,6 +69,8 @@ export type NflDraftRecResult = {
     needsByPos: Record<string, boolean>
     /** Internal base VAR for each requested probeId. */
     probeBaseVar: Record<number, number>
+    /** My lineup-relevant players per bye week (no K/DST). */
+    myByeCounts: Record<number, number>
   }
 }
 
@@ -146,11 +160,24 @@ export function computeNflDraftRecs(input: NflDraftRecInput): NflDraftRecResult 
   const skillNeedsRemain = (['QB', 'RB', 'WR', 'TE'] as const).some(needs)
   const allowKDst = picksRemaining > 0 && (picksRemaining <= 2 || !skillNeedsRemain)
 
+  // Bye-stacking: count my lineup-relevant players (no K/DST) per bye week;
+  // a candidate sharing a bye with 2+ of them takes a soft rec-score penalty.
+  const myByeCounts: Record<number, number> = {}
+  for (const p of mine) {
+    if (p.position === 'K' || p.position === 'DST') continue
+    if (p.byeWeek !== undefined) myByeCounts[p.byeWeek] = (myByeCounts[p.byeWeek] ?? 0) + 1
+  }
+  const byePenalty = (p: NflDbPlayer): number => {
+    if (p.position === 'K' || p.position === 'DST') return 1
+    const n = p.byeWeek !== undefined ? (myByeCounts[p.byeWeek] ?? 0) : 0
+    return n >= 3 ? BYE_STACK_PENALTY.threePlus : n === 2 ? BYE_STACK_PENALTY.two : 1
+  }
+
   const candidates = available.filter((p) =>
     p.position === 'K' || p.position === 'DST' ? allowKDst :
     p.position === 'QB' ? !qbSuppressed : true)
   const scored = candidates
-    .map((p) => ({ p, value: adjVar(p), need: needs(p.position) }))
+    .map((p) => ({ p, value: adjVar(p) * byePenalty(p), need: needs(p.position) }))
     .sort((a, b) => b.value - a.value)
   const bestNeed = scored.find((s) => s.need)?.value ?? 0
   let recs = scored
@@ -187,6 +214,7 @@ export function computeNflDraftRecs(input: NflDraftRecInput): NflDraftRecResult 
         TE: needs('TE'), K: needs('K'), DST: needs('DST'),
       },
       probeBaseVar,
+      myByeCounts,
     },
   }
 }

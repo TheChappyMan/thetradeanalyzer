@@ -327,10 +327,10 @@ function projectionsResponse() {
           const rest = await fetchRestOfSeasonProjections(state.season, completedWeek)
           if (rest) {
             backfillDstPtsAllowed(rest, await fetchSeasonStats(Number(state.season)))
-            restPlayers = buildPlayers(meta, rest)
+            restPlayers = attachByeWeeks(buildPlayers(meta, rest), await fetchByeWeeks(state.season))
           }
         }
-        const players = buildPlayers(meta, seasonProj)
+        const players = attachByeWeeks(buildPlayers(meta, seasonProj), await fetchByeWeeks(state.season))
         const data: ProjectionsPayload = {
           seasonId: state.season,
           week: completedWeek,
@@ -502,6 +502,63 @@ function stableId(pid: string): number {
   return (Math.abs(h) % 80000) + 10000
 }
 
+// ── Bye weeks ────────────────────────────────────────────────────────────────
+// Sleeper's player metadata carries no bye field. Byes are derived from the
+// weekly projections: a team's bye is the week where all of its rows have
+// opponent == null (verified live: GB 11, DET 6, KC 5, BUF 7, SF 8 for 2026).
+// 18 light QB-only fetches, cached in-module for 24h alongside projCache.
+
+let byeCache: { map: Record<string, number>; season: string; fetchedAt: number } | null = null
+const BYE_TTL_MS = 86_400_000
+
+async function fetchByeWeeks(season: string): Promise<Record<string, number>> {
+  if (byeCache && byeCache.season === season && Date.now() - byeCache.fetchedAt < BYE_TTL_MS) {
+    return byeCache.map
+  }
+  const map: Record<string, number> = {}
+  try {
+    const weeks = await Promise.all(
+      Array.from({ length: NFL_WEEKS }, (_, i) =>
+        fetch(`${SLEEPER_PROJ}/${season}/${i + 1}?season_type=regular&position[]=QB`, {
+          next: { revalidate: 86400 },
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      )
+    )
+    weeks.forEach((rows, i) => {
+      if (!Array.isArray(rows)) return
+      const byTeam: Record<string, { total: number; nullOpp: number }> = {}
+      for (const row of rows) {
+        const team = (row as { team?: unknown }).team
+        if (typeof team !== 'string' || !team) continue
+        const t = (byTeam[team] ??= { total: 0, nullOpp: 0 })
+        t.total++
+        if ((row as { opponent?: unknown }).opponent == null) t.nullOpp++
+      }
+      for (const [team, c] of Object.entries(byTeam)) {
+        if (c.total > 0 && c.nullOpp === c.total && map[team] === undefined) map[team] = i + 1
+      }
+    })
+  } catch {
+    // byes are supplemental — serve players without them rather than fail
+  }
+  // Only cache a plausibly complete map (most of 32 teams found)
+  if (Object.keys(map).length >= 20) {
+    byeCache = { map, season, fetchedAt: Date.now() }
+  }
+  return map
+}
+
+/** Attach this season's team bye week to every player (mutates in place). */
+function attachByeWeeks(players: NflDbPlayer[], byeMap: Record<string, number>): NflDbPlayer[] {
+  for (const p of players) {
+    const bye = byeMap[p.team]
+    if (bye !== undefined) p.byeWeek = bye
+  }
+  return players
+}
+
 // ── Build NflDbPlayer list for one season ───────────────────────────────────
 
 function buildPlayers(meta: SleeperMeta, seasonData: SeasonTotals): NflDbPlayer[] {
@@ -631,8 +688,12 @@ export async function GET(request: Request) {
     fetchSeasonStats(currentYear),
     fetchSeasonStats(priorYear),
   ])
-  const currentPlayers = buildPlayers(meta, currentStats)
-  const priorPlayers   = buildPlayers(meta, priorStats)
+  // Byes are a THIS-season schedule property: attach the current season's
+  // map to both lists (drafters care about the player's bye this year even
+  // when valuing last-year stats).
+  const byeMap = await fetchByeWeeks(String(currentYear))
+  const currentPlayers = attachByeWeeks(buildPlayers(meta, currentStats), byeMap)
+  const priorPlayers   = attachByeWeeks(buildPlayers(meta, priorStats), byeMap)
 
   // buildPlayers appends all 32 DSTs unconditionally (even with zero stats),
   // so a raw length check can never see an "empty" season. A season only has

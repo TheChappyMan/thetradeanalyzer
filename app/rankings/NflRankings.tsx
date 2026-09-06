@@ -388,10 +388,22 @@ export default function NflRankings() {
     ? (projStatus === "ready" && !projAvailable ? "error" : projStatus)
     : dbStatus;
 
+  // My lineup-relevant players per bye week — drives the "⚠ stack" indicator
+  // on candidate rows (2+ same-bye players already marked Mine).
+  const myByeCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    for (const p of playerDb) {
+      if (taken[p.id] !== "mine") continue;
+      if (p.position === "K" || p.position === "DST") continue;
+      if (p.byeWeek !== undefined) counts[p.byeWeek] = (counts[p.byeWeek] ?? 0) + 1;
+    }
+    return counts;
+  }, [playerDb, taken]);
+
   const columns = posFilter === "ALL" ? [] : POSITION_COLUMNS[posFilter];
   const avgForPos = posFilter === "ALL" ? undefined : poolAverages.get(posFilter);
   const colCount =
-    (draftActive ? 2 : 0) + 6 + (posFilter === "ALL" ? 1 : 0) + columns.length;
+    (draftActive ? 2 : 0) + 7 + (posFilter === "ALL" ? 1 : 0) + columns.length; // 7 = rank/name/team/bye/gp/proj/var
 
   // Marker only renders on the unfiltered list — a filtered or searched view
   // hides players, so "N available players from the top" would be misleading.
@@ -534,6 +546,7 @@ export default function NflRankings() {
                 <th className="px-2 py-1.5 font-medium">Player</th>
                 {posFilter === "ALL" && <th className="px-2 py-1.5 font-medium">Pos</th>}
                 <th className="px-2 py-1.5 font-medium">Team</th>
+                <th className="px-2 py-1.5 font-medium text-right">Bye</th>
                 <th className="px-2 py-1.5 font-medium text-right">GP</th>
                 <th className="px-2 py-1.5 font-medium text-right">Proj Pts</th>
                 <th className="px-2 py-1.5 font-medium text-right">VAR</th>
@@ -579,6 +592,21 @@ export default function NflRankings() {
                     </td>
                     {posFilter === "ALL" && <td className="px-2 py-1">{r.p.position}</td>}
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.p.team}</td>
+                    <td className="px-2 py-1 text-right whitespace-nowrap" style={{ color: "var(--color-muted)" }}>
+                      {r.p.byeWeek ?? "–"}
+                      {/* Bye-stacking warning: candidate shares a bye with 2+ of my
+                          lineup-relevant players (color + text per accessibility) */}
+                      {draftActive && !isTaken && r.p.byeWeek !== undefined &&
+                        (myByeCounts[r.p.byeWeek] ?? 0) >= 2 && (
+                        <span
+                          className="ml-1 text-[10px] font-semibold"
+                          style={{ color: "#D4843B" }}
+                          title={`Bye ${r.p.byeWeek} — you already have ${myByeCounts[r.p.byeWeek]} players on bye that week`}
+                        >
+                          ⚠ stack
+                        </span>
+                      )}
+                    </td>
                     <td className="px-2 py-1 text-right" style={{ color: "var(--color-muted)" }}>{r.p.gamesPlayed}</td>
                     <td className="px-2 py-1 text-right font-semibold">{r.proj.toFixed(1)}</td>
                     <td className="px-2 py-1 text-right">{r.var_.toFixed(1)}</td>

@@ -225,6 +225,61 @@ for (const bn of [2, 3, 4, 5, 11]) actuals[`bench.eff.${bn}`] = effectiveBenchSl
   // (e) 2 QBs + final-3 window → eligible
   actuals["sf.e.qbEligible"] = !recs(proj, mark(qb(2), "mine"), SF, 3).diag.qbSuppressed;
 }
+// 10. Bye-stacking (synthetic byes injected — the frozen snapshot predates
+//     the byeWeek field, and synthetic assignment keeps these deterministic)
+{
+  const withBye = (p: NflDbPlayer, byeWeek: number): NflDbPlayer => ({ ...p, byeWeek });
+  const rbs = byProj(proj, "RB", SF);
+  const wrs = byProj(proj, "WR", SF);
+  // (a) Near-tie: top-2 RBs are within ~5% (209.2 vs 200.1 adj in SF).
+  //     Give the higher one bye 7 and 3 of my players bye 7 → ×0.85 must
+  //     flip green to the bye-10 rival.
+  {
+    const players = proj.map((p) => {
+      if (p.id === rbs[0].id) return withBye(p, 7);
+      if (p.id === rbs[1].id) return withBye(p, 10);
+      if ([wrs[0].id, wrs[1].id, wrs[2].id].includes(p.id)) return withBye(p, 7);
+      return p;
+    });
+    const taken = mark([wrs[0], wrs[1], wrs[2]].map((w) => players.find((p) => p.id === w.id)!), "mine");
+    const r = recs(players, taken, SF, 10, [rbs[0].id, rbs[1].id]);
+    actuals["bye.neartie.greenIsBye10"] = r.recPlayers[0]?.id === rbs[1].id;
+    // Reported scores: both are RB rank 1-2 in the full pool → ×1.30 scarcity;
+    // the bye-7 candidate additionally takes ×0.85 (3 same-bye players held).
+    actuals["bye.neartie.scoreBye7"] = +((r.diag.probeBaseVar[rbs[0].id] ?? 0) * 1.30 * 0.85).toFixed(1);
+    actuals["bye.neartie.scoreBye10"] = +((r.diag.probeBaseVar[rbs[1].id] ?? 0) * 1.30).toFixed(1);
+  }
+  // (b) 25%+ clear: same 3×bye-7 roster, but the bye-7 candidate has no
+  //     near rival (next alternatives league-taken) → stays green despite ×0.85.
+  {
+    const players = proj.map((p) => (p.id === rbs[0].id ? withBye(p, 7) :
+      [wrs[0].id, wrs[1].id, wrs[2].id].includes(p.id) ? withBye(p, 7) : p));
+    const taken = mark([wrs[0], wrs[1], wrs[2]].map((w) => players.find((p) => p.id === w.id)!), "mine");
+    // Remove near rivals INCLUDING the top superflex QB (who otherwise
+    // outboosts the penalized RB) so the bye-7 candidate is 20%+ clear.
+    const qbs = byProj(proj, "QB", SF);
+    for (const rival of [rbs[1], rbs[2], rbs[3], qbs[0]]) taken[rival.id] = "league";
+    const r = recs(players, taken, SF, 10);
+    actuals["bye.clear.staysGreen"] = r.recPlayers[0]?.id === rbs[0].id;
+  }
+  // (c) Zero bye overlap (≤1 same-bye) → recIds identical to no-bye-data run.
+  {
+    const playersNoBye = proj;
+    const playersBye = proj.map((p, i) => ({ ...p, byeWeek: (i % 14) + 5 })); // spread byes broadly
+    const mine = [rbs[0], wrs[0]];
+    // Force the two Mine players onto DIFFERENT byes so no 2+ stack exists
+    playersBye.find((p) => p.id === rbs[0].id)!.byeWeek = 5;
+    playersBye.find((p) => p.id === wrs[0].id)!.byeWeek = 6;
+    const a = recs(playersNoBye, mark(mine.map((m) => playersNoBye.find((p) => p.id === m.id)!), "mine"), SF, 10);
+    const b = recs(playersBye, mark(mine.map((m) => playersBye.find((p) => p.id === m.id)!), "mine"), SF, 10);
+    // Strict: with no 2+ same-bye stack, penalties are all ×1 and the rec
+    // list must be byte-identical to the run with no bye data at all.
+    actuals["bye.zerooverlap.identical"] =
+      JSON.stringify(a.recIds) === JSON.stringify(b.recIds) &&
+      Object.values(b.diag.myByeCounts).every((n) => n < 2);
+  }
+}
+
 // 9. One-engine consistency: rankings VAR === rec-layer base VAR (5 samples)
 {
   const b = bars(proj, KEP);
