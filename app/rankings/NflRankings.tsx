@@ -1,6 +1,7 @@
 "use client";
 
 import ClearableSearch from "@/app/components/ClearableSearch";
+import NflInjuryBadge from "@/app/components/NflInjuryBadge";
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
@@ -658,6 +659,13 @@ export default function NflRankings() {
                     <td className="px-2 py-1" style={{ color: "var(--color-muted)" }}>{r.rank}</td>
                     <td className="px-2 py-1 font-medium whitespace-nowrap">
                       {r.p.name}
+                      {r.p.injuryStatus && (
+                        <span className="ml-1.5">
+                          {/* Rankings VAR carries no availability discount, so the
+                              badge tooltip shows the no-discount wording (mult=1). */}
+                          <NflInjuryBadge status={r.p.injuryStatus} mult={1} discountActive={false} />
+                        </span>
+                      )}
                       {rec && <RecBadge tier={rec} />}
                     </td>
                     {posFilter === "ALL" && <td className="px-2 py-1">{r.p.position}</td>}

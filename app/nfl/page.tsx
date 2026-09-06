@@ -8,6 +8,7 @@ import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
+import NflInjuryBadge from "@/app/components/NflInjuryBadge";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
 import { NFL_WEIGHT_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
@@ -57,35 +58,8 @@ function nflInjuryMultiplier(status: string | undefined, isRedraft: boolean): nu
   }
 }
 
-function NflInjuryBadge({ status, mult, isRedraft }: {
-  status: string | undefined;
-  mult: number;
-  isRedraft: boolean;
-}) {
-  if (!status) return null;
-  const isAmber  = status === "Questionable";
-  const isOrange = status === "Doubtful" || status === "Out";
-  const isRed    = status === "IR" || status === "PUP";
-  const isDark   = status === "Sus" || status === "NA";
-  const { border, text, bg } =
-    isAmber  ? { border: "border-amber-400",  text: "text-amber-700",  bg: "bg-amber-50"  } :
-    isOrange ? { border: "border-orange-400", text: "text-orange-700", bg: "bg-orange-50" } :
-    isRed    ? { border: "border-red-400",    text: "text-red-700",    bg: "bg-red-50"    } :
-    isDark   ? { border: "border-red-700",    text: "text-red-900",    bg: "bg-red-100"   } :
-               { border: "border-gray-300",   text: "text-gray-600",   bg: ""             };
-  const label = status === "Sus" ? "Suspended" : status;
-  const showDiscount = isRedraft && mult < 1.0;
-  return (
-    <span
-      className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
-      title={showDiscount
-        ? `Value discounted ×${mult.toFixed(2)} for availability`
-        : "No value discount applied (keeper league, or projections already reflect the absence)"}
-    >
-      {label}
-    </span>
-  );
-}
+// NflInjuryBadge moved to app/components/NflInjuryBadge.tsx — shared with
+// the Rankings / Draft Mode rows so there is exactly one implementation.
 
 // ============================================================
 // TYPES
@@ -1421,7 +1395,7 @@ function NflPlayerRow({
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 min-w-0">
           <span className="font-semibold" style={{ color: "var(--color-text)" }}>{player.name}</span>
-          <NflInjuryBadge status={dbEntry.injuryStatus} mult={iMult} isRedraft={isRedraft} />
+          <NflInjuryBadge status={dbEntry.injuryStatus} mult={iMult} discountActive={isRedraft} />
           {rbTier === "elite" && (
             <span className="inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--color-accent)", color: "var(--color-accent-text)" }}>
               Elite RB
