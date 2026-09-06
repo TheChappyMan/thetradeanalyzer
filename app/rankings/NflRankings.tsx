@@ -374,27 +374,10 @@ export default function NflRankings() {
       return v;
     };
 
-    // Fill my roster slots with my drafted players, best first. Dedicated
-    // slots fill first; FLEX only once a skill player's dedicated slots are
-    // full; in 2QB/Superflex the second QB slot prefers QBs by value (mine
-    // are processed in value order). Everything else lands on the bench.
+    // In 2QB/Superflex the second QB slot counts as a dedicated QB slot
+    // (superflex drafts fill it with a QB by value).
     const qbSlots = league.qbFormat === "2QB" ? Math.max(roster.QB ?? 1, 2) : (roster.QB ?? 1);
-    const open: Record<string, number> = {
-      QB: qbSlots, RB: roster.RB ?? 0, WR: roster.WR ?? 0, TE: roster.TE ?? 0,
-      K: roster.K ?? 0, DST: roster.DST ?? 0, FLEX: roster.FLEX ?? 0, BN: roster.BN ?? 0,
-    };
-    const slotOrder = (pos: NflPlayerPosition): string[] =>
-      pos === "QB" ? ["QB", "BN"]
-      : pos === "K" || pos === "DST" ? [pos, "BN"]
-      : [pos, "FLEX", "BN"];
     const mine = playerDb.filter((p) => taken[p.id] === "mine");
-    const mineByValue = [...mine].sort(
-      (a, b) => projectedNflValue(b, weights, useRates) - projectedNflValue(a, weights, useRates));
-    for (const p of mineByValue) {
-      for (const s of slotOrder(p.position)) {
-        if (open[s] > 0) { open[s]--; break; }
-      }
-    }
 
     // Positional targets: starters + bench share, mirroring the engine's
     // bench-aware replacement (1 bench to QB, rest proportional RB/WR/TE).
@@ -417,7 +400,25 @@ export default function NflRankings() {
     };
     const myCount: Record<string, number> = {};
     for (const p of mine) myCount[p.position] = (myCount[p.position] ?? 0) + 1;
-    const needs = (pos: NflPlayerPosition) => (myCount[pos] ?? 0) < target[pos] - 1e-9;
+
+    // QB need tiers (both formats; superflex counts the 2nd slot as dedicated):
+    //   starters open                     → full need priority
+    //   starters filled, no bench QB yet  → not a need; recommended only when
+    //                                       value beats the best need by ≥25%
+    //   starters + 1 bench QB all filled  → fully suppressed, all badge tiers,
+    //                                       regardless of VAR
+    // The generic OVERWHELM escape (1.5×) previously let "best remaining QB"
+    // top the list forever in superflex: rec-layer bars slide down as QBs
+    // leave the board and the superflex multiplier always gives the best
+    // remaining QB ×1.40, so a 4th QB kept clearing 1.5× the best need.
+    const qbBenchCap = Math.min(1, roster.BN ?? 0);
+    const myQBs = myCount.QB ?? 0;
+    const qbStartersOpen = myQBs < qbSlots;
+    const qbSuppressed = myQBs >= qbSlots + qbBenchCap;
+    const BENCH_QB_OVERWHELM = 1.25;
+
+    const needs = (pos: NflPlayerPosition) =>
+      pos === "QB" ? qbStartersOpen : (myCount[pos] ?? 0) < target[pos] - 1e-9;
 
     // K/DST suppression: never recommend until my final two owned picks,
     // unless every skill-position need is already fully covered.
@@ -426,12 +427,19 @@ export default function NflRankings() {
     const allowKDst = picksRemaining > 0 && (picksRemaining <= 2 || !skillNeedsRemain);
 
     const candidates = available.filter((p) =>
-      p.position === "K" || p.position === "DST" ? allowKDst : true);
+      p.position === "K" || p.position === "DST" ? allowKDst :
+      p.position === "QB" ? !qbSuppressed : true);
     const scored = candidates
       .map((p) => ({ p, value: adjVar(p), need: needs(p.position) }))
       .sort((a, b) => b.value - a.value);
     const bestNeed = scored.find((s) => s.need)?.value ?? 0;
-    let recs = scored.filter((s) => s.need || s.value >= bestNeed * OVERWHELM).slice(0, 5);
+    // Bench-tier QBs (starters filled, bench QB open) use the tighter 25%
+    // margin; everything else keeps the generic overwhelm factor.
+    const overwhelmFor = (p: NflDbPlayer) =>
+      p.position === "QB" && !qbStartersOpen ? BENCH_QB_OVERWHELM : OVERWHELM;
+    let recs = scored
+      .filter((s) => s.need || s.value >= bestNeed * overwhelmFor(s.p))
+      .slice(0, 5);
 
     // Final two owned picks: unfilled K/DST slots lead the recommendations
     // (raw VAR would keep burying them under leftover skill players).
