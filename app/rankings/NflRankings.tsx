@@ -24,6 +24,7 @@ import {
   nflInjuryMultiplier,
 } from "@/lib/nfl-valuation";
 import { draftRounds } from "@/lib/draft";
+import { computeNflDraftRecs } from "@/lib/nfl-draft-rec";
 import {
   REC_STYLES, OVERWHELM, recTiersFor, useDraftState, computeNextPick, computeMarkerIndex,
   DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells, DraftConsistencyNotice,
@@ -340,145 +341,28 @@ export default function NflRankings() {
   }, [draftActive, league.draftPicks, league.teams, league.roster, takenCount, mineCount]);
 
   // ── Recommendations: recomputed on every checkbox change ──
-  // Same VAR engine AND the same full-pool replacement bars as the table,
-  // with RB/TE scarcity multipliers applied and roster-need awareness for
-  // my picks.
-  //
-  // The bars are deliberately NOT recomputed against the available pool:
-  // per-available bars fall fastest at whichever position the board (and
-  // the user) drafted most, making leftover players at drained positions
-  // outscore genuinely better players at untouched ones — an inverted
-  // positional need. (Repro: RB bar 53.0 vs WR bar 127.4 made a 143-pt RB
-  // "worth" 90.1 while a 204-pt WR scored 76.3, and rank-1-of-available
-  // pinned the ×1.30 elite-RB multiplier onto him → green over a
-  // need-flagged, higher-VAR WR.) Scarcity ranks likewise use the full
-  // pool, matching the trade analyzer's semantics.
+  // The whole recommendation layer lives in lib/nfl-draft-rec.ts (pure
+  // function) so the verification harness (scripts/verify-nfl) exercises
+  // the exact code this page runs. See that file for the design decisions
+  // (full-pool bars/ranks, QB suppression tiers + hard cap, K/DST rules).
   const draftRec = useMemo(() => {
     if (!draftActive || playerDb.length === 0) return null;
-    const available = playerDb.filter((p) => taken[p.id] === undefined);
-    if (available.length === 0) return null;
-    const weights = league.scoringWeights;
-    const roster = league.roster as NflRoster;
-
-    const projOf = new Map(playerDb.map((p) => [p.id, projectedNflValue(p, weights, useRates)]));
-    const baseVar = (p: NflDbPlayer) =>
-      valueAboveReplacement(projOf.get(p.id) ?? 0, replacementLevels.get(p.position) ?? 0);
-
-    // RB/TE/QB scarcity multipliers by VAR rank across the FULL pool —
-    // drafting the RB1 does not turn RB20 into an "elite" RB1.
-    const scarcityRank = new Map<number, number>();
-    for (const pos of ["RB", "TE", "QB"] as const) {
-      playerDb
-        .filter((p) => p.position === pos)
-        .sort((a, b) => baseVar(b) - baseVar(a))
-        .forEach((p, i) => scarcityRank.set(p.id, i + 1));
-    }
-    // In 2QB/Superflex the second QB slot counts as a dedicated QB slot
-    // (superflex drafts fill it with a QB by value).
-    const qbSlots = league.qbFormat === "2QB" ? Math.max(roster.QB ?? 1, 2) : (roster.QB ?? 1);
-    const mine = playerDb.filter((p) => taken[p.id] === "mine");
-    const myQBs = mine.filter((p) => p.position === "QB").length;
-
-    // QB tiers. Starter slots open (dedicated, plus the superflex slot in
-    // 2QB) → full need priority. Once starters are filled, QBs are HARD
-    // suppressed from all badge tiers — mirroring K/DST — until the final 3
-    // owned picks, where a QB may compete again as a normal bench candidate
-    // with no priority boost. A relative threshold doesn't work here: a
-    // backup QB only starts during byes/injuries, so his roster value is a
-    // small fraction of season VAR, yet rec-layer bars slide down as QBs
-    // leave the board and kept the best remaining QB's VAR clearing any
-    // percentage gate in superflex.
-    const qbStartersOpen = myQBs < qbSlots;
-    const picksRemaining = nextPick?.picksRemaining ?? 0;
-    // Hard cap: starters + 1 insurance QB (superflex 3, 1QB 2). At the cap,
-    // QB stays suppressed through the end of the draft — the final-picks
-    // window must not re-enable a 4th superflex QB, since QB VAR inflation
-    // puts any available QB on top the moment it's eligible.
-    const qbCap = qbSlots + 1;
-    const finalPicksWindow = picksRemaining > 0 && picksRemaining <= 3 && myQBs < qbCap;
-    const qbSuppressed = !qbStartersOpen && !finalPicksWindow;
-
-    // Superflex/2QB: QBs are the scarcest superflex asset, but raw VAR
-    // against the QB pool alone leaves them behind scarcity-boosted RBs.
-    // Mirror the RB/TE market-calibration tiers so top QBs surface early
-    // the way superflex drafts actually run. Recommendation layer only —
-    // the shared engine and trade values are untouched, 1QB leagues never
-    // apply it, and it turns off once the starter slots are filled (a
-    // bench QB competes at face value, no boost).
-    const qbSuperflexMultiplier = (rank: number): number =>
-      rank <= 5 ? 1.40 : rank <= 10 ? 1.25 : rank <= 15 ? 1.10 : 1.0;
-    const adjVar = (p: NflDbPlayer) => {
-      // Availability discount first (same flag as the ranked table and the
-      // trade analyzer), then positional scarcity on top.
-      let v = baseVar(p) * nflInjuryMultiplier(p.injuryStatus, availabilityDiscountActive);
-      const rank = scarcityRank.get(p.id);
-      if (!rank) return v;
-      if (p.position === "RB") v *= rbScarcityMultiplier(rank);
-      else if (p.position === "TE") v *= teScarcityMultiplier(rank);
-      else if (p.position === "QB" && league.qbFormat === "2QB" && qbStartersOpen) {
-        v *= qbSuperflexMultiplier(rank);
-      }
-      return v;
-    };
-
-    // Positional targets: starters + bench share, mirroring the engine's
-    // bench-aware replacement (1 bench to QB, rest proportional RB/WR/TE).
-    const bench = roster.BN ?? 0;
-    const qbBench = Math.min(1, bench);
-    const remainingBench = Math.max(0, bench - qbBench);
-    const flex = roster.FLEX ?? 0;
-    const rbSF = (roster.RB ?? 0) + flex * 0.5;
-    const wrSF = (roster.WR ?? 0) + flex * 0.4;
-    const teSF = (roster.TE ?? 0) + flex * 0.1;
-    const sfTotal = rbSF + wrSF + teSF;
-    const benchFor = (sf: number) => (sfTotal > 0 ? remainingBench * (sf / sfTotal) : 0);
-    const target: Record<NflPlayerPosition, number> = {
-      QB: qbSlots + qbBench,
-      RB: rbSF + benchFor(rbSF),
-      WR: wrSF + benchFor(wrSF),
-      TE: teSF + benchFor(teSF),
-      K: roster.K ?? 0,
-      DST: roster.DST ?? 0,
-    };
-    const myCount: Record<string, number> = {};
-    for (const p of mine) myCount[p.position] = (myCount[p.position] ?? 0) + 1;
-
-    // QB need is starters-only: once the dedicated (and superflex) slots are
-    // filled, a QB is never a "need" — the hard suppression above governs
-    // whether he can appear at all.
-    const needs = (pos: NflPlayerPosition) =>
-      pos === "QB" ? qbStartersOpen : (myCount[pos] ?? 0) < target[pos] - 1e-9;
-
-    // K/DST suppression: never recommend until my final two owned picks,
-    // unless every skill-position need is already fully covered.
-    const skillNeedsRemain = (["QB", "RB", "WR", "TE"] as const).some(needs);
-    const allowKDst = picksRemaining > 0 && (picksRemaining <= 2 || !skillNeedsRemain);
-
-    const candidates = available.filter((p) =>
-      p.position === "K" || p.position === "DST" ? allowKDst :
-      p.position === "QB" ? !qbSuppressed : true);
-    const scored = candidates
-      .map((p) => ({ p, value: adjVar(p), need: needs(p.position) }))
-      .sort((a, b) => b.value - a.value);
-    const bestNeed = scored.find((s) => s.need)?.value ?? 0;
-    let recs = scored
-      .filter((s) => s.need || s.value >= bestNeed * OVERWHELM)
-      .slice(0, 5);
-
-    // Final two owned picks: unfilled K/DST slots lead the recommendations
-    // (raw VAR would keep burying them under leftover skill players).
-    if (picksRemaining > 0 && picksRemaining <= 2) {
-      const kdBest = (["K", "DST"] as const)
-        .filter(needs)
-        .map((pos) => scored.find((s) => s.p.position === pos))
-        .filter((s): s is NonNullable<typeof s> => s !== undefined);
-      if (kdBest.length > 0) {
-        const rest = recs.filter((r) => !kdBest.includes(r));
-        recs = [...kdBest, ...rest].slice(0, 5);
-      }
-    }
-    return recTiersFor(recs.map((r) => r.p.id));
+    const { recIds } = computeNflDraftRecs({
+      playerDb,
+      taken,
+      replacementLevels,
+      weights: league.scoringWeights,
+      roster: league.roster as NflRoster,
+      qbFormat: league.qbFormat,
+      teams: league.teams,
+      useRates,
+      availabilityDiscountActive,
+      picksRemaining: nextPick?.picksRemaining ?? 0,
+    });
+    if (recIds.length === 0) return null;
+    return recTiersFor(recIds);
   }, [draftActive, playerDb, taken, league, useRates, nextPick, availabilityDiscountActive, replacementLevels]);
+
 
   // ── Filters ───────────────────────────────────────────────
   const [posFilter, setPosFilter] = useState<NflPlayerPosition | "ALL">("ALL");

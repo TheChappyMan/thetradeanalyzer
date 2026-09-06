@@ -1,5 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Engine verification (run before merging any engine or Draft Mode change)
+
+```bash
+npm run verify:nfl
+```
+
+Checks the NFL valuation engine (`lib/nfl-valuation.ts`) and the Draft Mode
+recommendation layer (`lib/nfl-draft-rec.ts`) against pinned calibration
+points on a frozen data snapshot — replacement bars, VAR windows, pick
+values, a reference trade rating, bench weighting, QB/K/DST suppression
+behavior, and rankings↔recommendation consistency. Exits nonzero on any
+FAIL. Expected ranges live in `scripts/verify-nfl/fixtures.mts` (one comment
+per scenario naming the regression it guards); re-snapshot/re-pin
+instructions are in `scripts/verify-nfl/SNAPSHOT.md`.
+
 ## Getting Started
 
 First, run the development server:

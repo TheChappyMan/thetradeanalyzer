@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:nfl": "tsx scripts/verify-nfl/verify-nfl.mts",
+    "verify:nfl:snapshot": "tsx scripts/verify-nfl/verify-nfl.mts --snapshot"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.0.0",
@@ -26,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "^16.2.4",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }
