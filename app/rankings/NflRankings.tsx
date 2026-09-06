@@ -21,6 +21,7 @@ import {
   valueAboveReplacement,
   rbScarcityMultiplier,
   teScarcityMultiplier,
+  nflInjuryMultiplier,
 } from "@/lib/nfl-valuation";
 import { draftRounds } from "@/lib/draft";
 import {
@@ -267,6 +268,14 @@ export default function NflRankings() {
 
   type RankedPlayer = { p: NflDbPlayer; proj: number; var_: number; rank: number };
 
+  // Availability discounts (injury/suspension/NA) apply in redraft leagues
+  // on ACTUALS modes only — projection modes are exempt because Sleeper
+  // already bakes expected absences into projected totals. Same rule as the
+  // trade analyzer, so the surfaces can't diverge (Option A decision).
+  const availabilityDiscountActive =
+    league.leagueType === "redraft" &&
+    (dataMode === "lastTotal" || dataMode === "thisTotal");
+
   // Rank by VAR, not raw projected points — QBs out-point every other
   // position raw, which floated all QBs to the top even in 1QB leagues
   // while the recommendation engine (correctly) favored RBs. Ties at 0 VAR
@@ -276,11 +285,12 @@ export default function NflRankings() {
       .map((p) => {
         const proj = projectedNflValue(p, league.scoringWeights, useRates);
         const repl = replacementLevels.get(p.position) ?? 0;
-        return { p, proj, var_: valueAboveReplacement(proj, repl), rank: 0 };
+        const iMult = nflInjuryMultiplier(p.injuryStatus, availabilityDiscountActive);
+        return { p, proj, var_: valueAboveReplacement(proj, repl) * iMult, rank: 0 };
       })
       .sort((a, b) => b.var_ - a.var_ || b.proj - a.proj)
       .map((r, i) => ({ ...r, rank: i + 1 }));
-  }, [playerDb, league.scoringWeights, replacementLevels, useRates]);
+  }, [playerDb, league.scoringWeights, replacementLevels, useRates, availabilityDiscountActive]);
 
   // ── Draftable pool + per-position stat averages ───────────
   // Draftable = top (teams × roster spots excl. IR) players by VAR.
@@ -387,13 +397,15 @@ export default function NflRankings() {
     const qbSuperflexMultiplier = (rank: number): number =>
       rank <= 5 ? 1.40 : rank <= 10 ? 1.25 : rank <= 15 ? 1.10 : 1.0;
     const adjVar = (p: NflDbPlayer) => {
-      const v = baseVar(p);
+      // Availability discount first (same flag as the ranked table and the
+      // trade analyzer), then positional scarcity on top.
+      let v = baseVar(p) * nflInjuryMultiplier(p.injuryStatus, availabilityDiscountActive);
       const rank = scarcityRank.get(p.id);
       if (!rank) return v;
-      if (p.position === "RB") return v * rbScarcityMultiplier(rank);
-      if (p.position === "TE") return v * teScarcityMultiplier(rank);
-      if (p.position === "QB" && league.qbFormat === "2QB" && qbStartersOpen) {
-        return v * qbSuperflexMultiplier(rank);
+      if (p.position === "RB") v *= rbScarcityMultiplier(rank);
+      else if (p.position === "TE") v *= teScarcityMultiplier(rank);
+      else if (p.position === "QB" && league.qbFormat === "2QB" && qbStartersOpen) {
+        v *= qbSuperflexMultiplier(rank);
       }
       return v;
     };
@@ -455,7 +467,7 @@ export default function NflRankings() {
       }
     }
     return recTiersFor(recs.map((r) => r.p.id));
-  }, [draftActive, playerDb, taken, league, useRates, nextPick]);
+  }, [draftActive, playerDb, taken, league, useRates, nextPick, availabilityDiscountActive]);
 
   // ── Filters ───────────────────────────────────────────────
   const [posFilter, setPosFilter] = useState<NflPlayerPosition | "ALL">("ALL");
@@ -661,9 +673,11 @@ export default function NflRankings() {
                       {r.p.name}
                       {r.p.injuryStatus && (
                         <span className="ml-1.5">
-                          {/* Rankings VAR carries no availability discount, so the
-                              badge tooltip shows the no-discount wording (mult=1). */}
-                          <NflInjuryBadge status={r.p.injuryStatus} mult={1} discountActive={false} />
+                          <NflInjuryBadge
+                            status={r.p.injuryStatus}
+                            mult={nflInjuryMultiplier(r.p.injuryStatus, availabilityDiscountActive)}
+                            discountActive={availabilityDiscountActive}
+                          />
                         </span>
                       )}
                       {rec && <RecBadge tier={rec} />}

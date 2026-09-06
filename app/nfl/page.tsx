@@ -28,6 +28,7 @@ import {
   rbScarcityTier,
   teScarcityMultiplier,
   teScarcityTier,
+  nflInjuryMultiplier,
 } from "@/lib/nfl-valuation";
 
 // ============================================================
@@ -38,25 +39,9 @@ import {
 // NA, COV, DNR. Discounts apply in REDRAFT leagues only (keeper leagues
 // retain full value, badge only) — same pattern as NHL/MLB.
 //
-// NFL discounts are scaled to a 17-game season, not copied from NHL
-// (where "Out" means out for the season): Doubtful/Out are ~1 missed
-// game (~6%); IR and PUP are a 4-game minimum (~25%); Sus is typically
-// multi-game; NA is unavailable for an unknown duration (e.g. league
-// investigation) — discounted between a 1-gamer and an IR stint.
-
-function nflInjuryMultiplier(status: string | undefined, isRedraft: boolean): number {
-  if (!status || !isRedraft) return 1.0;
-  switch (status) {
-    case "Questionable": return 1.0;   // badge only — game-time decision
-    case "Doubtful":     return 0.95;  // likely misses ~1 game
-    case "Out":          return 0.95;  // ruled out ~1 game
-    case "IR":           return 0.75;  // 4-game minimum
-    case "PUP":          return 0.75;  // 4-game minimum
-    case "Sus":          return 0.75;  // suspension, typically multi-game
-    case "NA":           return 0.80;  // unavailable, duration unknown
-    default:             return 1.0;   // COV / DNR / anything new — badge only
-  }
-}
+// NFL availability discounts are scaled to a 17-game season, not copied
+// from NHL (where "Out" means out for the season) — see nflInjuryMultiplier
+// in lib/nfl-valuation.ts, shared with Rankings and Draft Mode.
 
 // NflInjuryBadge moved to app/components/NflInjuryBadge.tsx — shared with
 // the Rankings / Draft Mode rows so there is exactly one implementation.

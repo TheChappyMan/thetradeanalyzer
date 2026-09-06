@@ -216,6 +216,36 @@ export function valueAboveReplacement(
 }
 
 // ============================================================
+// AVAILABILITY (INJURY / SUSPENSION / NA) MULTIPLIER
+// ============================================================
+
+/**
+ * Availability discount applied to a player's non-negative value.
+ * Shared by the trade analyzer, Rankings order, and Draft Mode
+ * recommendations so the three surfaces can never silently diverge.
+ *
+ * `discountActive` is false in keeper leagues and whenever the active
+ * dataset is Sleeper projections (projections already bake expected
+ * absences into totals — discounting again would double-count).
+ */
+export function nflInjuryMultiplier(
+  status: string | undefined,
+  discountActive: boolean
+): number {
+  if (!status || !discountActive) return 1.0
+  switch (status) {
+    case 'Questionable': return 1.0   // badge only — game-time decision
+    case 'Doubtful':     return 0.95  // likely misses ~1 game
+    case 'Out':          return 0.95  // ruled out ~1 game
+    case 'IR':           return 0.75  // 4-game minimum
+    case 'PUP':          return 0.75  // 4-game minimum
+    case 'Sus':          return 0.75  // suspension, typically multi-game
+    case 'NA':           return 0.80  // unavailable, duration unknown
+    default:             return 1.0   // COV / DNR / anything new — badge only
+  }
+}
+
+// ============================================================
 // RB POSITIONAL SCARCITY
 // ============================================================
 
