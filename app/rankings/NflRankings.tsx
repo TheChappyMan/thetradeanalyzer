@@ -390,7 +390,12 @@ export default function NflRankings() {
     // percentage gate in superflex.
     const qbStartersOpen = myQBs < qbSlots;
     const picksRemaining = nextPick?.picksRemaining ?? 0;
-    const finalPicksWindow = picksRemaining > 0 && picksRemaining <= 3;
+    // Hard cap: starters + 1 insurance QB (superflex 3, 1QB 2). At the cap,
+    // QB stays suppressed through the end of the draft — the final-picks
+    // window must not re-enable a 4th superflex QB, since QB VAR inflation
+    // puts any available QB on top the moment it's eligible.
+    const qbCap = qbSlots + 1;
+    const finalPicksWindow = picksRemaining > 0 && picksRemaining <= 3 && myQBs < qbCap;
     const qbSuppressed = !qbStartersOpen && !finalPicksWindow;
 
     // Superflex/2QB: QBs are the scarcest superflex asset, but raw VAR
