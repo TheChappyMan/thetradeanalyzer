@@ -356,12 +356,33 @@ export default function NflRankings() {
         .sort((a, b) => baseVar(b) - baseVar(a))
         .forEach((p, i) => scarcityRank.set(p.id, i + 1));
     }
+    // In 2QB/Superflex the second QB slot counts as a dedicated QB slot
+    // (superflex drafts fill it with a QB by value).
+    const qbSlots = league.qbFormat === "2QB" ? Math.max(roster.QB ?? 1, 2) : (roster.QB ?? 1);
+    const mine = playerDb.filter((p) => taken[p.id] === "mine");
+    const myQBs = mine.filter((p) => p.position === "QB").length;
+
+    // QB tiers. Starter slots open (dedicated, plus the superflex slot in
+    // 2QB) → full need priority. Once starters are filled, QBs are HARD
+    // suppressed from all badge tiers — mirroring K/DST — until the final 3
+    // owned picks, where a QB may compete again as a normal bench candidate
+    // with no priority boost. A relative threshold doesn't work here: a
+    // backup QB only starts during byes/injuries, so his roster value is a
+    // small fraction of season VAR, yet rec-layer bars slide down as QBs
+    // leave the board and kept the best remaining QB's VAR clearing any
+    // percentage gate in superflex.
+    const qbStartersOpen = myQBs < qbSlots;
+    const picksRemaining = nextPick?.picksRemaining ?? 0;
+    const finalPicksWindow = picksRemaining > 0 && picksRemaining <= 3;
+    const qbSuppressed = !qbStartersOpen && !finalPicksWindow;
+
     // Superflex/2QB: QBs are the scarcest superflex asset, but raw VAR
     // against the QB pool alone leaves them behind scarcity-boosted RBs.
     // Mirror the RB/TE market-calibration tiers so top QBs surface early
     // the way superflex drafts actually run. Recommendation layer only —
-    // the shared engine and trade values are untouched, and 1QB leagues
-    // never apply it.
+    // the shared engine and trade values are untouched, 1QB leagues never
+    // apply it, and it turns off once the starter slots are filled (a
+    // bench QB competes at face value, no boost).
     const qbSuperflexMultiplier = (rank: number): number =>
       rank <= 5 ? 1.40 : rank <= 10 ? 1.25 : rank <= 15 ? 1.10 : 1.0;
     const adjVar = (p: NflDbPlayer) => {
@@ -370,14 +391,11 @@ export default function NflRankings() {
       if (!rank) return v;
       if (p.position === "RB") return v * rbScarcityMultiplier(rank);
       if (p.position === "TE") return v * teScarcityMultiplier(rank);
-      if (p.position === "QB" && league.qbFormat === "2QB") return v * qbSuperflexMultiplier(rank);
+      if (p.position === "QB" && league.qbFormat === "2QB" && qbStartersOpen) {
+        return v * qbSuperflexMultiplier(rank);
+      }
       return v;
     };
-
-    // In 2QB/Superflex the second QB slot counts as a dedicated QB slot
-    // (superflex drafts fill it with a QB by value).
-    const qbSlots = league.qbFormat === "2QB" ? Math.max(roster.QB ?? 1, 2) : (roster.QB ?? 1);
-    const mine = playerDb.filter((p) => taken[p.id] === "mine");
 
     // Positional targets: starters + bench share, mirroring the engine's
     // bench-aware replacement (1 bench to QB, rest proportional RB/WR/TE).
@@ -401,29 +419,15 @@ export default function NflRankings() {
     const myCount: Record<string, number> = {};
     for (const p of mine) myCount[p.position] = (myCount[p.position] ?? 0) + 1;
 
-    // QB need tiers (both formats; superflex counts the 2nd slot as dedicated):
-    //   starters open                     → full need priority
-    //   starters filled, no bench QB yet  → not a need; recommended only when
-    //                                       value beats the best need by ≥25%
-    //   starters + 1 bench QB all filled  → fully suppressed, all badge tiers,
-    //                                       regardless of VAR
-    // The generic OVERWHELM escape (1.5×) previously let "best remaining QB"
-    // top the list forever in superflex: rec-layer bars slide down as QBs
-    // leave the board and the superflex multiplier always gives the best
-    // remaining QB ×1.40, so a 4th QB kept clearing 1.5× the best need.
-    const qbBenchCap = Math.min(1, roster.BN ?? 0);
-    const myQBs = myCount.QB ?? 0;
-    const qbStartersOpen = myQBs < qbSlots;
-    const qbSuppressed = myQBs >= qbSlots + qbBenchCap;
-    const BENCH_QB_OVERWHELM = 1.25;
-
+    // QB need is starters-only: once the dedicated (and superflex) slots are
+    // filled, a QB is never a "need" — the hard suppression above governs
+    // whether he can appear at all.
     const needs = (pos: NflPlayerPosition) =>
       pos === "QB" ? qbStartersOpen : (myCount[pos] ?? 0) < target[pos] - 1e-9;
 
     // K/DST suppression: never recommend until my final two owned picks,
     // unless every skill-position need is already fully covered.
     const skillNeedsRemain = (["QB", "RB", "WR", "TE"] as const).some(needs);
-    const picksRemaining = nextPick?.picksRemaining ?? 0;
     const allowKDst = picksRemaining > 0 && (picksRemaining <= 2 || !skillNeedsRemain);
 
     const candidates = available.filter((p) =>
@@ -433,12 +437,8 @@ export default function NflRankings() {
       .map((p) => ({ p, value: adjVar(p), need: needs(p.position) }))
       .sort((a, b) => b.value - a.value);
     const bestNeed = scored.find((s) => s.need)?.value ?? 0;
-    // Bench-tier QBs (starters filled, bench QB open) use the tighter 25%
-    // margin; everything else keeps the generic overwhelm factor.
-    const overwhelmFor = (p: NflDbPlayer) =>
-      p.position === "QB" && !qbStartersOpen ? BENCH_QB_OVERWHELM : OVERWHELM;
     let recs = scored
-      .filter((s) => s.need || s.value >= bestNeed * overwhelmFor(s.p))
+      .filter((s) => s.need || s.value >= bestNeed * OVERWHELM)
       .slice(0, 5);
 
     // Final two owned picks: unfilled K/DST slots lead the recommendations
