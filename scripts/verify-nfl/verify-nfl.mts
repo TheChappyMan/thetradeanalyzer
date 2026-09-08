@@ -37,7 +37,7 @@ import {
   type NflRoster,
   type NflScoringWeights,
 } from "../../lib/nfl-types";
-import { FIXTURES, KEP, SF } from "./fixtures.mts";
+import { BTM, BTM_S3_PRE_TIER_RECIDS, FIXTURES, KEP, SF } from "./fixtures.mts";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const CAPTURE = process.argv.includes("--capture");
@@ -280,6 +280,69 @@ for (const bn of [2, 3, 4, 5, 11]) actuals[`bench.eff.${bn}`] = effectiveBenchSl
   }
 }
 
+// 11. Starter-urgency tiers (BTM league — the 2026-09-08 live bug repro)
+const btmDetail: string[] = [];
+{
+  const b = bars(proj, BTM);
+  const rbB = byProj(proj, "RB", BTM), wrB = byProj(proj, "WR", BTM), teB = byProj(proj, "TE", BTM);
+  const lamar = find(proj, "Lamar Jackson");
+  // Rec score replicated for reporting/expectations: baseVAR × full-pool
+  // RB/TE scarcity (no byes in snapshot, discount off, QB suppressed).
+  const scarRank = new Map<number, number>();
+  for (const pos of ["RB", "TE"] as const) {
+    proj.filter((p) => p.position === pos).sort((x, y) => varOf(y, proj, BTM, b) - varOf(x, proj, BTM, b))
+      .forEach((p, i) => scarRank.set(p.id, i + 1));
+  }
+  const score = (p: NflDbPlayer) => varOf(p, proj, BTM, b) *
+    (p.position === "RB" ? rbScarcityMultiplier(scarRank.get(p.id) ?? 999) :
+     p.position === "TE" ? teScarcityMultiplier(scarRank.get(p.id) ?? 999) : 1);
+  const detail = (label: string, r: ReturnType<typeof recs>) => {
+    btmDetail.push(`  ${label}: guard=${r.diag.feasibilityGuard} tiers ` +
+      `RB=${r.diag.tierByPos.RB} WR=${r.diag.tierByPos.WR} TE=${r.diag.tierByPos.TE}`);
+    r.recPlayers.forEach((p, i) => btmDetail.push(
+      `    rec${i + 1}: ${p.position} ${p.name}  tier=${r.diag.tierByPos[p.position]}  ` +
+      `VAR=${varOf(p, proj, BTM, b).toFixed(1)}  score=${score(p).toFixed(1)}`));
+  };
+
+  // (1) Live bug repro: Lamar + 4 RBs, 0 WR, 0 TE, ~5 rounds gone.
+  const taken1 = mark([lamar, rbB[3], rbB[9], rbB[15], rbB[21]], "mine");
+  const allByProjB = [...proj].sort((x, y) =>
+    projectedNflValue(y, BTM.weights, false) - projectedNflValue(x, BTM.weights, false));
+  let n = 0;
+  for (const p of allByProjB) { if (n >= 55) break; if (!taken1[p.id]) { taken1[p.id] = "league"; n++; } }
+  const r1 = recs(proj, taken1, BTM, 10);
+  actuals["btm.s1.onlyWrTe"] = r1.recPlayers.length === 5 &&
+    r1.recPlayers.every((p) => p.position === "WR" || p.position === "TE");
+  detail("s1 Lamar+4RB 0WR/0TE", r1);
+
+  // (2) Starters filled (Lamar + 2RB + 2WR + 1TE): every skill position is
+  // tier 2, so the green must be the global best rec score among them.
+  const taken2 = mark([lamar, rbB[3], rbB[9], wrB[3], wrB[9], teB[2]], "mine");
+  const r2 = recs(proj, taken2, BTM, 9);
+  const expectGreen = proj
+    .filter((p) => (p.position === "RB" || p.position === "WR" || p.position === "TE") && !taken2[p.id])
+    .sort((x, y) => score(y) - score(x))[0];
+  actuals["btm.s2.bestVarWins"] =
+    r2.diag.tierByPos.RB === 2 && r2.diag.tierByPos.WR === 2 && r2.diag.tierByPos.TE === 2 &&
+    r2.recPlayers[0]?.id === expectGreen.id;
+  detail("s2 starters filled", r2);
+
+  // (3) Empty roster, round 1: identical to the pre-tier pin.
+  const taken3 = mark(allByProjB.slice(0, 11), "league");
+  const r3 = recs(proj, taken3, BTM, 15);
+  actuals["btm.s3.roundOneUnchanged"] =
+    JSON.stringify(r3.recIds) === JSON.stringify(BTM_S3_PRE_TIER_RECIDS);
+
+  // (4) Feasibility guard: starters + flex filled, K and DST missing,
+  // exactly 2 picks left → recommendations are exclusively K/DST.
+  const taken4 = mark([lamar, rbB[3], rbB[9], rbB[15], wrB[3], wrB[9], teB[2]], "mine");
+  const r4 = recs(proj, taken4, BTM, 2);
+  actuals["btm.s4.onlyKDst"] = r4.diag.feasibilityGuard === true &&
+    r4.recPlayers.length > 0 &&
+    r4.recPlayers.every((p) => p.position === "K" || p.position === "DST");
+  detail("s4 guard: 2 picks left, K+DST open", r4);
+}
+
 // 9. One-engine consistency: rankings VAR === rec-layer base VAR (5 samples)
 {
   const b = bars(proj, KEP);
@@ -321,5 +384,9 @@ for (const f of FIXTURES) {
 }
 console.log(`NFL engine verification — snapshot ${SNAP.capturedAt.slice(0, 10)} (proj ${SNAP.projSeasonId}, last ${SNAP.lastSeasonId})\n`);
 for (const r of rows) console.log(r);
+if (btmDetail.length) {
+  console.log("\nBTM starter-urgency detail:");
+  for (const line of btmDetail) console.log(line);
+}
 console.log(`\n${FIXTURES.length - failed}/${FIXTURES.length} passed${failed ? ` — ${failed} FAILED` : ""}`);
 process.exit(failed > 0 ? 1 : 0);

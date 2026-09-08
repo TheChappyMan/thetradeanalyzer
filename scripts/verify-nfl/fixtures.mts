@@ -27,6 +27,19 @@ export const SF = {
   weights: DEFAULT_NFL_LEAGUE.scoringWeights,
 };
 
+/** Boys to Men League: 12 teams, half PPR, 1QB — the 2026-09-08 live bug
+ *  config ("5th RB recommended over 0 WR / 0 TE"). */
+export const BTM = {
+  teams: 12, qbFormat: "1QB" as const,
+  roster: { ...DEFAULT_NFL_LEAGUE.roster, QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1, BN: 6, IR: 0 } as NflRoster,
+  weights: DEFAULT_NFL_LEAGUE.scoringWeights, // half PPR default
+};
+
+/** BTM empty-roster round-1 recIds pinned BEFORE the starter-urgency tiers
+ *  (captured at commit 4471eb2, snapshot 2026-09-05): CMC, Taylor, Cook,
+ *  Henry, Achane. The tiers must not change round-1 behavior. */
+export const BTM_S3_PRE_TIER_RECIDS = [86336, 86855, 71177, 51690, 28168];
+
 // ── Scenario expectations ────────────────────────────────────
 
 export type Fixture =
@@ -92,4 +105,10 @@ export const FIXTURES: Fixture[] = [
   // 9. One-engine consistency: rankings VAR === rec-layer base VAR
   //    (available-pool divergence bug, de4fc1f).
   { key: "consistency.rankingsEqualsRec", kind: "true", note: "rankings path === rec layer, 5 samples" },
+
+  // 11. Starter-urgency tiers (BTM league — 2026-09-08 live bug).
+  { key: "btm.s1.onlyWrTe",         kind: "true", note: "Lamar+4RB, 0WR/0TE: recs contain ONLY WR/TE (tier 1 beats RB tier 3)" },
+  { key: "btm.s2.bestVarWins",      kind: "true", note: "starters filled (all tier 2): green = global best rec score" },
+  { key: "btm.s3.roundOneUnchanged", kind: "true", note: "empty roster rd 1: recIds identical to pre-tier pin" },
+  { key: "btm.s4.onlyKDst",         kind: "true", note: "2 picks left, K+DST missing: feasibility guard, K/DST only" },
 ];

@@ -59,6 +59,10 @@ export type NflDraftRecInput = {
   probeIds?: number[]
 }
 
+/** Starter-urgency tier: 1 = empty dedicated starter slot, 2 = flex
+ *  coverage open, 3 = below bench-inclusive target, null = fully covered. */
+export type NflRecTier = 1 | 2 | 3 | null
+
 export type NflDraftRecResult = {
   /** Ordered candidate ids for the badge tiers (green, 2× amber, 2× orange). */
   recIds: number[]
@@ -67,6 +71,11 @@ export type NflDraftRecResult = {
     qbStartersOpen: boolean
     allowKDst: boolean
     needsByPos: Record<string, boolean>
+    /** Starter-urgency tier per position (see NflRecTier). */
+    tierByPos: Record<string, NflRecTier>
+    /** True when remaining picks are all spoken for by unfilled starting
+     *  slots + required K/DST — recs restricted to exactly those. */
+    feasibilityGuard: boolean
     /** Internal base VAR for each requested probeId. */
     probeBaseVar: Record<number, number>
     /** My lineup-relevant players per bye week (no K/DST). */
@@ -173,15 +182,80 @@ export function computeNflDraftRecs(input: NflDraftRecInput): NflDraftRecResult 
     return n >= 3 ? BYE_STACK_PENALTY.threePlus : n === 2 ? BYE_STACK_PENALTY.two : 1
   }
 
-  const candidates = available.filter((p) =>
-    p.position === 'K' || p.position === 'DST' ? allowKDst :
-    p.position === 'QB' ? !qbSuppressed : true)
+  // ── Starter-urgency tiers (recommendation layer only) ──────
+  // 1 = EMPTY STARTER: fewer players than dedicated starting slots
+  // 2 = OPEN FLEX: dedicated starters filled, flex coverage not
+  // 3 = BENCH DEPTH: starters + flex covered, below bench-inclusive target
+  // null = fully covered.
+  // Recommendations come from the best (lowest) tier that has candidates:
+  // an empty WR starting slot always outranks a 5th RB chasing bench
+  // depth, no matter the VAR gap (the flat need flag let exactly that
+  // happen — the "5th RB over 0 WR / 0 TE" live bug).
+  const dedicated: Record<NflPlayerPosition, number> = {
+    QB: qbSlots, RB: roster.RB ?? 0, WR: roster.WR ?? 0, TE: roster.TE ?? 0,
+    K: roster.K ?? 0, DST: roster.DST ?? 0,
+  }
+  const startersFlexOf: Record<NflPlayerPosition, number> = {
+    QB: qbSlots, RB: rbSF, WR: wrSF, TE: teSF, K: dedicated.K, DST: dedicated.DST,
+  }
+  const tierOf = (pos: NflPlayerPosition): NflRecTier => {
+    const c = myCount[pos] ?? 0
+    // QB need is starters-only (hard suppression governs the rest);
+    // K/DST have no flex or bench share.
+    if (pos === 'QB') return qbStartersOpen ? 1 : null
+    if (pos === 'K' || pos === 'DST') return c < dedicated[pos] ? 1 : null
+    if (c < dedicated[pos]) return 1
+    if (c < startersFlexOf[pos] - 1e-9) return 2
+    if (c < target[pos] - 1e-9) return 3
+    return null
+  }
+
+  // ── Feasibility guard ──────────────────────────────────────
+  // When my remaining owned picks are no more than the unfilled starting
+  // slots (dedicated deficits + uncovered FLEX) plus required K/DST,
+  // every pick is spoken for: recommend exclusively those slots. This
+  // generalizes the K/DST final-two-picks logic.
+  const posDeficit = (pos: NflPlayerPosition) => Math.max(0, dedicated[pos] - (myCount[pos] ?? 0))
+  const skillSurplus = (['RB', 'WR', 'TE'] as const)
+    .reduce((s, pos) => s + Math.max(0, (myCount[pos] ?? 0) - dedicated[pos]), 0)
+  const flexUnfilled = Math.max(0, flex - skillSurplus)
+  const requiredSlots =
+    posDeficit('QB') + posDeficit('RB') + posDeficit('WR') + posDeficit('TE') +
+    flexUnfilled + posDeficit('K') + posDeficit('DST')
+  const feasibilityGuard = picksRemaining > 0 && requiredSlots > 0 && picksRemaining <= requiredSlots
+  const guardAllows = (pos: NflPlayerPosition): boolean => {
+    if (pos === 'QB' || pos === 'K' || pos === 'DST') return posDeficit(pos) > 0
+    return posDeficit(pos) > 0 || flexUnfilled > 0
+  }
+
+  const candidates = available.filter((p) => {
+    // Under the guard, required K/DST bypass their usual suppression —
+    // those slots ARE what the remaining picks must fill.
+    if (feasibilityGuard) return guardAllows(p.position)
+    if (p.position === 'K' || p.position === 'DST') return allowKDst
+    if (p.position === 'QB') return !qbSuppressed
+    return true
+  })
   const scored = candidates
-    .map((p) => ({ p, value: adjVar(p) * byePenalty(p), need: needs(p.position) }))
+    .map((p) => ({ p, value: adjVar(p) * byePenalty(p), need: needs(p.position), tier: tierOf(p.position) }))
     .sort((a, b) => b.value - a.value)
-  const bestNeed = scored.find((s) => s.need)?.value ?? 0
+
+  // Best (lowest) tier among candidates. The OVERWHELM hatch may reach
+  // exactly ONE tier past it (a 1.5× value edge lets a tier-2 candidate
+  // interleave with tier 1) — it can never lift a tier-3 or fully-covered
+  // position over a tier-1 need. Covered positions (no tier) appear only
+  // via that hatch when the best tier is already 3.
+  const tierRank = (t: NflRecTier): number => t ?? 4
+  const bestTier = scored.length ? Math.min(...scored.map((s) => tierRank(s.tier))) : 4
+  const bestTierTop = scored.find((s) => tierRank(s.tier) === bestTier)?.value ?? 0
+  const effectiveTier = (s: (typeof scored)[number]): number => {
+    const t = tierRank(s.tier)
+    return t === bestTier + 1 && s.value >= bestTierTop * NFL_REC_OVERWHELM ? bestTier : t
+  }
   let recs = scored
-    .filter((s) => s.need || s.value >= bestNeed * NFL_REC_OVERWHELM)
+    .map((s) => ({ ...s, eTier: effectiveTier(s) }))
+    .filter((s) => s.eTier < 4) // fully-covered positions only via the hatch
+    .sort((a, b) => a.eTier - b.eTier || b.value - a.value)
     .slice(0, 5)
 
   // Final two owned picks: unfilled K/DST slots lead the recommendations
@@ -191,8 +265,10 @@ export function computeNflDraftRecs(input: NflDraftRecInput): NflDraftRecResult 
       .filter(needs)
       .map((pos) => scored.find((s) => s.p.position === pos))
       .filter((s): s is NonNullable<typeof s> => s !== undefined)
+      .map((s) => ({ ...s, eTier: 1 }))
     if (kdBest.length > 0) {
-      const rest = recs.filter((r) => !kdBest.includes(r))
+      const kdIds = new Set(kdBest.map((s) => s.p.id))
+      const rest = recs.filter((r) => !kdIds.has(r.p.id))
       recs = [...kdBest, ...rest].slice(0, 5)
     }
   }
@@ -213,6 +289,11 @@ export function computeNflDraftRecs(input: NflDraftRecInput): NflDraftRecResult 
         QB: needs('QB'), RB: needs('RB'), WR: needs('WR'),
         TE: needs('TE'), K: needs('K'), DST: needs('DST'),
       },
+      tierByPos: {
+        QB: tierOf('QB'), RB: tierOf('RB'), WR: tierOf('WR'),
+        TE: tierOf('TE'), K: tierOf('K'), DST: tierOf('DST'),
+      },
+      feasibilityGuard,
       probeBaseVar,
       myByeCounts,
     },
