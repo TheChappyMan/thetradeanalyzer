@@ -13,6 +13,27 @@ export type NewsItem = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    title: 'Smarter values for deep-bench leagues',
+    date: '2026-09-09',
+    body:
+      'Replacement level now weighs bench slots by how often those players actually ' +
+      'reach your lineup. In leagues with big benches, player values and draft pick ' +
+      'values line up with how real managers trade, so fairness verdicts stay honest ' +
+      'whether your league rosters 14 players or 20.',
+  },
+  {
+    title: 'Draft Mode just got a lot smarter',
+    date: '2026-09-01',
+    body:
+      'NFL draft recommendations are now starter-aware. The board fills your empty ' +
+      'starting slots before suggesting depth, caps QB picks in superflex once your ' +
+      'slots are covered, holds K and DST until the end, and warns you before stacking ' +
+      'too many players on the same bye. Injury and availability badges now show on ' +
+      'every board, so you can see exactly why a player is priced where he is.',
+    href: '/rankings',
+    linkLabel: 'Open Rankings',
+  },
+  {
     title: 'Draft Mode now covers NFL',
     date: '2026-08-27',
     body:
