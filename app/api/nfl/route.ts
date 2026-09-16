@@ -96,6 +96,9 @@ async function fetchWeek(season: number, week: number): Promise<Record<string, R
 type SeasonTotals = {
   totals: Record<string, Record<string, number>>
   gpCounts: Record<string, number>
+  // Regular-season weeks that actually returned stats. Absent on
+  // projection-shaped totals, which are always full-season scale.
+  weeksWithData?: number
 }
 
 async function fetchSeasonStats(season: number): Promise<SeasonTotals> {
@@ -104,9 +107,11 @@ async function fetchSeasonStats(season: number): Promise<SeasonTotals> {
   )
   const totals: Record<string, Record<string, number>> = {}
   const gpCounts: Record<string, number> = {}
+  let weeksWithData = 0
 
   for (const weekData of weeks) {
     if (!weekData) continue
+    if (Object.keys(weekData).length > 0) weeksWithData++
     for (const [pid, stats] of Object.entries(weekData)) {
       if (!stats || typeof stats !== 'object') continue
       const played = Object.values(stats).some((v) => typeof v === 'number' && v > 0)
@@ -137,7 +142,7 @@ async function fetchSeasonStats(season: number): Promise<SeasonTotals> {
       }
     }
   }
-  return { totals, gpCounts }
+  return { totals, gpCounts, weeksWithData }
 }
 
 // ── Projections (UNDOCUMENTED Sleeper endpoints) ────────────────────────────
@@ -563,6 +568,11 @@ function attachByeWeeks(players: NflDbPlayer[], byeMap: Record<string, number>):
 
 function buildPlayers(meta: SleeperMeta, seasonData: SeasonTotals): NflDbPlayer[] {
   const { totals, gpCounts } = seasonData
+  // The 5-point relevance cutoff is sized for full-season totals. Early in
+  // the season it must shrink with the data — at week 1 almost nobody has
+  // 5 season points yet, which collapsed the pool to ~200 players. Totals
+  // without weeksWithData (projections) are already full-season scale.
+  const minScore = 5 * Math.min(1, (seasonData.weeksWithData ?? 17) / 17)
   const result: NflDbPlayer[] = []
   const usedIds = new Set<number>()
   const safeId = (baseId: number) => {
@@ -592,7 +602,7 @@ function buildPlayers(meta: SleeperMeta, seasonData: SeasonTotals): NflDbPlayer[
 
     const stats = pos === 'K' ? mapKickerStats(raw) : mapSkillStats(raw)
     const score = fantasyScore(stats, pos)
-    if (score < 5) continue
+    if (score < minScore) continue
 
     const gp = Math.max(1, Math.min(18, gpCounts[pid] ?? 1))
     const name = info.full_name ?? `${info.first_name ?? ''} ${info.last_name ?? ''}`.trim()
