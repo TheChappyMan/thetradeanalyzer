@@ -84,7 +84,12 @@ export function buildPlayerDatabase(args: {
         STP: ppPoints + shPoints,
         GWG: asNumber(s.gameWinningGoals),
         SOG: asNumber(s.shots),
-        TOI: asNumber(s.timeOnIce),
+        // The skater/summary endpoint has no total-TOI field (only
+        // timeOnIcePerGame), so derive the total: ATOI (seconds) × GP.
+        // Without this, stats.TOI is 0 for every skater and the z-score
+        // pool's "top N by TOI" cut silently becomes arbitrary API order.
+        TOI: asNumber(s.timeOnIce) ||
+          asNumber(s.timeOnIcePerGame) * asNumber(s.gamesPlayed),
         ATOI: asNumber(s.timeOnIcePerGame),
       },
     });
@@ -124,7 +129,10 @@ export function buildPlayerDatabase(args: {
         SV: asNumber(g.saves),
         GA: asNumber(g.goalsAgainst),
         GAA: asNumber(g.goalsAgainstAverage),
-        "SV%": asNumber(g.savePercentage),
+        // The goalie/summary endpoint calls this field `savePct`
+        // (`savePercentage` kept as a fallback). With the wrong key the
+        // SV% category silently contributed zero for every goalie.
+        "SV%": asNumber(g.savePct) || asNumber(g.savePercentage),
       },
     });
   });

@@ -11,6 +11,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { generateDraftPicks, parseDraftPick, type DraftPicksConfig } from "@/lib/draft";
+import type { BalanceStatus, CategoryBalanceRow } from "@/lib/category-balance";
 
 export type TakenMap = Record<number, "league" | "mine">;
 export type RecTier = 1 | 2 | 3;
@@ -324,6 +325,76 @@ export function DraftConsistencyNotice({ kind }: { kind: "extra" | "behind" | nu
       >
         ×
       </button>
+    </div>
+  );
+}
+
+// ── Category balance strip (categories leagues) ───────────────
+// One chip per league category: my drafted total vs where an average team
+// should be at this roster fill, plus the full-roster target. Status colors
+// follow the semantic palette and always carry a text arrow so the state is
+// never color-only.
+const BALANCE_STYLES: Record<BalanceStatus, { color: string; symbol: string; label: string }> = {
+  "ahead":   { color: "var(--color-success)", symbol: "▲", label: "ahead" },
+  "on-pace": { color: "var(--color-muted)",   symbol: "•", label: "on pace" },
+  "behind":  { color: "#D4843B",              symbol: "▼", label: "behind" },
+};
+
+function fmtStat(v: number, isRate: boolean): string {
+  if (isRate) return v === 0 ? "–" : v >= 10 ? v.toFixed(1) : v.toFixed(3).replace(/^0\./, ".");
+  return String(Math.round(v));
+}
+
+export function CategoryBalancePanel({ rows, mineCount }: {
+  rows: CategoryBalanceRow[];
+  mineCount: number;
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <div
+      className="rounded-xl border px-4 py-3 mb-3 text-xs"
+      style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+    >
+      <p className="font-semibold mb-0.5" style={{ color: "var(--color-text)" }}>
+        Category balance
+      </p>
+      <p className="mb-2" style={{ color: "var(--color-muted)" }}>
+        {mineCount === 0
+          ? "Full-roster league-average targets per category. As you check players as Mine, each category shows your total vs the expected amount at your current roster size."
+          : "Your drafted total vs the expected amount for the spots you've filled. Target is the league average for a full roster."}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {rows.map((r) => {
+          const s = BALANCE_STYLES[r.status];
+          return (
+            <div
+              key={r.key}
+              className="rounded-lg border px-2 py-1 leading-tight"
+              style={{ borderColor: "var(--color-border)" }}
+              title={`${r.label}: you have ${fmtStat(r.mine, r.isRate)}, expected ${fmtStat(r.expectedNow, r.isRate)} at your roster size. Full-roster target: ${fmtStat(r.target, r.isRate)}.${r.direction === "less" ? " Lower is better." : ""}`}
+            >
+              <span className="font-semibold" style={{ color: "var(--color-text)" }}>{r.label}</span>{" "}
+              {mineCount > 0 && (
+                <span style={{ color: s.color }} aria-label={`${r.label} ${s.label}`}>
+                  <span className="font-semibold">{fmtStat(r.mine, r.isRate)}</span>
+                  {" "}{s.symbol} {fmtStat(r.expectedNow, r.isRate)}
+                </span>
+              )}
+              <span style={{ color: "var(--color-muted)" }}>
+                {mineCount > 0 ? " · tgt " : "tgt "}{fmtStat(r.target, r.isRate)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {mineCount > 0 && (
+        <p className="mt-1.5" style={{ color: "var(--color-muted)" }}>
+          <span style={{ color: "var(--color-success)" }}>▲ ahead</span>
+          {" · "}<span>• on pace</span>
+          {" · "}<span style={{ color: "#D4843B" }}>▼ behind</span>
+          {" — "}vs the expected amount for your filled spots (lower-is-better categories invert).
+        </p>
+      )}
     </div>
   );
 }

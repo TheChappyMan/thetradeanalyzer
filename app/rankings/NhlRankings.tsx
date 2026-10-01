@@ -26,9 +26,11 @@ import {
   type DbPlayer,
 } from "@/lib/nhl-valuation";
 import { draftRounds } from "@/lib/draft";
+import { computeCategoryBalance } from "@/lib/category-balance";
 import {
   REC_STYLES, OVERWHELM, recTiersFor, useDraftState, computeNextPick, computeMarkerIndex,
   DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells, DraftConsistencyNotice,
+  CategoryBalancePanel,
   type RecTier,
 } from "./draft-shared";
 
@@ -294,6 +296,22 @@ export default function NhlRankings() {
     return recTiersFor(recs.map((r) => r.p.id));
   }, [draftActive, playerDb, taken, isCatMode, league, useRates]);
 
+  // ── Category balance (categories leagues only) ────────────
+  // Benchmarks come from the full ranked list (value order), so the
+  // targets are stable through the draft; "mine" comes from the Mine
+  // checkboxes. Both use the active data mode's stat basis.
+  const categoryBalance = useMemo(() => {
+    if (!draftActive || !isCatMode || ranked.length === 0) return null;
+    return computeCategoryBalance({
+      rankedPlayers: ranked.map((r) => r.p),
+      minePlayers: playerDb.filter((p) => taken[p.id] === "mine"),
+      teams: league.teams,
+      roster: league.roster,
+      skaterCategories: league.skaterCategories,
+      goalieCategories: league.goalieCategories,
+    });
+  }, [draftActive, isCatMode, ranked, playerDb, taken, league.teams, league.roster, league.skaterCategories, league.goalieCategories]);
+
   // ── Next-pick marker ──────────────────────────────────────
   const nextPick = useMemo(() => {
     if (!draftActive) return null;
@@ -391,6 +409,9 @@ export default function NhlRankings() {
           setConfirmReset={setConfirmReset}
           onReset={resetTaken}
         />
+      )}
+      {draftActive && categoryBalance && (
+        <CategoryBalancePanel rows={categoryBalance} mineCount={mineCount} />
       )}
 
       {isPro && leagues.length > 0 && (

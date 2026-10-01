@@ -13,6 +13,20 @@ export type NewsItem = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    title: 'Draft Mode now tracks your category balance',
+    date: '2026-10-01',
+    body:
+      'Categories leagues get a new balance strip in NHL Draft Mode. Every category ' +
+      'your league counts shows what your drafted roster has banked, the expected ' +
+      'amount for the spots you have filled, and the full-roster target based on your ' +
+      'league\'s average team. Ahead, on pace, or behind at a glance, so you can see ' +
+      'when it is time to stop stacking points and go fill hits and PIM. NHL category ' +
+      'values also got more accurate under the hood, including a fix that restores ' +
+      'save percentage to goalie valuations.',
+    href: '/rankings',
+    linkLabel: 'Open Rankings',
+  },
+  {
     title: 'Smarter values for deep-bench leagues',
     date: '2026-09-09',
     body:
