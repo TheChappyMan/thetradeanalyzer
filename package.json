@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "verify:nfl": "tsx scripts/verify-nfl/verify-nfl.mts",
-    "verify:nfl:snapshot": "tsx scripts/verify-nfl/verify-nfl.mts --snapshot"
+    "verify:nfl:snapshot": "tsx scripts/verify-nfl/verify-nfl.mts --snapshot",
+    "verify:nhl": "tsx scripts/verify-nhl/verify-nhl.mts",
+    "verify:nhl:snapshot": "tsx scripts/verify-nhl/verify-nhl.mts --snapshot"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.0.0",

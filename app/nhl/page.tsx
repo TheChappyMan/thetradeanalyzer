@@ -1479,19 +1479,17 @@ export default function TradeAnalyzer() {
             playerDb={playerDb}
             dbStatus={dbStatus}
             roster={league.roster}
-            skaterWeights={league.skaterWeights}
-            positionBonuses={league.positionBonuses}
-            goalieWeights={league.goalieWeights}
             rankMap={rankMap}
             injuryMap={injuryMap}
             isRedraft={league.leagueType === "redraft"}
+            isCatMode={isCatMode}
             effectiveEntryOf={effectiveEntry}
+            baseValueOf={tradeBase}
             fallbackNoteOf={fallbackLabel}
             onAdd={(p) => addPlayer("send", p)}
             onRemove={(id) => removePlayer("send", id)}
             onTogglePos={(id, pos) => togglePosition("send", id, pos)}
             onToggleKeeper={(id) => toggleKeeper("send", id)}
-            useRates={useRates}
           />
           <TradeSide
             label="You Get"
@@ -1505,19 +1503,17 @@ export default function TradeAnalyzer() {
             playerDb={playerDb}
             dbStatus={dbStatus}
             roster={league.roster}
-            skaterWeights={league.skaterWeights}
-            positionBonuses={league.positionBonuses}
-            goalieWeights={league.goalieWeights}
             rankMap={rankMap}
             injuryMap={injuryMap}
             isRedraft={league.leagueType === "redraft"}
+            isCatMode={isCatMode}
             effectiveEntryOf={effectiveEntry}
+            baseValueOf={tradeBase}
             fallbackNoteOf={fallbackLabel}
             onAdd={(p) => addPlayer("recv", p)}
             onRemove={(id) => removePlayer("recv", id)}
             onTogglePos={(id, pos) => togglePosition("recv", id, pos)}
             onToggleKeeper={(id) => toggleKeeper("recv", id)}
-            useRates={useRates}
           />
         </div>
       </div>
@@ -1666,29 +1662,33 @@ type TradeSideProps = {
   playerDb: DbPlayer[];
   dbStatus: DbStatus;
   roster: Roster;
-  skaterWeights: SkaterWeights;
-  goalieWeights: GoalieWeights;
-  positionBonuses: PositionBonuses | undefined;
   rankMap: Map<number, number>;
   injuryMap: Record<number, string>;
   isRedraft: boolean;
+  isCatMode: boolean;
   /** Entry used for valuation — prior-season pseudo entry for thin samples */
   effectiveEntryOf: (db: DbPlayer) => DbPlayer;
+  /**
+   * TRADE-MATH base value at the player's checked eligibility — the exact
+   * number summed into the side total (tradeBase on the page). The card
+   * must never derive its own value: in categories leagues the points
+   * formula reads all-zero weights and printed 0.0 for every player.
+   */
+  baseValueOf: (db: DbPlayer, positions: string[]) => number;
   /** Prior-season fallback / low-confidence card note, or null */
   fallbackNoteOf: (id: number, gamesPlayed: number) => string | null;
   onAdd: (p: DbPlayer) => void;
   onRemove: (id: number) => void;
   onTogglePos: (id: number, pos: string) => void;
   onToggleKeeper: (id: number) => void;
-  useRates: boolean;
 };
 
 function TradeSide({
   label, players, picks, setPicks, parsedPicks, talentRanking, teams, keepersPerTeam,
   playerDb, dbStatus,
-  roster, skaterWeights, goalieWeights, positionBonuses, rankMap,
-  injuryMap, isRedraft, effectiveEntryOf, fallbackNoteOf,
-  onAdd, onRemove, onTogglePos, onToggleKeeper, useRates,
+  roster, rankMap,
+  injuryMap, isRedraft, isCatMode, effectiveEntryOf, baseValueOf, fallbackNoteOf,
+  onAdd, onRemove, onTogglePos, onToggleKeeper,
 }: TradeSideProps) {
   return (
     <div>
@@ -1707,10 +1707,9 @@ function TradeSide({
               key={p.id}
               player={p}
               dbEntry={raw ? effectiveEntryOf(raw) : undefined}
+              baseValue={raw ? baseValueOf(raw, p.positions) : 0}
+              isCatMode={isCatMode}
               roster={roster}
-              skaterWeights={skaterWeights}
-              goalieWeights={goalieWeights}
-              positionBonuses={positionBonuses}
               rank={rankMap.get(p.id) ?? null}
               totalPlayers={playerDb.length}
               injuryStatus={injuryMap[p.id]}
@@ -1719,7 +1718,6 @@ function TradeSide({
               onRemove={() => onRemove(p.id)}
               onTogglePos={(pos) => onTogglePos(p.id, pos)}
               onToggleKeeper={() => onToggleKeeper(p.id)}
-              useRates={useRates}
             />
           );
         })}
@@ -1953,9 +1951,9 @@ type PlayerRowProps = {
   player: TradePlayer;
   dbEntry: DbPlayer | undefined;
   roster: Roster;
-  skaterWeights: SkaterWeights;
-  goalieWeights: GoalieWeights;
-  positionBonuses: PositionBonuses | undefined;
+  /** Trade-math base at the checked eligibility (see TradeSideProps.baseValueOf) */
+  baseValue: number;
+  isCatMode: boolean;
   rank: number | null;
   totalPlayers: number;
   injuryStatus: string | undefined;
@@ -1965,17 +1963,15 @@ type PlayerRowProps = {
   onRemove: () => void;
   onTogglePos: (pos: string) => void;
   onToggleKeeper: () => void;
-  useRates: boolean;
 };
 
 function PlayerRow({
-  player, dbEntry, roster, skaterWeights, goalieWeights, positionBonuses, rank, totalPlayers,
+  player, dbEntry, roster, baseValue, isCatMode, rank, totalPlayers,
   injuryStatus, isRedraft, fallbackNote,
-  onRemove, onTogglePos, onToggleKeeper, useRates,
+  onRemove, onTogglePos, onToggleKeeper,
 }: PlayerRowProps) {
   if (!dbEntry) return null;
   const mult      = positionMultiplier(player.positions, roster);
-  const baseValue = projectedSeasonValue(dbEntry, skaterWeights, goalieWeights, useRates, positionBonuses);
   const kMult     = player.isKeeper ? keeperMultiplier(rank) : 1.0;
   const iMult     = nhlInjuryMultiplier(injuryStatus, isRedraft);
   const adjValue  = baseValue * mult * kMult * iMult;
@@ -2035,6 +2031,11 @@ function PlayerRow({
       {fallbackNote && (
         <div className="text-[10px] mt-1 text-amber-700">
           ⚠ {fallbackNote}
+        </div>
+      )}
+      {isCatMode && baseValue === 0 && (
+        <div className="text-[10px] mt-1" style={{ color: "var(--color-muted)" }}>
+          Below replacement level for your league — counts as 0 in the trade.
         </div>
       )}
       <div className="mt-1 flex items-center gap-3">
