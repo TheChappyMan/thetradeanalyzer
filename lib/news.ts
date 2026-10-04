@@ -13,14 +13,27 @@ export type NewsItem = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
-    title: 'Draft Mode now tracks your category balance',
-    date: '2026-10-01',
+    title: 'Shareable trade summaries',
+    date: '2026-10-04',
     body:
-      'Categories leagues get a new balance strip in NHL Draft Mode. Every category ' +
+      'Every trade now ends with a clean summary card showing both sides, every ' +
+      'player and pick, and the final verdict. It\'s built to fit one phone ' +
+      'screenshot, so you can send it straight to your league chat and settle the ' +
+      'debate. Available on every account, including free.',
+    href: 'https://app.thetradeanalyzer.com',
+    linkLabel: 'Open the analyzer',
+  },
+  {
+    title: 'Draft Mode now tracks your roster balance',
+    date: '2026-09-26',
+    body:
+      'NHL Draft Mode has a new balance strip. In categories leagues, every category ' +
       'your league counts shows what your drafted roster has banked, the expected ' +
       'amount for the spots you have filled, and the full-roster target based on your ' +
-      'league\'s average team. Ahead, on pace, or behind at a glance, so you can see ' +
-      'when it is time to stop stacking points and go fill hits and PIM. NHL category ' +
+      'league\'s average team, so you can see when it is time to stop stacking points ' +
+      'and go fill hits and PIM. In points leagues, it compares your starters\' ' +
+      'projected points (skaters, goalies, and total) with the league-average team. ' +
+      'Ahead, on pace, or behind at a glance. NHL category ' +
       'values also got more accurate under the hood, including a fix that restores ' +
       'save percentage to goalie valuations.',
     href: '/rankings',

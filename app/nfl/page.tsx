@@ -10,6 +10,8 @@ import StatHelp from "@/app/components/StatHelp";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
 import NflInjuryBadge from "@/app/components/NflInjuryBadge";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
+import FairnessScale from "@/app/components/FairnessScale";
+import TradeSummaryCard, { type SummaryAsset } from "@/app/components/TradeSummaryCard";
 import { NFL_WEIGHT_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
   DEFAULT_NFL_LEAGUE,
@@ -139,6 +141,32 @@ function fairnessDescription(score: number): string {
   if (score <= 80.4) return "Big win for you.";
   if (score <= 90.4) return "They shouldn't accept this trade, but if they do, good for you.";
   return "We won't tell, but if they accept this, it's probably collusion.";
+}
+
+/** Scoring label for the Trade Summary card, e.g. "Half PPR · 2QB". */
+function nflScoringLabel(ppr: "standard" | "half" | "full", qb: "1QB" | "2QB"): string {
+  const base = ppr === "standard" ? "Standard" : ppr === "half" ? "Half PPR" : "Full PPR";
+  return qb === "2QB" ? `${base} · 2QB` : base;
+}
+
+/** Compact injury/availability label for the Trade Summary card badges. */
+function nflInjuryBadgeLabel(status: string): string {
+  switch (status) {
+    case "Questionable": return "Q";
+    case "Doubtful":     return "D";
+    case "Sus":          return "Susp";
+    default:             return status; // Out, IR, PUP, NA, …
+  }
+}
+
+/** Human label for the active data mode (matches the ApiStatus dropdown). */
+function dataModeLabel(mode: DataMode, currentIsProjected: boolean): string {
+  switch (mode) {
+    case "thisTotal": return currentIsProjected ? "This Year – Projected Total" : "This Year – Total";
+    case "thisAvg":   return currentIsProjected ? "This Year – Projected Per-Game" : "This Year – Per-Game Proj.";
+    case "lastTotal": return "Last Year – Total";
+    case "lastAvg":   return "Last Year – Per-Game Proj.";
+  }
 }
 
 function tradeRatingLabel(rating: number): string {
@@ -592,49 +620,67 @@ export default function NflTradeAnalyzer() {
   const availabilityDiscountActive =
     league.leagueType === "redraft" && !(currentIsProjected && usingThisSeason);
 
-  const sendValue = useMemo(() => {
-    const playerTotal = sendPlayers.reduce((sum, p) => {
+  // Per-asset trade values for one side. The side totals below are the sums
+  // of these rows, so the shareable Trade Summary card and the fairness math
+  // can never disagree.
+  const buildSideAssets = useCallback((players: NflTradePlayer[], picks: ParsedPick[]): SummaryAsset[] => {
+    const rows: SummaryAsset[] = [];
+    for (const p of players) {
       const db = playerDb.find((x) => x.id === p.id);
-      if (!db) return sum;
+      if (!db) continue;
       const proj = projectedNflValue(db, league.scoringWeights, useRates);
       const repl = replacementLevels.get(p.position) ?? 0;
       const baseVar = valueAboveReplacement(proj, repl);
+      const rbRank = p.position === "RB" ? (rbRankMap.get(p.id) ?? 999) : null;
+      const teRank = p.position === "TE" ? (teRankMap.get(p.id) ?? 999) : null;
       const scarcityMult =
-        p.position === "RB" ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999) :
-        p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
+        rbRank !== null ? rbScarcityMultiplier(rbRank) :
+        teRank !== null ? teScarcityMultiplier(teRank) :
         1.0;
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nflInjuryMultiplier(db.injuryStatus, availabilityDiscountActive);
-      return sum + baseVar * scarcityMult * kMult * iMult;
-    }, 0);
-    const pickTotal = sendPicksParsed.reduce(
-      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
-    return playerTotal + pickTotal;
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league.scoringWeights,
+      const badges: string[] = [];
+      if (db.injuryStatus) badges.push(nflInjuryBadgeLabel(db.injuryStatus));
+      // Position is already on the row, so the scarcity badge is just the tier.
+      const tier =
+        rbRank !== null ? rbScarcityTier(rbRank) :
+        teRank !== null ? teScarcityTier(teRank) :
+        null;
+      if (tier === "elite")  badges.push("Elite");
+      if (tier === "scarce") badges.push("Scarce");
+      if (p.isKeeper) badges.push("Keeper");
+      rows.push({
+        key: `p-${p.id}`,
+        name: p.name,
+        sub: `${db.team} · ${p.position}`,
+        value: baseVar * scarcityMult * kMult * iMult,
+        badges,
+      });
+    }
+    picks.forEach((pk, idx) => {
+      if (pk.error) return;
+      rows.push({
+        key: `pk-${idx}-${pk.raw}`,
+        name: `Pick ${pk.round}.${pk.slot.toString().padStart(2, "0")}`,
+        sub: pk.year ? `${pk.year} draft pick` : "Draft pick",
+        value: valueForPick(pk, talentRanking, league.teams, keepersPerTeam),
+      });
+    });
+    return rows;
+  }, [talentRanking, playerDb, league.scoringWeights,
       replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap,
       useRates, availabilityDiscountActive]);
 
-  const recvValue = useMemo(() => {
-    const playerTotal = recvPlayers.reduce((sum, p) => {
-      const db = playerDb.find((x) => x.id === p.id);
-      if (!db) return sum;
-      const proj = projectedNflValue(db, league.scoringWeights, useRates);
-      const repl = replacementLevels.get(p.position) ?? 0;
-      const baseVar = valueAboveReplacement(proj, repl);
-      const scarcityMult =
-        p.position === "RB" ? rbScarcityMultiplier(rbRankMap.get(p.id) ?? 999) :
-        p.position === "TE" ? teScarcityMultiplier(teRankMap.get(p.id) ?? 999) :
-        1.0;
-      const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      const iMult = nflInjuryMultiplier(db.injuryStatus, availabilityDiscountActive);
-      return sum + baseVar * scarcityMult * kMult * iMult;
-    }, 0);
-    const pickTotal = recvPicksParsed.reduce(
-      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0);
-    return playerTotal + pickTotal;
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league.scoringWeights,
-      replacementLevels, league.teams, keepersPerTeam, rankMap, rbRankMap, teRankMap,
-      useRates, availabilityDiscountActive]);
+  const sendAssets = useMemo(
+    () => buildSideAssets(sendPlayers, sendPicksParsed),
+    [buildSideAssets, sendPlayers, sendPicksParsed]
+  );
+  const recvAssets = useMemo(
+    () => buildSideAssets(recvPlayers, recvPicksParsed),
+    [buildSideAssets, recvPlayers, recvPicksParsed]
+  );
+  const sendValue = useMemo(() => sendAssets.reduce((sum, a) => sum + a.value, 0), [sendAssets]);
+  const recvValue = useMemo(() => recvAssets.reduce((sum, a) => sum + a.value, 0), [recvAssets]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -1159,33 +1205,7 @@ export default function NflTradeAnalyzer() {
 
           {/* Fairness Scale Bar */}
           <div className="mb-3">
-            <div className="relative flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
-              <span>Opponent Wins</span>
-              <span className="absolute left-1/2 -translate-x-1/2 font-medium">Fairness Scale</span>
-              <span>You Win</span>
-            </div>
-            <div className="relative my-2">
-              <div className="h-6 rounded-full overflow-hidden flex">
-                <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-                <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-                <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-              </div>
-              {/* Marker — overhangs the bar top and bottom so it stands out */}
-              <div
-                className="absolute -top-1.5 -bottom-1.5 w-1.5 -translate-x-1/2 rounded-full pointer-events-none"
-                style={{
-                  left: `${safeDisplayScore}%`,
-                  background: "#fff",
-                  boxShadow: "0 0 0 1.5px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.45)",
-                }}
-              />
-            </div>
+            <FairnessScale displayScore={safeDisplayScore} />
           </div>
 
           {sendValue === 0 && recvValue === 0 && (
@@ -1194,6 +1214,29 @@ export default function NflTradeAnalyzer() {
             </div>
           )}
         </div>
+
+        {/* ── Shareable Trade Summary (all tiers) ───────────────── */}
+        {sendAssets.length > 0 && recvAssets.length > 0 && (
+          <div className="mt-6">
+          <TradeSummaryCard
+            sport="nfl"
+            leagueName={league.name}
+            defaultSettings={!isPro}
+            teams={league.teams}
+            scoringLabel={nflScoringLabel(league.pprFormat, league.qbFormat)}
+            leagueTypeLabel={league.leagueType === "keeper" ? "Keeper" : "Redraft"}
+            dataModeLabel={dataModeLabel(dataMode, currentIsProjected)}
+            give={sendAssets}
+            get={recvAssets}
+            giveTotal={sendValue}
+            getTotal={recvValue}
+            decimals={1}
+            tradeRating={tradeRating}
+            displayScore={safeDisplayScore}
+            verdictText={tradeOutline(safeDisplayScore)}
+          />
+          </div>
+        )}
 
         <AccuracyRating sport="nfl" />
 

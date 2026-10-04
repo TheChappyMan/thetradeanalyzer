@@ -7,6 +7,8 @@ import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import FairnessScale from "@/app/components/FairnessScale";
+import TradeSummaryCard, { type SummaryAsset } from "@/app/components/TradeSummaryCard";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
 import { NHL_SKATER_DESCRIPTIONS, NHL_GOALIE_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
@@ -848,11 +850,16 @@ export default function TradeAnalyzer() {
 
   const isCatMode = league.scoringType === "categories";
 
-  const sendValue = useMemo(() => {
+  // Per-asset trade values for one side. The side totals below are the sums
+  // of these rows, so the shareable Trade Summary card and the fairness math
+  // can never disagree.
+  const buildSideAssets = useCallback((players: TradePlayer[], picks: ParsedPick[]): SummaryAsset[] => {
     const isRedraft = league.leagueType === "redraft";
-    const playerTotal = sendPlayers.reduce((sum, p) => {
+    const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
+    const rows: SummaryAsset[] = [];
+    for (const p of players) {
       const dbEntry = playerDb.find((x) => x.id === p.id);
-      if (!dbEntry) return sum;
+      if (!dbEntry) continue;
       // TRADE value (positional, exactly 0 below replacement) in categories
       // mode; raw projected points in points mode. Valued at the most
       // favorable checked eligibility. Multipliers never touch a signed z.
@@ -861,35 +868,41 @@ export default function TradeAnalyzer() {
       const mult  = positionMultiplier(p.positions, league.roster);
       const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
       const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
-      return sum + base * mult * kMult * iMult;
-    }, 0);
-    const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
-    const pickTotal = sendPicksParsed.reduce(
-      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepers),
-      0
-    );
-    return playerTotal + pickTotal;
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap, injuryMap]);
+      const badges: string[] = [];
+      const inj = injuryMap[p.id];
+      if (inj) badges.push(nhlInjuryLabel(inj));
+      if (p.isKeeper) badges.push("Keeper");
+      rows.push({
+        key: `p-${p.id}`,
+        name: p.name,
+        sub: `${dbEntry.team} · ${p.primaryPosition}`,
+        value: base * mult * kMult * iMult,
+        badges,
+      });
+    }
+    picks.forEach((pk, idx) => {
+      if (pk.error) return;
+      rows.push({
+        key: `pk-${idx}-${pk.raw}`,
+        name: `Pick ${pk.round}.${pk.slot.toString().padStart(2, "0")}`,
+        sub: pk.year ? `${pk.year} draft pick` : "Draft pick",
+        value: valueForPick(pk, talentRanking, league.teams, keepers),
+      });
+    });
+    return rows;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap, injuryMap, tradeBase]);
 
-  const recvValue = useMemo(() => {
-    const isRedraft = league.leagueType === "redraft";
-    const playerTotal = recvPlayers.reduce((sum, p) => {
-      const dbEntry = playerDb.find((x) => x.id === p.id);
-      if (!dbEntry) return sum;
-      // Trade-math base — see sendValue comment
-      const base  = tradeBase(dbEntry, p.positions);
-      const mult  = positionMultiplier(p.positions, league.roster);
-      const kMult = p.isKeeper ? keeperMultiplier(rankMap.get(p.id) ?? null) : 1.0;
-      const iMult = nhlInjuryMultiplier(injuryMap[p.id], isRedraft);
-      return sum + base * mult * kMult * iMult;
-    }, 0);
-    const keepers = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
-    const pickTotal = recvPicksParsed.reduce(
-      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepers),
-      0
-    );
-    return playerTotal + pickTotal;
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isCatMode, useRates, rankMap, injuryMap]);
+  const sendAssets = useMemo(
+    () => buildSideAssets(sendPlayers, sendPicksParsed),
+    [buildSideAssets, sendPlayers, sendPicksParsed]
+  );
+  const recvAssets = useMemo(
+    () => buildSideAssets(recvPlayers, recvPicksParsed),
+    [buildSideAssets, recvPlayers, recvPicksParsed]
+  );
+  const sendValue = useMemo(() => sendAssets.reduce((sum, a) => sum + a.value, 0), [sendAssets]);
+  const recvValue = useMemo(() => recvAssets.reduce((sum, a) => sum + a.value, 0), [recvAssets]);
 
   const totalRosterSize = useMemo(() => {
     return Object.values(league.roster).reduce((a, b) => a + b, 0);
@@ -1556,35 +1569,7 @@ export default function TradeAnalyzer() {
 
         {/* ── Fairness Scale Bar ───────────────────────────────── */}
         <div className="mb-3">
-          <div className="relative flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
-            <span>Opponent Wins</span>
-            <span className="absolute left-1/2 -translate-x-1/2 font-medium">Fairness Scale</span>
-            <span>You Win</span>
-          </div>
-          {/* Segmented bar — all zones always visible, marker moves */}
-          <div className="relative my-2">
-            <div className="h-6 rounded-full overflow-hidden flex">
-              {/* Each width = segment range / 100 * 100% */}
-              <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-              <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-              <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-              <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-              <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
-              <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-              <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-              <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-              <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-            </div>
-            {/* Marker — overhangs the bar top and bottom so it stands out */}
-            <div
-              className="absolute -top-1.5 -bottom-1.5 w-1.5 -translate-x-1/2 rounded-full pointer-events-none"
-              style={{
-                left: `${safeDisplayScore}%`,
-                background: "#fff",
-                boxShadow: "0 0 0 1.5px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.45)",
-              }}
-            />
-          </div>
+          <FairnessScale displayScore={safeDisplayScore} />
         </div>
 
         {(sendValue === 0 && recvValue === 0) && (
@@ -1595,6 +1580,29 @@ export default function TradeAnalyzer() {
           </div>
         )}
       </div>
+
+      {/* ── Shareable Trade Summary (all tiers) ─────────────────── */}
+      {sendAssets.length > 0 && recvAssets.length > 0 && (
+        <div className="mt-6">
+        <TradeSummaryCard
+          sport="nhl"
+          leagueName={league.name}
+          defaultSettings={!isPro}
+          teams={league.teams}
+          scoringLabel={isCatMode ? "Categories" : "Points"}
+          leagueTypeLabel={league.leagueType === "keeper" ? "Keeper" : "Redraft"}
+          dataModeLabel={dataModeLabel(dataMode)}
+          give={sendAssets}
+          get={recvAssets}
+          giveTotal={sendValue}
+          getTotal={recvValue}
+          decimals={isCatMode ? 2 : 1}
+          tradeRating={tradeRating}
+          displayScore={safeDisplayScore}
+          verdictText={tradeOutline(safeDisplayScore)}
+        />
+        </div>
+      )}
 
       <AccuracyRating sport="nhl" />
 
@@ -1898,6 +1906,22 @@ function PlayerTypeahead({ playerDb, dbStatus, existingIds, onSelect }: PlayerTy
  * Only applied in redraft leagues — keeper leagues retain full value.
  * DTD and WTW carry a badge only; more severe designations discount value.
  */
+/** Short injury label for the Trade Summary card badges. */
+function nhlInjuryLabel(status: string): string {
+  const s = status.toUpperCase();
+  return (s === "OFS" || s === "OUT") ? "Out" : status;
+}
+
+/** Human label for the active data mode (matches the ApiStatus dropdown). */
+function dataModeLabel(mode: DataMode): string {
+  switch (mode) {
+    case "thisTotal": return "This Year – Total";
+    case "thisAvg":   return "This Year – Per-Game Proj.";
+    case "lastTotal": return "Last Year – Total";
+    case "lastAvg":   return "Last Year – Per-Game Proj.";
+  }
+}
+
 function nhlInjuryMultiplier(status: string | undefined, isRedraft: boolean): number {
   if (!status || !isRedraft) return 1.0;
   switch (status.toUpperCase()) {

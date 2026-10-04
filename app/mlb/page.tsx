@@ -7,6 +7,8 @@ import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import FairnessScale from "@/app/components/FairnessScale";
+import TradeSummaryCard, { type SummaryAsset } from "@/app/components/TradeSummaryCard";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
 import { MLB_HITTER_DESCRIPTIONS, MLB_PITCHER_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
@@ -186,6 +188,25 @@ const POSITION_SCARCITY: Record<string, number> = {
   SP:   1.05,
   RP:   1.00,
 };
+
+/** Scoring label for the Trade Summary card. */
+function mlbScoringLabel(format: LeagueFormat): string {
+  switch (format) {
+    case "5x5":    return "Roto 5x5";
+    case "obp":    return "Roto OBP";
+    case "points": return "Points";
+  }
+}
+
+/** Human label for the active data mode (matches the ApiStatus dropdown). */
+function dataModeLabel(mode: DataMode): string {
+  switch (mode) {
+    case "thisTotal": return "This Year – Total";
+    case "thisAvg":   return "This Year – Projected";
+    case "lastTotal": return "Last Year – Total";
+    case "lastAvg":   return "Last Year – Projected";
+  }
+}
 
 function positionScarcityMultiplier(position: string): number {
   return POSITION_SCARCITY[position] ?? 1.0;
@@ -694,29 +715,52 @@ export default function MlbTradeAnalyzer() {
 
   const keepersPerTeam = league.leagueType === "keeper" ? league.keepersPerTeam : 0;
 
-  const sendValue = useMemo(() => {
-    const playerTotal = sendPlayers.reduce((sum, p) => {
+  // Per-asset trade values for one side. The side totals below are the sums
+  // of these rows, so the shareable Trade Summary card and the fairness math
+  // can never disagree. Player values come from playerValue() above.
+  function buildSideAssets(players: TradePlayer[], picks: ParsedPick[]): SummaryAsset[] {
+    const rows: SummaryAsset[] = [];
+    for (const p of players) {
       const dbEntry = playerDb.find((x) => x.id === p.id);
-      return dbEntry ? sum + playerValue(p, dbEntry) : sum;
-    }, 0);
-    const pickTotal = sendPicksParsed.reduce(
-      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0
-    );
-    return playerTotal + pickTotal;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap, injuryMap]);
+      if (!dbEntry) continue;
+      const badges: string[] = [];
+      const inj = injuryMap[dbEntry.mlbId];
+      if (inj) badges.push(inj);
+      if (positionScarcityMultiplier(dbEntry.position) > 1.0) badges.push("Scarce");
+      if (p.isKeeper) badges.push("Keeper");
+      rows.push({
+        key: `p-${p.id}`,
+        name: p.name,
+        sub: `${dbEntry.team} · ${p.position}`,
+        value: playerValue(p, dbEntry),
+        badges,
+      });
+    }
+    picks.forEach((pk, idx) => {
+      if (pk.error) return;
+      rows.push({
+        key: `pk-${idx}-${pk.raw}`,
+        name: `Pick ${pk.round}.${pk.slot.toString().padStart(2, "0")}`,
+        sub: pk.year ? `${pk.year} draft pick` : "Draft pick",
+        value: valueForPick(pk, talentRanking, league.teams, keepersPerTeam),
+      });
+    });
+    return rows;
+  }
 
-  const recvValue = useMemo(() => {
-    const playerTotal = recvPlayers.reduce((sum, p) => {
-      const dbEntry = playerDb.find((x) => x.id === p.id);
-      return dbEntry ? sum + playerValue(p, dbEntry) : sum;
-    }, 0);
-    const pickTotal = recvPicksParsed.reduce(
-      (sum, pk) => sum + valueForPick(pk, talentRanking, league.teams, keepersPerTeam), 0
-    );
-    return playerTotal + pickTotal;
+  const sendAssets = useMemo(
+    () => buildSideAssets(sendPlayers, sendPicksParsed),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap, injuryMap]);
+    [sendPlayers, sendPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap, injuryMap]
+  );
+  const recvAssets = useMemo(
+    () => buildSideAssets(recvPlayers, recvPicksParsed),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+    [recvPlayers, recvPicksParsed, talentRanking, playerDb, league, poolStats, isRotoMode, useRates, rankMap, injuryMap]
+  );
+  const sendValue = useMemo(() => sendAssets.reduce((sum, a) => sum + a.value, 0), [sendAssets]);
+
+  const recvValue = useMemo(() => recvAssets.reduce((sum, a) => sum + a.value, 0), [recvAssets]);
 
   const score = useMemo(() => fairnessScore(sendValue, recvValue), [sendValue, recvValue]);
 
@@ -1310,33 +1354,7 @@ export default function MlbTradeAnalyzer() {
 
           {/* Fairness scale bar */}
           <div className="mb-3">
-            <div className="relative flex justify-between text-xs mb-1" style={{ color: "var(--color-muted)" }}>
-              <span>Opponent Wins</span>
-              <span className="absolute left-1/2 -translate-x-1/2 font-medium">Fairness Scale</span>
-              <span>You Win</span>
-            </div>
-            <div className="relative my-2">
-              <div className="h-6 rounded-full overflow-hidden flex">
-                <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-                <div style={{ width: "19%",   background: "var(--bar-fair)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-mild)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-warning)" }} />
-                <div style={{ width: "10%",   background: "var(--bar-danger)" }} />
-                <div style={{ width: "10.5%", background: "var(--bar-extreme)" }} />
-              </div>
-              {/* Marker — overhangs the bar top and bottom so it stands out */}
-              <div
-                className="absolute -top-1.5 -bottom-1.5 w-1.5 -translate-x-1/2 rounded-full pointer-events-none"
-                style={{
-                  left: `${safeScore}%`,
-                  background: "#fff",
-                  boxShadow: "0 0 0 1.5px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.45)",
-                }}
-              />
-            </div>
+            <FairnessScale displayScore={safeScore} />
           </div>
 
           {(sendValue === 0 && recvValue === 0) && (
@@ -1374,6 +1392,29 @@ export default function MlbTradeAnalyzer() {
                 <MlbHistoryRow key={e.id} entry={e} onDelete={deleteHistoryEntry} />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ── Shareable Trade Summary (all tiers) ───────────────── */}
+        {sendAssets.length > 0 && recvAssets.length > 0 && (
+          <div className="mb-6">
+            <TradeSummaryCard
+              sport="mlb"
+              leagueName={league.name}
+              defaultSettings={!isPro}
+              teams={league.teams}
+              scoringLabel={mlbScoringLabel(league.format)}
+              leagueTypeLabel={league.leagueType === "keeper" ? "Keeper" : "Redraft"}
+              dataModeLabel={dataModeLabel(dataMode)}
+              give={sendAssets}
+              get={recvAssets}
+              giveTotal={sendValue}
+              getTotal={recvValue}
+              decimals={isRotoMode ? 2 : 1}
+              tradeRating={tradeRating}
+              displayScore={safeScore}
+              verdictText={tradeOutline(safeScore)}
+            />
           </div>
         )}
 
