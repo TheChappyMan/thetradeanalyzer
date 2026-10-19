@@ -13,6 +13,22 @@ export type NewsItem = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    title: 'Goalie values now know who actually has the net',
+    date: '2026-10-19',
+    body:
+      'NHL goalie projections are now scaled by each goalie\'s expected share of his ' +
+      'team\'s games, so workhorse starters, 1A/1B tandems, and backups are priced by ' +
+      'the role they actually play instead of everyone being projected onto a ' +
+      'starter\'s schedule. Early in the season the share blends last year\'s workload ' +
+      'with this year\'s usage, then this season takes over as games pile up — and ' +
+      'goalies now switch to current-season valuation after just 5 starts. A new ' +
+      'Workload badge on every goalie card shows the share behind the value. Rate ' +
+      'stats like save percentage are untouched; a backup\'s .920 is still a .920 — ' +
+      'it just moves the needle in proportion to how often he plays.',
+    href: 'https://app.thetradeanalyzer.com/nhl',
+    linkLabel: 'Open the NHL analyzer',
+  },
+  {
     title: 'Shareable trade summaries',
     date: '2026-10-04',
     body:
