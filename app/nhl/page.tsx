@@ -23,6 +23,8 @@ import {
   BELOW_REPL_BAND,
   RATE_STAT_KEYS,
   _median,
+  buildGoalieWorkloadShares,
+  scaleGoalieToShare,
   type DbPlayer,
   type PlayerStats,
   type PoolStats,
@@ -524,15 +526,27 @@ export default function TradeAnalyzer() {
     try { localStorage.setItem(LS_DATA_MODE, dataMode); } catch {}
   }, [dataMode]);
 
+  // ── Goalie workload shares (blended for this-season modes + fallback,
+  // prior-only for last-season per-game mode) ───────────────────
+  const goalieShares = useMemo(
+    () => buildGoalieWorkloadShares(currentSeasonDb, priorSeasonDb),
+    [currentSeasonDb, priorSeasonDb]
+  );
+
   // ── Active player database: derived from season + mode ───────
+  // Per-game projected modes scale each goalie's projected stat line by his
+  // expected share of team games BEFORE pool stats / z-scores are computed.
+  // Total modes are untouched: real totals already embed workload.
   const playerDb = useMemo(() => {
-    const base = (dataMode === "thisTotal" || dataMode === "thisAvg")
-      ? currentSeasonDb
-      : priorSeasonDb;
-    return (dataMode === "thisAvg" || dataMode === "lastAvg")
-      ? base.map(normalizePlayerTo82)
-      : base;
-  }, [dataMode, currentSeasonDb, priorSeasonDb]);
+    const thisSeason = dataMode === "thisTotal" || dataMode === "thisAvg";
+    const base = thisSeason ? currentSeasonDb : priorSeasonDb;
+    if (!(dataMode === "thisAvg" || dataMode === "lastAvg")) return base;
+    const shares = thisSeason ? goalieShares.blended : goalieShares.prior;
+    return base.map((p) => {
+      const n = normalizePlayerTo82(p);
+      return p.isGoalie ? scaleGoalieToShare(n, shares.get(p.id) ?? 1) : n;
+    });
+  }, [dataMode, currentSeasonDb, priorSeasonDb, goalieShares]);
 
   // ── Apply saved league settings into component state ────────
   const applyLeagueSettings = useCallback((settings: League) => {
@@ -697,10 +711,18 @@ export default function TradeAnalyzer() {
         }
         pseudo = { ...prior, gamesPlayed: scaleGp, stats };
       }
+      // Goalie fallback lines are role-scaled by the blended workload share —
+      // the exact bug this exists for: a 2-GP backup's prior per-game rates
+      // extrapolated to a starter's schedule. Blended (not current-only) so
+      // a couple of noisy games can't whipsaw the share either.
+      if (p.isGoalie) {
+        const share = goalieShares.blended.get(p.id);
+        if (share !== undefined) pseudo = scaleGoalieToShare(pseudo, share);
+      }
       map.set(p.id, { ...pseudo, id: p.id, name: p.name, team: p.team });
     }
     return { map, lowConfidence };
-  }, [playerDb, priorSeasonDb, currentSeasonDb, poolStats, dataMode, useRates, league.scoringType]);
+  }, [playerDb, priorSeasonDb, currentSeasonDb, poolStats, dataMode, useRates, league.scoringType, goalieShares]);
 
   /** Entry used for valuation — prior-season pseudo entry for thin samples */
   const effectiveEntry = useCallback(
@@ -2014,6 +2036,17 @@ function PlayerRow({
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-semibold" style={{ color: "var(--color-text)" }}>{player.name}</span>
           <InjuryBadge status={injuryStatus} mult={iMult} isRedraft={isRedraft} />
+          {/* Goalie workload badge — neutral, text always present (colorblind-
+              accessible). Set only when the valuation entry was role-scaled
+              (per-game projected modes / prior-season fallback). */}
+          {dbEntry.workloadShare !== undefined && (
+            <span
+              className="text-[10px] px-1.5 py-0.5 rounded border"
+              style={{ color: "var(--color-muted)", borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+            >
+              Workload: {Math.round(dbEntry.workloadShare * 100)}% of team games
+            </span>
+          )}
           <span style={{ color: "var(--color-muted)" }}>
             {dbEntry.team} · {player.primaryPosition} · {dbEntry.gamesPlayed} GP
           </span>

@@ -29,6 +29,14 @@ export type DbPlayer = {
   isGoalie: boolean;
   gamesPlayed: number;
   stats: PlayerStats;
+  /**
+   * Goalie workload share (expected fraction of team games), set only when
+   * the projected stat line has been scaled by it (per-game projected modes
+   * and the prior-season fallback). Counting stats are already ×share when
+   * this is set; rate stats (SV%/GAA) are untouched — their z contribution
+   * is volume-weighted by this share instead.
+   */
+  workloadShare?: number;
 };
 
 export function asNumber(v: unknown): number {
@@ -162,6 +170,122 @@ export function normalizePlayerTo82(player: DbPlayer): DbPlayer {
 }
 
 // ============================================================
+// GOALIE WORKLOAD SHARE
+// ============================================================
+// Goalies are the one position where games played is a ROLE signal, not just
+// a sample-size problem: a backup's per-game rates can look elite while his
+// season value is a fraction of a starter's. Projected goalie stat lines
+// (per-game projected modes and the prior-season fallback) are scaled by the
+// goalie's expected share of team games — at the STAT-LINE level, before
+// z-scores are computed, never as a multiplier on the final value (signed-z
+// multipliers invert their intent). Total modes are untouched: real totals
+// already embed workload. Skaters are untouched in every mode.
+
+export const WORKLOAD_SHARE_MIN = 0.05;
+/**
+ * teamGP at which the blend fully trusts the current season's role.
+ * Originally specced at 20, retuned to 10 against the 2026-10-19 snapshot:
+ * at 20 an elite-prior goalie who lost his net (Wedgewood, 2 of COL's 8
+ * games, 45 GP prior) still outgraded the goalie who took a net over
+ * (Bussi, 5 of CAR's 10) — see harness scenario W1. At 10 the flip holds
+ * while 2–3 noisy team games still leave the prior season ≥70% of the
+ * weight, which is the anti-whipsaw property the blend exists for.
+ */
+export const WORKLOAD_BLEND_GAMES = 10;
+
+/**
+ * Current-season games played per NHL team, proxied as the max GP among that
+ * team's single-team skaters (at least one healthy skater on every team
+ * plays every game). Avoids a new API dependency; traded skaters report
+ * comma-joined team strings and are skipped so their combined GP can't
+ * overstate a single team's count. Same freshness as the player stats.
+ */
+export function computeTeamGamesPlayed(currentSeasonDb: DbPlayer[]): Record<string, number> {
+  const teamGp: Record<string, number> = {};
+  for (const p of currentSeasonDb) {
+    if (p.isGoalie || !p.team || p.team.includes(",")) continue;
+    if ((teamGp[p.team] ?? 0) < p.gamesPlayed) teamGp[p.team] = p.gamesPlayed;
+  }
+  return teamGp;
+}
+
+/**
+ * Blended expected share of team games for a goalie.
+ * Early in the season the blend leans on last year's role so 2–3 noisy games
+ * can't whipsaw a value; by ~game WORKLOAD_BLEND_GAMES the current season
+ * fully takes over.
+ * Known limitation: a starter injured after 2 games has a depressed
+ * shareCurrent — the blend toward sharePrior is the mitigation; no second
+ * correction is applied.
+ */
+export function goalieWorkloadShare(args: {
+  currentGp: number;
+  teamGp: number;
+  /** Prior-season GP, or null when the goalie has no prior season (rookie). */
+  priorGp: number | null;
+  /** Prior-season team games; 82 is fine when not tracked. */
+  priorTeamGp?: number;
+}): number {
+  const clamp = (s: number) => Math.min(1, Math.max(WORKLOAD_SHARE_MIN, s));
+  const sharePrior = args.priorGp === null ? null : args.priorGp / (args.priorTeamGp ?? 82);
+  if (args.teamGp <= 0) return clamp(sharePrior ?? 0.5); // preseason edge case
+  const shareCurrent = args.currentGp / args.teamGp;
+  if (sharePrior === null) return clamp(shareCurrent); // rookie goalie
+  const w = Math.min(1, args.teamGp / WORKLOAD_BLEND_GAMES);
+  return clamp(w * shareCurrent + (1 - w) * sharePrior);
+}
+
+/**
+ * Per-goalie shares for both share bases:
+ *  - `blended` (this-season per-game projected mode and the prior-season
+ *    fallback): current role blended with last year's by teamGP.
+ *  - `prior` (last-season per-game projected mode): prior GP / 82 only —
+ *    the question being asked is about last season's role.
+ * Traded goalie approximation: his GP spans two teams but is divided by his
+ * CURRENT team's teamGP (last listed team abbrev).
+ */
+export function buildGoalieWorkloadShares(
+  currentSeasonDb: DbPlayer[],
+  priorSeasonDb: DbPlayer[]
+): { blended: Map<number, number>; prior: Map<number, number> } {
+  const teamGp = computeTeamGamesPlayed(currentSeasonDb);
+  const priorGpById = new Map(
+    priorSeasonDb.filter((p) => p.isGoalie).map((p) => [p.id, p.gamesPlayed])
+  );
+  const blended = new Map<number, number>();
+  for (const p of currentSeasonDb) {
+    if (!p.isGoalie) continue;
+    const currentTeam = p.team.split(",").pop()?.trim() ?? p.team;
+    blended.set(p.id, goalieWorkloadShare({
+      currentGp: p.gamesPlayed,
+      teamGp: teamGp[currentTeam] ?? 0,
+      priorGp: priorGpById.get(p.id) ?? null,
+    }));
+  }
+  const prior = new Map<number, number>();
+  for (const [id, gp] of priorGpById) {
+    prior.set(id, Math.min(1, Math.max(WORKLOAD_SHARE_MIN, gp / 82)));
+  }
+  return { blended, prior };
+}
+
+/**
+ * Scale a goalie's projected COUNTING stats by his workload share and stamp
+ * the share on the entry. Rate stats (SV%/GAA, per RATE_STAT_KEYS) are never
+ * scaled — a backup's .920 is still a .920; their z contribution is
+ * volume-weighted by the stamped share instead (see _goalieZ). gamesPlayed
+ * is left alone so per-game math and thin-sample thresholds are unaffected.
+ */
+export function scaleGoalieToShare(goalie: DbPlayer, share: number): DbPlayer {
+  const stats: PlayerStats = {};
+  for (const [key, val] of Object.entries(goalie.stats) as [string, number | undefined][]) {
+    if (val === undefined) continue;
+    (stats as Record<string, number>)[key] = RATE_STAT_KEYS.has(key) ? val : val * share;
+  }
+  return { ...goalie, stats, workloadShare: share };
+}
+
+// ============================================================
 // VALUATION — points mode
 // ============================================================
 
@@ -282,7 +406,10 @@ export function computePoolStats(
     } else if (useRates && stat === "GAA") {
       const values = topGoalies.map((p) => p.stats.GAA || 0);
       const { mean, stddev } = _meanStddev(values);
-      const avgVolume = topGoalies.reduce((a, p) => a + p.gamesPlayed, 0) / (topGoalies.length || 1);
+      // GAA volume is games — weighted by workload share when the pool's
+      // stat lines are share-scaled, so pool volume and player volume stay
+      // on the same basis. (SV% volume is SV/GP, already share-scaled.)
+      const avgVolume = topGoalies.reduce((a, p) => a + p.gamesPlayed * (p.workloadShare ?? 1), 0) / (topGoalies.length || 1);
       goaliePoolStats[stat] = { mean, stddev, avgVolume };
     } else if (useRates) {
       const values = topGoalies.map((p) => ((p.stats[stat] || 0)) / p.gamesPlayed);
@@ -319,9 +446,12 @@ export function _goalieZ(player: DbPlayer, stat: GoalieStatKey, ps: StatPoolStat
     return (raw - ps.mean) / ps.stddev;
   }
   if (VOL_GOALIE.has(stat) && ps.avgVolume !== undefined && ps.avgVolume > 0) {
+    // A workload-scaled entry weights its rate-stat contribution by share:
+    // SV% through the already-scaled SV counting stat, GAA explicitly.
+    // A backup's great SV% moves the needle less than a starter's good SV%.
     const vol = stat === "SV%"
       ? (player.stats.SV || 0) / player.gamesPlayed
-      : player.gamesPlayed;
+      : player.gamesPlayed * (player.workloadShare ?? 1);
     return (raw - ps.mean) * (vol / ps.avgVolume) / ps.stddev;
   }
   return (raw / player.gamesPlayed - ps.mean) / ps.stddev;

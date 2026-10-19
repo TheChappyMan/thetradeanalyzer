@@ -23,10 +23,12 @@ import {
   zScoreValue,
   computeNhlReplacement,
   softReplacementValue,
+  buildGoalieWorkloadShares,
+  scaleGoalieToShare,
   type DbPlayer,
 } from "@/lib/nhl-valuation";
 import { draftRounds } from "@/lib/draft";
-import { computeCategoryBalance } from "@/lib/category-balance";
+import { computeCategoryBalance, computePointsBalance } from "@/lib/category-balance";
 import {
   REC_STYLES, OVERWHELM, recTiersFor, useDraftState, computeNextPick, computeMarkerIndex,
   DraftToggleRow, DraftPanel, MarkerRow, RecBadge, DraftCells, DraftConsistencyNotice,
@@ -150,12 +152,23 @@ export default function NhlRankings() {
     return () => { cancelled = true; };
   }, []);
 
+  // Same goalie workload-share scaling as the analyzer's playerDb (stat-line
+  // level, before pool stats / z-scores), so rankings and Draft Mode price
+  // goalies on the identical projected lines. Total modes untouched.
+  const goalieShares = useMemo(
+    () => buildGoalieWorkloadShares(currentSeasonDb, priorSeasonDb),
+    [currentSeasonDb, priorSeasonDb]
+  );
   const playerDb = useMemo(() => {
-    const base = (dataMode === "thisTotal" || dataMode === "thisAvg")
-      ? currentSeasonDb : priorSeasonDb;
-    return (dataMode === "thisAvg" || dataMode === "lastAvg")
-      ? base.map(normalizePlayerTo82) : base;
-  }, [dataMode, currentSeasonDb, priorSeasonDb]);
+    const thisSeason = dataMode === "thisTotal" || dataMode === "thisAvg";
+    const base = thisSeason ? currentSeasonDb : priorSeasonDb;
+    if (!(dataMode === "thisAvg" || dataMode === "lastAvg")) return base;
+    const shares = thisSeason ? goalieShares.blended : goalieShares.prior;
+    return base.map((p) => {
+      const n = normalizePlayerTo82(p);
+      return p.isGoalie ? scaleGoalieToShare(n, shares.get(p.id) ?? 1) : n;
+    });
+  }, [dataMode, currentSeasonDb, priorSeasonDb, goalieShares]);
 
   const useRates = dataMode === "thisAvg" || dataMode === "lastAvg";
   const isCatMode = league.scoringType === "categories";
@@ -296,21 +309,32 @@ export default function NhlRankings() {
     return recTiersFor(recs.map((r) => r.p.id));
   }, [draftActive, playerDb, taken, isCatMode, league, useRates]);
 
-  // ── Category balance (categories leagues only) ────────────
+  // ── Draft balance (per category, or projected points) ─────
   // Benchmarks come from the full ranked list (value order), so the
   // targets are stable through the draft; "mine" comes from the Mine
   // checkboxes. Both use the active data mode's stat basis.
   const categoryBalance = useMemo(() => {
-    if (!draftActive || !isCatMode || ranked.length === 0) return null;
+    if (!draftActive || ranked.length === 0) return null;
+    const rankedPlayers = ranked.map((r) => r.p);
+    const minePlayers = playerDb.filter((p) => taken[p.id] === "mine");
+    if (!isCatMode) {
+      return computePointsBalance({
+        rankedPlayers,
+        minePlayers,
+        teams: league.teams,
+        roster: league.roster,
+        projOf: (p) => projectedSeasonValue(p, league.skaterWeights, league.goalieWeights, useRates, league.positionBonuses),
+      });
+    }
     return computeCategoryBalance({
-      rankedPlayers: ranked.map((r) => r.p),
-      minePlayers: playerDb.filter((p) => taken[p.id] === "mine"),
+      rankedPlayers,
+      minePlayers,
       teams: league.teams,
       roster: league.roster,
       skaterCategories: league.skaterCategories,
       goalieCategories: league.goalieCategories,
     });
-  }, [draftActive, isCatMode, ranked, playerDb, taken, league.teams, league.roster, league.skaterCategories, league.goalieCategories]);
+  }, [draftActive, isCatMode, ranked, playerDb, taken, league.teams, league.roster, league.skaterCategories, league.goalieCategories, league.skaterWeights, league.goalieWeights, league.positionBonuses, useRates]);
 
   // ── Next-pick marker ──────────────────────────────────────
   const nextPick = useMemo(() => {
@@ -411,7 +435,7 @@ export default function NhlRankings() {
         />
       )}
       {draftActive && categoryBalance && (
-        <CategoryBalancePanel rows={categoryBalance} mineCount={mineCount} />
+        <CategoryBalancePanel rows={categoryBalance} mineCount={mineCount} mode={isCatMode ? "categories" : "points"} />
       )}
 
       {isPro && leagues.length > 0 && (
