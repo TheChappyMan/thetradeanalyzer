@@ -681,14 +681,21 @@ export default function TradeAnalyzer() {
     for (const p of playerDb) {
       const real      = realById.get(p.id) ?? p;
       const medianGp  = p.isGoalie ? realGoalieMedianGp : realSkaterMedianGp;
-      const floor     = p.isGoalie ? 10 : 15;
-      const threshold = Math.max(floor, 0.25 * medianGp);
+      // Goalies switch to current-season data at 5 real GP (not 10): they
+      // play roughly every other game, so a 10-GP bar kept every goalie on
+      // prior-season data until ~20 team games — effectively untradeable on
+      // this season's play. 5 starts is role + sample enough, and the
+      // workload share handles the volume question separately.
+      const currentFloor = p.isGoalie ? 5 : 15;
+      const threshold = Math.max(currentFloor, 0.25 * medianGp);
       if (real.gamesPlayed >= threshold) continue;
 
       const prior = priorSeasonDb.find((x) => x.id === p.id);
       // The prior season must itself be a meaningful sample — extrapolating
-      // per-game rates from a handful of prior games explodes just as badly.
-      if (!prior || prior.gamesPlayed < floor) {
+      // per-game rates from a handful of prior games explodes just as badly
+      // (goalies keep the 10-GP bar here: this guards rate quality, not role).
+      const priorFloor = p.isGoalie ? 10 : 15;
+      if (!prior || prior.gamesPlayed < priorFloor) {
         lowConfidence.add(p.id);
         continue;
       }

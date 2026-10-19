@@ -232,10 +232,11 @@ function buildFallbackMap(
   for (const p of playerDb) {
     const real = realById.get(p.id) ?? p;
     const medianGp = p.isGoalie ? realGoalieMedianGp : realSkaterMedianGp;
-    const floor = p.isGoalie ? 10 : 15;
-    if (real.gamesPlayed >= Math.max(floor, 0.25 * medianGp)) continue;
+    const currentFloor = p.isGoalie ? 5 : 15; // goalies switch to this season at 5 real GP
+    if (real.gamesPlayed >= Math.max(currentFloor, 0.25 * medianGp)) continue;
     const prior = pri.find((x) => x.id === p.id);
-    if (!prior || prior.gamesPlayed < floor) continue;
+    const priorFloor = p.isGoalie ? 10 : 15;
+    if (!prior || prior.gamesPlayed < priorFloor) continue;
     let pseudo: DbPlayer;
     if (useRates) {
       pseudo = normalizePlayerTo82(prior);
@@ -311,9 +312,13 @@ function runWorkloadScenarios(capture: boolean): void {
     return gs.findIndex((p) => p.id === id) + 1;
   };
 
-  // W1 — the reported bug: Bussi (CAR, high early share) must grade above
-  // Wedgewood (COL, 2 GP backup) with workload on, in the per-game projected
-  // mode AND through the Total-mode fallback path.
+  // W1 — the reported bug: before the fix, Wedgewood's 2-GP backup line was
+  // extrapolated to a starter's schedule and "give Bussi, get Wedgewood"
+  // read as a WIN. The trade verdict is built on tradeBase, so the pinned
+  // requirement is on trade values: Wedgewood must never carry MORE trade
+  // value than Bussi in a this-season mode. (With the 5-GP rule Bussi is
+  // judged on his real current play — a weak .88x start — so both can
+  // legitimately sit below replacement at exactly 0: an even trade.)
   const bussi = byName(cur, "Brandon Bussi");
   const wedge = byName(cur, "Scott Wedgewood");
   if (capture) {
@@ -321,10 +326,23 @@ function runWorkloadScenarios(capture: boolean): void {
   }
   for (const mode of ["thisAvg", "thisTotal"] as Mode[]) {
     const P = buildModePipeline(cur, pri, L, mode, true);
-    const vb = P.displayValue(P.byId.get(bussi.id)!);
-    const vw = P.displayValue(P.byId.get(wedge.id)!);
-    check(`W1 ${mode}: Bussi grades above Wedgewood`, vb > vw,
-      `Bussi ${vb.toFixed(3)} (goalie rank ${goalieRank(P, bussi.id)}) vs Wedgewood ${vw.toFixed(3)} (rank ${goalieRank(P, wedge.id)})`);
+    const tb = P.value(P.byId.get(bussi.id)!);
+    const tw = P.value(P.byId.get(wedge.id)!);
+    check(`W1 ${mode}: receiving Wedgewood for Bussi never reads as a win (trade value W ≤ B)`, tw <= tb,
+      `trade value Bussi ${tb.toFixed(3)} vs Wedgewood ${tw.toFixed(3)} (display ${P.displayValue(P.byId.get(bussi.id)!).toFixed(3)} / ${P.displayValue(P.byId.get(wedge.id)!).toFixed(3)}, goalie ranks ${goalieRank(P, bussi.id)} / ${goalieRank(P, wedge.id)})`);
+  }
+
+  // W1b — a goalie with 5 real GP is valued on THIS season, not the
+  // prior-season fallback (goalies play ~every other game; the old 10-GP
+  // bar kept every goalie on last year's data until ~20 team games).
+  {
+    for (const mode of ["thisAvg", "thisTotal"] as Mode[]) {
+      const P = buildModePipeline(cur, pri, L, mode, true);
+      const fiveGp = cur.filter((p) => p.isGoalie && p.gamesPlayed >= 5);
+      const onFallback = fiveGp.filter((p) => P.fallbackIds.has(p.id));
+      check(`W1b ${mode}: goalies with ≥5 real GP are valued on this season`, fiveGp.length > 0 && onFallback.length === 0,
+        `${fiveGp.length} goalies at 5+ GP (incl. Bussi: ${fiveGp.some((p) => p.id === bussi.id)}), ${onFallback.length} wrongly on fallback`);
+    }
   }
 
   // W2 — relative ordering among true starters (blended share ≥ 0.55) is
