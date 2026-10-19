@@ -1,5 +1,7 @@
 /**
- * Draft Mode category balance — categories leagues only.
+ * Draft Mode balance — per category in categories leagues
+ * (computeCategoryBalance), projected points in points leagues
+ * (computePointsBalance).
  *
  * For every category a league counts, compare what MY drafted roster has
  * banked against what an average team in this league should have, so a
@@ -74,6 +76,89 @@ export function starterCounts(roster: Roster): { skaters: number; goalies: numbe
   };
 }
 
+/** Benchmark pools: the starters a 100%-efficient league would roster. */
+function benchmarkPools(
+  rankedPlayers: DbPlayer[],
+  teams: number,
+  starters: { skaters: number; goalies: number }
+): { poolSkaters: DbPlayer[]; poolGoalies: DbPlayer[] } {
+  const poolSkaters: DbPlayer[] = [];
+  const poolGoalies: DbPlayer[] = [];
+  for (const p of rankedPlayers) {
+    if (p.isGoalie) {
+      if (poolGoalies.length < teams * starters.goalies) poolGoalies.push(p);
+    } else if (poolSkaters.length < teams * starters.skaters) {
+      poolSkaters.push(p);
+    }
+    if (
+      poolSkaters.length >= teams * starters.skaters &&
+      poolGoalies.length >= teams * starters.goalies
+    ) break;
+  }
+  return { poolSkaters, poolGoalies };
+}
+
+/**
+ * Points-league balance: projected fantasy points of my drafted starters vs
+ * the league-average team, as Skater / Goalie / Total rows.
+ *
+ * - target: the benchmark pool's projected points divided by teams.
+ * - expectedNow: target scaled by starter spots filled, per kind (skater
+ *   and goalie slots fill independently).
+ * - mine: my best projected players up to the starter count per kind —
+ *   bench players don't score in points leagues, so they don't count.
+ */
+export function computePointsBalance(args: {
+  rankedPlayers: DbPlayer[];
+  minePlayers: DbPlayer[];
+  teams: number;
+  roster: Roster;
+  projOf: (p: DbPlayer) => number;
+}): CategoryBalanceRow[] {
+  const { rankedPlayers, minePlayers, teams, roster, projOf } = args;
+  const starters = starterCounts(roster);
+  const { poolSkaters, poolGoalies } = benchmarkPools(rankedPlayers, teams, starters);
+
+  const total = (players: DbPlayer[]) => players.reduce((a, p) => a + projOf(p), 0);
+  const bestStarters = (players: DbPlayer[], cap: number) =>
+    [...players].sort((a, b) => projOf(b) - projOf(a)).slice(0, cap);
+
+  const kind = (pool: DbPlayer[], mine: DbPlayer[], cap: number) => {
+    const target = teams === 0 ? 0 : total(pool) / teams;
+    const counted = bestStarters(mine, cap);
+    return {
+      target,
+      expectedNow: cap === 0 ? 0 : target * (counted.length / cap),
+      mine: total(counted),
+    };
+  };
+
+  const sk = kind(poolSkaters, minePlayers.filter((p) => !p.isGoalie), starters.skaters);
+  const g = kind(poolGoalies, minePlayers.filter((p) => p.isGoalie), starters.goalies);
+
+  const row = (key: string, label: string, isGoalie: boolean, v: { target: number; expectedNow: number; mine: number }): CategoryBalanceRow => ({
+    key,
+    label,
+    isGoalie,
+    direction: "more",
+    isRate: false,
+    mine: v.mine,
+    expectedNow: v.expectedNow,
+    target: v.target,
+    status: statusFor(v.mine, v.expectedNow, "more", false),
+  });
+
+  const rows: CategoryBalanceRow[] = [];
+  if (starters.skaters > 0) rows.push(row("pts-skaters", "Skater pts", false, sk));
+  if (starters.goalies > 0) rows.push(row("pts-goalies", "Goalie pts", true, g));
+  rows.push(row("pts-total", "Total pts", false, {
+    target: sk.target + g.target,
+    expectedNow: sk.expectedNow + g.expectedNow,
+    mine: sk.mine + g.mine,
+  }));
+  return rows;
+}
+
 /**
  * Compute one balance row per active category.
  *
@@ -94,21 +179,7 @@ export function computeCategoryBalance(args: {
 }): CategoryBalanceRow[] {
   const { rankedPlayers, minePlayers, teams, roster, skaterCategories, goalieCategories } = args;
   const starters = starterCounts(roster);
-
-  // Benchmark pools: the players a 100%-efficient league would roster.
-  const poolSkaters: DbPlayer[] = [];
-  const poolGoalies: DbPlayer[] = [];
-  for (const p of rankedPlayers) {
-    if (p.isGoalie) {
-      if (poolGoalies.length < teams * starters.goalies) poolGoalies.push(p);
-    } else if (poolSkaters.length < teams * starters.skaters) {
-      poolSkaters.push(p);
-    }
-    if (
-      poolSkaters.length >= teams * starters.skaters &&
-      poolGoalies.length >= teams * starters.goalies
-    ) break;
-  }
+  const { poolSkaters, poolGoalies } = benchmarkPools(rankedPlayers, teams, starters);
 
   const mineSkaters = minePlayers.filter((p) => !p.isGoalie);
   const mineGoalies = minePlayers.filter((p) => p.isGoalie);

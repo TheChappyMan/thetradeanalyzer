@@ -345,23 +345,29 @@ function fmtStat(v: number, isRate: boolean): string {
   return String(Math.round(v));
 }
 
-export function CategoryBalancePanel({ rows, mineCount }: {
+export function CategoryBalancePanel({ rows, mineCount, mode = "categories" }: {
   rows: CategoryBalanceRow[];
   mineCount: number;
+  mode?: "categories" | "points";
 }) {
   if (rows.length === 0) return null;
+  const isPoints = mode === "points";
   return (
     <div
       className="rounded-xl border px-4 py-3 mb-3 text-xs"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
       <p className="font-semibold mb-0.5" style={{ color: "var(--color-text)" }}>
-        Category balance
+        {isPoints ? "Points balance" : "Category balance"}
       </p>
       <p className="mb-2" style={{ color: "var(--color-muted)" }}>
-        {mineCount === 0
-          ? "Full-roster league-average targets per category. As you check players as Mine, each category shows your total vs the expected amount at your current roster size."
-          : "Your drafted total vs the expected amount for the spots you've filled. Target is the league average for a full roster."}
+        {isPoints
+          ? mineCount === 0
+            ? "Projected fantasy points for the league-average team's starters. As you check players as Mine, you'll see your starters' projected points vs the expected amount for the spots you've filled."
+            : "Your starters' projected points vs the expected amount for the spots you've filled (bench players don't count). Target is the league-average team's starting lineup."
+          : mineCount === 0
+            ? "Full-roster league-average targets per category. As you check players as Mine, each category shows your total vs the expected amount at your current roster size."
+            : "Your drafted total vs the expected amount for the spots you've filled. Target is the league average for a full roster."}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {rows.map((r) => {
@@ -392,7 +398,7 @@ export function CategoryBalancePanel({ rows, mineCount }: {
           <span style={{ color: "var(--color-success)" }}>▲ ahead</span>
           {" · "}<span>• on pace</span>
           {" · "}<span style={{ color: "#D4843B" }}>▼ behind</span>
-          {" — "}vs the expected amount for your filled spots (lower-is-better categories invert).
+          {" — "}vs the expected amount for your filled spots{isPoints ? "." : " (lower-is-better categories invert)."}
         </p>
       )}
     </div>
