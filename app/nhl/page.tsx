@@ -971,7 +971,10 @@ export default function TradeAnalyzer() {
   // displayScore: ratio-based distance from center mapped to 0–100,
   // with direction (you win = right of center, opponent wins = left).
   // Uses the same offset-adjusted values as tradeRating to handle negative z-scores.
-  const ratio = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
+  // maxVal === 0 means BOTH sides are worthless (e.g. two below-replacement
+  // goalies) — an even nothing-for-nothing trade, needle centered. Infinity
+  // (needle pegged) is only for value-vs-nothing.
+  const ratio = maxVal === 0 ? 1 : minVal === 0 ? Infinity : maxVal / minVal;
   const youWin = recvValue >= sendValue;
   const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
   const displayScore = youWin ? 50 + ratioDistance : 50 - ratioDistance;

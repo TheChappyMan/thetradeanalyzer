@@ -782,7 +782,9 @@ export default function MlbTradeAnalyzer() {
     ? 0
     : Math.min(100, Math.round(100 * Math.exp(-2.5 * (maxVal / minVal - 1)) * 10) / 10);
   const youWin        = recvValue >= sendValue;
-  const ratio         = (minVal === 0 || maxVal === 0) ? Infinity : maxVal / minVal;
+  // maxVal === 0 means BOTH sides are worthless — an even nothing-for-nothing
+  // trade, needle centered. Infinity (needle pegged) only for value-vs-nothing.
+  const ratio         = maxVal === 0 ? 1 : minVal === 0 ? Infinity : maxVal / minVal;
   const ratioDistance = Math.min(50, (1 - Math.exp(-2.5 * (ratio - 1))) * 50);
   const displayScore  = youWin ? 50 + ratioDistance : 50 - ratioDistance;
   const safeScore     = isNaN(displayScore) ? 50 : displayScore;
