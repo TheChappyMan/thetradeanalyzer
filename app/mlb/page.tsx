@@ -7,6 +7,7 @@ import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import WeightInput from "@/app/components/WeightInput";
 import FairnessScale from "@/app/components/FairnessScale";
 import TradeSummaryCard, { type SummaryAsset } from "@/app/components/TradeSummaryCard";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
@@ -1218,10 +1219,10 @@ export default function MlbTradeAnalyzer() {
                               {stat}
                               <StatHelp text={MLB_HITTER_DESCRIPTIONS[stat]} />
                             </label>
-                            <input
-                              type="number" step="0.5" className="form-input text-xs" style={{ padding: "0.25rem" }}
+                            <WeightInput
+                              className="form-input text-xs" style={{ padding: "0.25rem" }}
                               value={league.hitterWeights[stat]}
-                              onChange={(e) => updateHitterWeight(stat, parseFloat(e.target.value || "0"))}
+                              onCommit={(n) => updateHitterWeight(stat, n)}
                             />
                           </div>
                         ))}
@@ -1236,10 +1237,10 @@ export default function MlbTradeAnalyzer() {
                               {stat}
                               <StatHelp text={MLB_PITCHER_DESCRIPTIONS[stat]} />
                             </label>
-                            <input
-                              type="number" step="0.5" className="form-input text-xs" style={{ padding: "0.25rem" }}
+                            <WeightInput
+                              className="form-input text-xs" style={{ padding: "0.25rem" }}
                               value={league.pitcherWeights[stat]}
-                              onChange={(e) => updatePitcherWeight(stat, parseFloat(e.target.value || "0"))}
+                              onCommit={(n) => updatePitcherWeight(stat, n)}
                             />
                           </div>
                         ))}

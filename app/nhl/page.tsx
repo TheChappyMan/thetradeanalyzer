@@ -7,6 +7,7 @@ import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import WeightInput from "@/app/components/WeightInput";
 import FairnessScale from "@/app/components/FairnessScale";
 import TradeSummaryCard, { type SummaryAsset } from "@/app/components/TradeSummaryCard";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
@@ -1351,13 +1352,11 @@ export default function TradeAnalyzer() {
                       {stat === "PM" ? "+/-" : stat}
                       <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                     </label>
-                    <input
-                      type="number"
-                      step="0.1"
+                    <WeightInput
                       className="form-input"
                       style={{ padding: "0.25rem" }}
                       value={league.skaterWeights[stat]}
-                      onChange={(e) => updateSkaterWeight(stat, parseFloat(e.target.value || "0"))}
+                      onCommit={(n) => updateSkaterWeight(stat, n)}
                     />
                   </div>
                 ))}
@@ -1370,13 +1369,11 @@ export default function TradeAnalyzer() {
                       {stat}
                       <StatHelp text={NHL_GOALIE_DESCRIPTIONS[stat]} />
                     </label>
-                    <input
-                      type="number"
-                      step="0.1"
+                    <WeightInput
                       className="form-input"
                       style={{ padding: "0.25rem" }}
                       value={league.goalieWeights[stat]}
-                      onChange={(e) => updateGoalieWeight(stat, parseFloat(e.target.value || "0"))}
+                      onCommit={(n) => updateGoalieWeight(stat, n)}
                     />
                   </div>
                 ))}
@@ -1401,13 +1398,11 @@ export default function TradeAnalyzer() {
                             {stat}
                             <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                           </label>
-                          <input
-                            type="number"
-                            step="0.1"
+                          <WeightInput
                             className="form-input"
                             style={{ padding: "0.25rem" }}
                             value={league.positionBonuses?.[grp]?.[stat] ?? 0}
-                            onChange={(e) => updatePositionBonus(grp, stat, parseFloat(e.target.value || "0"))}
+                            onCommit={(n) => updatePositionBonus(grp, stat, n)}
                           />
                         </div>
                       ))}

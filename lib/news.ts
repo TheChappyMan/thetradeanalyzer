@@ -13,6 +13,16 @@ export type NewsItem = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    title: 'Bug fix: negative values in scoring settings',
+    date: '2026-10-23',
+    body:
+      'Scoring weight fields across all three sports now accept negative values ' +
+      'properly. Previously, typing a minus sign got wiped before you could finish ' +
+      'the number, so penalty-style scoring (like -1 per interception or -0.5 per ' +
+      'error) was hard to enter on desktop and impossible on mobile. Stat help ' +
+      'tooltips also now open on tap for mobile users.',
+  },
+  {
     title: 'Goalie values now know who actually has the net',
     date: '2026-10-19',
     body:

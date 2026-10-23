@@ -7,6 +7,7 @@ import { useLeagueContext } from "@/lib/league-context";
 import { loadSessionLeague, saveSessionLeague } from "@/lib/session-league";
 import AccuracyRating from "@/app/components/AccuracyRating";
 import StatHelp from "@/app/components/StatHelp";
+import WeightInput from "@/app/components/WeightInput";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
 import NflInjuryBadge from "@/app/components/NflInjuryBadge";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
@@ -1061,13 +1062,11 @@ export default function NflTradeAnalyzer() {
                               {WEIGHT_LABELS[key]}
                               <StatHelp text={NFL_WEIGHT_DESCRIPTIONS[key]} />
                             </label>
-                            <input
-                              type="number"
-                              step="0.01"
+                            <WeightInput
                               className="form-input w-20 text-sm"
                               style={{ padding: "0.25rem" }}
                               value={league.scoringWeights[key]}
-                              onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
+                              onCommit={(n) => updateWeight(key, n)}
                             />
                           </div>
                         ))}
@@ -1097,13 +1096,11 @@ export default function NflTradeAnalyzer() {
                               {WEIGHT_LABELS[key]}
                               <StatHelp text={NFL_WEIGHT_DESCRIPTIONS[key]} />
                             </label>
-                            <input
-                              type="number"
-                              step="0.01"
+                            <WeightInput
                               className="form-input w-20 text-sm"
                               style={{ padding: "0.25rem" }}
                               value={league.scoringWeights[key]}
-                              onChange={(e) => updateWeight(key, parseFloat(e.target.value || "0"))}
+                              onCommit={(n) => updateWeight(key, n)}
                             />
                           </div>
                         ))}

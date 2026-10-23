@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import StatHelp from "@/app/components/StatHelp";
+import WeightInput from "@/app/components/WeightInput";
 import {
   NFL_YARD_BONUS_THRESHOLDS,
   nflYardBonusKey,
@@ -96,13 +97,11 @@ export default function NflYardBonusRows({ category, weights, onChange, resetKey
                 <option key={t} value={t}>{t}+</option>
               ))}
             </select>
-            <input
-              type="number"
-              step="0.5"
+            <WeightInput
               className="form-input w-20 text-sm"
               style={{ padding: "0.25rem" }}
               value={weights[key]}
-              onChange={(e) => onChange(key, parseFloat(e.target.value || "0"))}
+              onCommit={(n) => onChange(key, n)}
             />
           </div>
         );

@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { saveLeagueSettings, saveNflLeagueSettings, saveMlbLeagueSettings } from "./actions";
 import StatHelp from "@/app/components/StatHelp";
+import WeightInput from "@/app/components/WeightInput";
 import NflYardBonusRows from "@/app/components/NflYardBonusRows";
 import {
   NHL_SKATER_DESCRIPTIONS,
@@ -835,11 +836,10 @@ export default function NhlSettingsForm({
                           {stat === "PM" ? "+/-" : stat}
                           <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                         </label>
-                        <input
-                          type="number" step="0.1"
+                        <WeightInput
                           className="form-input p-1"
                           value={league.skaterWeights[stat]}
-                          onChange={(e) => updateSkaterWeight(stat, parseFloat(e.target.value || "0"))}
+                          onCommit={(n) => updateSkaterWeight(stat, n)}
                         />
                       </div>
                     ))}
@@ -854,11 +854,10 @@ export default function NhlSettingsForm({
                           {stat}
                           <StatHelp text={NHL_GOALIE_DESCRIPTIONS[stat]} />
                         </label>
-                        <input
-                          type="number" step="0.1"
+                        <WeightInput
                           className="form-input p-1"
                           value={league.goalieWeights[stat]}
-                          onChange={(e) => updateGoalieWeight(stat, parseFloat(e.target.value || "0"))}
+                          onCommit={(n) => updateGoalieWeight(stat, n)}
                         />
                       </div>
                     ))}
@@ -885,11 +884,10 @@ export default function NhlSettingsForm({
                                 {stat}
                                 <StatHelp text={NHL_SKATER_DESCRIPTIONS[stat]} />
                               </label>
-                              <input
-                                type="number" step="0.1"
+                              <WeightInput
                                 className="form-input p-1"
                                 value={league.positionBonuses?.[grp]?.[stat] ?? 0}
-                                onChange={(e) => updatePositionBonus(grp, stat, parseFloat(e.target.value || "0"))}
+                                onCommit={(n) => updatePositionBonus(grp, stat, n)}
                               />
                             </div>
                           ))}
@@ -1206,12 +1204,10 @@ export default function NhlSettingsForm({
                           {NFL_WEIGHT_LABELS[key]}
                           <StatHelp text={NFL_WEIGHT_DESCRIPTIONS[key]} />
                         </label>
-                        <input
-                          type="number"
-                          step="0.01"
+                        <WeightInput
                           className="form-input w-20 p-1 text-sm"
                           value={nflLeague.scoringWeights[key]}
-                          onChange={(e) => updateNflWeight(key, parseFloat(e.target.value || "0"))}
+                          onCommit={(n) => updateNflWeight(key, n)}
                         />
                       </div>
                     ))}
@@ -1485,11 +1481,10 @@ export default function NhlSettingsForm({
                           {stat}
                           <StatHelp text={MLB_HITTER_DESCRIPTIONS[stat]} />
                         </label>
-                        <input
-                          type="number" step="0.1"
+                        <WeightInput
                           className="form-input p-1"
                           value={mlbLeague.hitterWeights[stat]}
-                          onChange={(e) => updateMlbHitterWeight(stat, parseFloat(e.target.value || "0"))}
+                          onCommit={(n) => updateMlbHitterWeight(stat, n)}
                         />
                       </div>
                     ))}
@@ -1502,11 +1497,10 @@ export default function NhlSettingsForm({
                           {stat}
                           <StatHelp text={MLB_PITCHER_DESCRIPTIONS[stat]} />
                         </label>
-                        <input
-                          type="number" step="0.1"
+                        <WeightInput
                           className="form-input p-1"
                           value={mlbLeague.pitcherWeights[stat]}
-                          onChange={(e) => updateMlbPitcherWeight(stat, parseFloat(e.target.value || "0"))}
+                          onCommit={(n) => updateMlbPitcherWeight(stat, n)}
                         />
                       </div>
                     ))}
