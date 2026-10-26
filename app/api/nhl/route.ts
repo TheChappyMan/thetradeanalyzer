@@ -16,7 +16,6 @@ import { NextResponse } from "next/server";
  */
 
 const NHL_STATS_BASE = "https://api.nhle.com/stats/rest/en";
-const NHL_WEB_BASE   = "https://api-web.nhle.com/v1";
 
 const ENDPOINT_MAP: Record<string, string> = {
   "skater-summary":  "skater/summary",
@@ -54,27 +53,83 @@ async function fetchNhlEndpoint(
 }
 
 // ── Injury report ─────────────────────────────────────────────
-// Fetches the league-wide NHL injury report from the web API.
-// Returns a map of playerId → injuryStatus string (DTD, WTW, IR, LTIR, OFS, …).
+// The NHL web API's /v1/injury endpoint was removed (404s as of 2026-10),
+// which left the injury map permanently empty. The league-wide report now
+// comes from ESPN's public NHL injuries feed; its entries carry ESPN ids,
+// so players are matched back to NHL player ids by normalized full name
+// built from both seasons' stat payloads (names unique to one id only —
+// ambiguous names are skipped rather than risk tagging the wrong player).
+// Returns a map of playerId → injuryStatus string (DTD, IR, OUT).
 // Failures are silently ignored — injury data is supplemental.
-async function fetchInjuries(): Promise<Record<number, string>> {
+
+const ESPN_INJURIES_URL =
+  "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries";
+
+// ESPN statuses → the status codes the analyzer's injury tiers expect.
+// Anything unmapped passes through raw: it renders as a badge with no
+// value discount (nhlInjuryMultiplier defaults unknown statuses to ×1).
+const ESPN_STATUS_MAP: Record<string, string> = {
+  "day-to-day":      "DTD",
+  "injured reserve": "IR",
+  "out":             "OUT",
+};
+
+function normalizePlayerName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip diacritics
+    .toLowerCase()
+    .replace(/[^a-z ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Normalized full name → NHL player id; null marks an ambiguous name. */
+function buildNameToIdMap(
+  seasons: Array<{ summary: Record<string, unknown>[]; goalies: Record<string, unknown>[] }>
+): Map<string, number | null> {
+  const map = new Map<string, number | null>();
+  for (const season of seasons) {
+    for (const rows of [season.summary, season.goalies]) {
+      for (const row of rows) {
+        const id = typeof row.playerId === "number" ? row.playerId : 0;
+        const rawName = row.skaterFullName ?? row.goalieFullName;
+        if (!id || typeof rawName !== "string") continue;
+        const name = normalizePlayerName(rawName);
+        if (!name) continue;
+        const existing = map.get(name);
+        if (existing === undefined) map.set(name, id);
+        else if (existing !== id) map.set(name, null); // ambiguous
+      }
+    }
+  }
+  return map;
+}
+
+async function fetchInjuries(
+  nameToId: Map<string, number | null>
+): Promise<Record<number, string>> {
   const map: Record<number, string> = {};
   try {
-    const res = await fetch(`${NHL_WEB_BASE}/injury`, { next: { revalidate: 1800 } });
+    const res = await fetch(ESPN_INJURIES_URL, { next: { revalidate: 1800 } });
     if (!res.ok) return map;
-    const json = await res.json() as {
-      injured?: Array<{
-        id?: number;
-        playerId?: number;
-        player?: { id?: number };
-        injuryStatus?: string;
-        status?: string;
+    const json = (await res.json()) as {
+      injuries?: Array<{
+        injuries?: Array<{
+          status?: string;
+          athlete?: { displayName?: string };
+        }>;
       }>;
     };
-    for (const entry of (json.injured ?? [])) {
-      const playerId = entry.id ?? entry.playerId ?? entry.player?.id;
-      const status   = entry.injuryStatus ?? entry.status;
-      if (playerId && status) map[playerId] = status;
+    for (const team of json.injuries ?? []) {
+      for (const entry of team.injuries ?? []) {
+        const name   = entry.athlete?.displayName;
+        const status = entry.status;
+        if (!name || !status) continue;
+        const playerId = nameToId.get(normalizePlayerName(name));
+        if (!playerId) continue; // unknown or ambiguous name — skip
+        map[playerId] = ESPN_STATUS_MAP[status.toLowerCase()] ?? status;
+      }
     }
   } catch {
     // silently skip — injury data is supplemental
@@ -82,15 +137,14 @@ async function fetchInjuries(): Promise<Record<number, string>> {
   return map;
 }
 
-async function fetchOneSeason(season: string, includeInjuries = false) {
+async function fetchOneSeason(season: string) {
   const [summary, realtime, faceoffs, goalies] = await Promise.all([
     fetchNhlEndpoint("skater/summary",     season),
     fetchNhlEndpoint("skater/realtime",    season),
     fetchNhlEndpoint("skater/faceoffwins", season),
     fetchNhlEndpoint("goalie/summary",     season),
   ]);
-  const injuryMap = includeInjuries ? await fetchInjuries() : {} as Record<number, string>;
-  return { seasonId: season, summary, realtime, faceoffs, goalies, injuryMap };
+  return { seasonId: season, summary, realtime, faceoffs, goalies };
 }
 
 // ── Route handler ─────────────────────────────────────────────
@@ -103,10 +157,16 @@ export async function GET(request: Request) {
   if (endpoint === "all-seasons") {
     try {
       const [currentSeason, priorSeason] = await Promise.all([
-        fetchOneSeason(computeCurrentSeasonId(), true),   // include injuries for current season
-        fetchOneSeason(computePriorSeasonId(), false),
+        fetchOneSeason(computeCurrentSeasonId()),
+        fetchOneSeason(computePriorSeasonId()),
       ]);
-      return NextResponse.json({ currentSeason, priorSeason });
+      // Name→id map spans BOTH seasons: a player on IR since preseason has
+      // no current-season row, and his injury entry must still resolve.
+      const injuryMap = await fetchInjuries(buildNameToIdMap([currentSeason, priorSeason]));
+      return NextResponse.json({
+        currentSeason: { ...currentSeason, injuryMap },
+        priorSeason:   { ...priorSeason,   injuryMap: {} },
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       return NextResponse.json(

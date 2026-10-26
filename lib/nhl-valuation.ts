@@ -148,6 +148,34 @@ export function buildPlayerDatabase(args: {
   return Array.from(db.values());
 }
 
+/**
+ * The NHL stats endpoints only return players with ≥1 GP in the requested
+ * season, so anyone on IR since before opening night is simply absent from
+ * the current-season database — unsearchable and untradeable. Append a
+ * zero-GP, zero-stat entry for every currently-injured player (per the
+ * injury map) who exists in the prior season but not the current one.
+ *
+ * gamesPlayed: 0 keeps these entries out of every pool computation
+ * (computePoolStats and computeNhlReplacement both skip 0-GP players), so
+ * existing players' values are untouched; the analyzer's thin-sample
+ * fallback then values them from their prior-season data. Shared by the
+ * trade analyzer and the Rankings/Draft board so the pools never diverge.
+ */
+export function mergeMissingInjuredPlayers(
+  current: DbPlayer[],
+  prior: DbPlayer[],
+  injuryMap: Record<number, string>
+): DbPlayer[] {
+  if (prior.length === 0 || Object.keys(injuryMap).length === 0) return current;
+  const currentIds = new Set(current.map((p) => p.id));
+  const added: DbPlayer[] = [];
+  for (const p of prior) {
+    if (!injuryMap[p.id] || currentIds.has(p.id)) continue;
+    added.push({ ...p, gamesPlayed: 0, stats: {} });
+  }
+  return added.length === 0 ? current : [...current, ...added];
+}
+
 // ============================================================
 // SEASON NORMALIZATION
 // ============================================================

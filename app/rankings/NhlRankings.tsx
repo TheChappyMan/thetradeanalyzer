@@ -17,6 +17,7 @@ import {
 } from "@/lib/types";
 import {
   buildPlayerDatabase,
+  mergeMissingInjuredPlayers,
   normalizePlayerTo82,
   projectedSeasonValue,
   computePoolStats,
@@ -136,14 +137,20 @@ export default function NhlRankings() {
       realtime: Record<string, unknown>[];
       faceoffs: Record<string, unknown>[];
       goalies: Record<string, unknown>[];
+      injuryMap?: Record<number, string>;
     };
     let cancelled = false;
     fetch("/api/nhl?endpoint=all-seasons")
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then(({ currentSeason, priorSeason }: { currentSeason: SeasonPayload; priorSeason: SeasonPayload }) => {
         if (cancelled) return;
-        setCurrentSeasonDb(buildPlayerDatabase(currentSeason));
-        setPriorSeasonDb(buildPlayerDatabase(priorSeason));
+        const priPlayers = buildPlayerDatabase(priorSeason);
+        // Same 0-GP merge as the trade analyzer, so the Rankings/Draft pool
+        // can never silently diverge from the searchable trade pool.
+        setCurrentSeasonDb(mergeMissingInjuredPlayers(
+          buildPlayerDatabase(currentSeason), priPlayers, currentSeason.injuryMap ?? {}
+        ));
+        setPriorSeasonDb(priPlayers);
         setCurrentSeasonId(currentSeason.seasonId);
         setPriorSeasonId(priorSeason.seasonId);
         setDbStatus("ready");

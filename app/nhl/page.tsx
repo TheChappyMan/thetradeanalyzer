@@ -15,6 +15,7 @@ import { NHL_SKATER_DESCRIPTIONS, NHL_GOALIE_DESCRIPTIONS } from "@/lib/stat-des
 import {
   asNumber,
   buildPlayerDatabase,
+  mergeMissingInjuredPlayers,
   normalizePlayerTo82,
   projectedSeasonValue,
   computePoolStats,
@@ -487,19 +488,26 @@ export default function TradeAnalyzer() {
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then(({ currentSeason, priorSeason }: { currentSeason: SeasonPayload; priorSeason: SeasonPayload }) => {
         if (cancelled) return;
-        const curPlayers = buildPlayerDatabase({
-          summary: currentSeason.summary, realtime: currentSeason.realtime,
-          faceoffs: currentSeason.faceoffs, goalies: currentSeason.goalies,
-        });
         const priPlayers = buildPlayerDatabase({
           summary: priorSeason.summary, realtime: priorSeason.realtime,
           faceoffs: priorSeason.faceoffs, goalies: priorSeason.goalies,
         });
+        const im = currentSeason.injuryMap ?? {};
+        // Injured players with 0 GP this season are absent from the stats
+        // API — merge them in as 0-GP entries so they stay searchable and
+        // tradeable (valued via the thin-sample prior-season fallback).
+        const curPlayers = mergeMissingInjuredPlayers(
+          buildPlayerDatabase({
+            summary: currentSeason.summary, realtime: currentSeason.realtime,
+            faceoffs: currentSeason.faceoffs, goalies: currentSeason.goalies,
+          }),
+          priPlayers,
+          im
+        );
         setCurrentSeasonDb(curPlayers);
         setPriorSeasonDb(priPlayers);
         setCurrentSeasonIdStr(currentSeason.seasonId);
         setPriorSeasonIdStr(priorSeason.seasonId);
-        const im = currentSeason.injuryMap ?? {};
         if (Object.keys(im).length === 0) {
           console.warn(
             "[NHL injuries] injury map is EMPTY — no injury data was returned by /api/nhl, " +

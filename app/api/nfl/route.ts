@@ -646,6 +646,41 @@ function buildPlayers(meta: SleeperMeta, seasonData: SeasonTotals): NflDbPlayer[
   return result
 }
 
+/**
+ * buildPlayers derives the pool from weekly stat totals, so a player with
+ * ZERO games this season (on IR/PUP since preseason) has no totals row and
+ * vanishes from the current-season list — unsearchable and untradeable in
+ * This Year modes. Append a 0-GP, zero-stat entry for every injured player
+ * (per Sleeper's injury_status, already stamped on the prior-season entries)
+ * who made the prior-season list but not the current one.
+ *
+ * gamesPlayed: 0 makes projectedNflValue return exactly 0, and zero-value
+ * entries sort to the tail of every replacement/rank list, so existing
+ * players' values and replacement bars are untouched.
+ */
+function mergeMissingInjuredPlayers(
+  current: NflDbPlayer[],
+  prior: NflDbPlayer[]
+): NflDbPlayer[] {
+  const currentIds   = new Set(current.map((p) => p.id));
+  const currentNames = new Set(current.map((p) => `${p.name}|${p.position}`));
+  const added: NflDbPlayer[] = [];
+  for (const p of prior) {
+    if (p.position === 'DST' || !p.injuryStatus) continue;
+    // Ids are hash-derived per buildPlayers call, so collision bumping can
+    // assign the same player different ids across seasons — dedupe by
+    // name+position too, and skip (rather than duplicate) any id already
+    // taken in the current list.
+    if (currentIds.has(p.id) || currentNames.has(`${p.name}|${p.position}`)) continue;
+    added.push({
+      ...p,
+      gamesPlayed: 0,
+      stats: p.position === 'K' ? mapKickerStats({}) : mapSkillStats({}),
+    })
+  }
+  return added.length === 0 ? current : [...current, ...added]
+}
+
 // ── Static fallback (last resort only) ──────────────────────────────────────
 
 type FallbackJson = {
@@ -719,6 +754,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ data: FALLBACK.currentSeason.players, source: 'fallback' })
   }
 
+  // hasData is decided on the unmerged list: merged IR entries carry 0 GP
+  // and must not make a pre-season (empty) current season look populated.
+  const currentHasData = hasRealPlayers(currentPlayers)
+  const currentPlayersWithIr = mergeMissingInjuredPlayers(currentPlayers, priorPlayers)
+
   if (endpoint === 'all-seasons') {
     // Pre-season: the current year's stats endpoint legitimately returns
     // nothing until week 1 — return it with hasData: false and let the
@@ -726,9 +766,9 @@ export async function GET(request: Request) {
     return NextResponse.json({
       currentSeason: {
         seasonId: String(currentYear),
-        players:  currentPlayers,
+        players:  currentPlayersWithIr,
         source:   'sleeper',
-        hasData:  hasRealPlayers(currentPlayers),
+        hasData:  currentHasData,
       },
       priorSeason: {
         seasonId: String(priorYear),
@@ -740,5 +780,5 @@ export async function GET(request: Request) {
   }
 
   // Legacy: current season only
-  return NextResponse.json({ data: currentPlayers, source: 'sleeper' })
+  return NextResponse.json({ data: currentPlayersWithIr, source: 'sleeper' })
 }
