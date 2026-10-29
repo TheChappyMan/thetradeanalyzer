@@ -1,5 +1,7 @@
 "use client";
 
+import TapTooltip from "./TapTooltip";
+
 /**
  * NflInjuryBadge — availability status pill (Questionable / Out / IR / PUP /
  * Suspended / NA). Single shared implementation used by the NFL trade
@@ -8,6 +10,7 @@
  * `mult` + `discountActive` only affect the tooltip: pass the applied
  * availability multiplier where the surface discounts values (trade cards),
  * or mult=1 / discountActive=false where it doesn't (Rankings).
+ * The tooltip opens on hover (desktop) and tap (touch) via TapTooltip.
  */
 export default function NflInjuryBadge({ status, mult, discountActive }: {
   status: string | undefined;
@@ -28,13 +31,15 @@ export default function NflInjuryBadge({ status, mult, discountActive }: {
   const label = status === "Sus" ? "Suspended" : status;
   const showDiscount = discountActive && mult < 1.0;
   return (
-    <span
-      className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
-      title={showDiscount
+    <TapTooltip
+      tip={showDiscount
         ? `Value discounted ×${mult.toFixed(2)} for availability`
         : "No value discount applied (keeper league, or projections already reflect the absence)"}
+      expandTarget
     >
-      {label}
-    </span>
+      <span className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}>
+        {label}
+      </span>
+    </TapTooltip>
   );
 }

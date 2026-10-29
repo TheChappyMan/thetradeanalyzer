@@ -10,6 +10,7 @@ import StatHelp from "@/app/components/StatHelp";
 import WeightInput from "@/app/components/WeightInput";
 import FairnessScale from "@/app/components/FairnessScale";
 import TradeSummaryCard, { type SummaryAsset } from "@/app/components/TradeSummaryCard";
+import TapTooltip from "@/app/components/TapTooltip";
 import { fireRedditTradeAnalyzed } from "@/lib/reddit";
 import { NHL_SKATER_DESCRIPTIONS, NHL_GOALIE_DESCRIPTIONS } from "@/lib/stat-descriptions";
 import {
@@ -1995,14 +1996,16 @@ function InjuryBadge({
   const label     = isDarkRed ? "Out for Season" : status;
   const showDiscount = isRedraft && mult < 1.0;
   return (
-    <span
-      className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}
-      title={showDiscount
+    <TapTooltip
+      tip={showDiscount
         ? `Value discounted ×${mult.toFixed(2)} for redraft`
         : "Full value retained — keeper league"}
+      expandTarget
     >
-      {label}
-    </span>
+      <span className={`border rounded-full px-1.5 py-0.5 text-[10px] font-medium ${border} ${text} ${bg}`}>
+        {label}
+      </span>
+    </TapTooltip>
   );
 }
 

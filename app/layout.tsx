@@ -28,9 +28,16 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  // Full brand icon set (app/favicon.ico is a real multi-size .ico —
+  // 16/32/48; the old setup served a 352×351 PNG renamed to .ico, which
+  // some browsers reject and fall back to a default icon).
   icons: {
-    icon: '/favicon.png',
-    apple: '/favicon.png',
+    icon: [
+      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
   },
   openGraph: {
     title: 'Fantasy Trade Analyzer for NHL, NFL & MLB | The Trade Analyzer',

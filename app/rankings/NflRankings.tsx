@@ -2,6 +2,7 @@
 
 import ClearableSearch from "@/app/components/ClearableSearch";
 import NflInjuryBadge from "@/app/components/NflInjuryBadge";
+import TapTooltip from "@/app/components/TapTooltip";
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
@@ -228,7 +229,9 @@ export default function NflRankings() {
     id === currentSeasonId ? currentSeasonDb : id === priorSeasonId ? priorSeasonDb : [];
   const thisYearDb = dbFor(thisYearId);
   const lastYearDb = dbFor(lastYearId).length > 0 ? dbFor(lastYearId) : currentSeasonDb;
-  const hasThisYearData = thisYearDb.length > 0;
+  // Rostered players without stats ride along as 0-GP entries, so presence
+  // of rows alone doesn't mean the season has data — require real games.
+  const hasThisYearData = thisYearDb.some((p) => p.gamesPlayed > 0 && p.position !== "DST");
 
   // Kick the mode off unavailable choices once both fetches settle.
   useEffect(() => {
@@ -506,8 +509,15 @@ export default function NflRankings() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      {/* Filters — sticky so search and position pills stay reachable while
+          scrolling the (long) player list. Full-bleed background + bottom
+          border so rows never show through; z-20 keeps it under the fixed
+          tooltips (z-50) but over the table, and the next-pick marker and
+          row highlighting scroll beneath it untouched. */}
+      <div
+        className="sticky top-0 z-20 -mx-6 px-6 py-2 mb-3 flex flex-wrap items-center gap-2 border-b"
+        style={{ background: "var(--color-bg)", borderColor: "var(--color-border)" }}
+      >
         {(["ALL", ...NFL_POSITIONS] as const).map((pos) => (
           <button
             key={pos}
@@ -598,13 +608,15 @@ export default function NflRankings() {
                           lineup-relevant players (color + text per accessibility) */}
                       {draftActive && !isTaken && r.p.byeWeek !== undefined &&
                         (myByeCounts[r.p.byeWeek] ?? 0) >= 2 && (
-                        <span
-                          className="ml-1 text-[10px] font-semibold"
-                          style={{ color: "#D4843B" }}
-                          title={`Bye ${r.p.byeWeek} — you already have ${myByeCounts[r.p.byeWeek]} players on bye that week`}
+                        <TapTooltip
+                          tip={`Bye ${r.p.byeWeek} — you already have ${myByeCounts[r.p.byeWeek]} players on bye that week`}
+                          expandTarget
+                          className="ml-1"
                         >
-                          ⚠ stack
-                        </span>
+                          <span className="text-[10px] font-semibold" style={{ color: "#D4843B" }}>
+                            ⚠ stack
+                          </span>
+                        </TapTooltip>
                       )}
                     </td>
                     <td className="px-2 py-1 text-right" style={{ color: "var(--color-muted)" }}>{r.p.gamesPlayed}</td>
@@ -617,6 +629,7 @@ export default function NflRankings() {
                       const better = avg !== undefined && (
                         NEGATIVE_STATS.has(c.key) ? value < avg : value > avg
                       );
+                      const display = c.perGame ? value.toFixed(1) : Math.round(value);
                       return (
                         <td
                           key={c.key as string}
@@ -624,9 +637,12 @@ export default function NflRankings() {
                           style={better
                             ? { background: "var(--color-success-subtle)", color: "var(--color-success)", fontWeight: 600 }
                             : undefined}
-                          title={avg !== undefined ? `Draftable-pool avg: ${avg.toFixed(1)}` : undefined}
                         >
-                          {c.perGame ? value.toFixed(1) : Math.round(value)}
+                          {avg !== undefined ? (
+                            <TapTooltip tip={`Draftable-pool avg: ${avg.toFixed(1)}`}>
+                              <span>{display}</span>
+                            </TapTooltip>
+                          ) : display}
                         </td>
                       );
                     })}

@@ -584,51 +584,59 @@ function buildPlayers(meta: SleeperMeta, seasonData: SeasonTotals): NflDbPlayer[
 
   type Scored = NflDbPlayer & { _score: number }
   const byPos: Record<string, Scored[]> = { QB: [], RB: [], WR: [], TE: [], K: [] }
+  // Every ROSTERED player (a current NFL team in the metadata) appears in
+  // the pool even without season data — zero stats and 0 GP value to
+  // exactly 0, but the player stays searchable, rankable, and tradeable.
+  // Missing players are worse than imperfectly priced players.
+  const rosteredExtras: NflDbPlayer[] = []
 
   for (const [pid, info] of Object.entries(meta)) {
     if (!info) continue
-    // Suspended players stay in the pool — they're still tradeable; the
-    // analyzer applies an availability discount instead of hiding them.
-    const status = (info.status ?? '').toLowerCase()
-    if (status && !['active', 'injured_reserve', 'physically_unable_to_perform',
-                    'ir', 'reserve', 'suspended', ''].includes(status)) continue
-
     const positions = info.fantasy_positions ?? (info.position ? [info.position] : [])
     const pos = positions[0]
     if (!pos || !SKILL_POSITIONS.has(pos)) continue
-
-    const raw = totals[pid]
-    if (!raw) continue
-
-    const stats = pos === 'K' ? mapKickerStats(raw) : mapSkillStats(raw)
-    const score = fantasyScore(stats, pos)
-    if (score < minScore) continue
-
-    const gp = Math.max(1, Math.min(18, gpCounts[pid] ?? 1))
     const name = info.full_name ?? `${info.first_name ?? ''} ${info.last_name ?? ''}`.trim()
     if (!name) continue
 
-    byPos[pos].push({
+    // NOTE: there is deliberately NO status filter. Sleeper's live status
+    // strings are 'Active', 'Inactive' (rostered but on the inactive/IR
+    // list — this is what IR'd stars like a mid-season Achane carry) and
+    // 'Injured Reserve' WITH SPACES; an allowlist of underscore variants
+    // silently dropped all of them. Relevance is decided by roster spot
+    // (team set) or season stats instead; suspended players stay in the
+    // pool — the analyzer applies an availability discount, not removal.
+    const rostered = typeof info.team === 'string' && info.team.length > 0
+    const raw = totals[pid]
+    if (!raw && !rostered) continue // no roster spot, no stats → irrelevant
+
+    const stats = pos === 'K' ? mapKickerStats(raw ?? {}) : mapSkillStats(raw ?? {})
+    const score = raw ? fantasyScore(stats, pos) : 0
+    const player: NflDbPlayer = {
       id:          safeId(stableId(pid)),
       name,
       team:        info.team ?? 'FA',
       position:    pos as NflPlayerPosition,
-      gamesPlayed: gp,
-      // Data plumbing only — no badge or valuation use yet
+      gamesPlayed: raw ? Math.max(1, Math.min(18, gpCounts[pid] ?? 1)) : 0,
       injuryStatus: info.injury_status ?? undefined,
       stats,
-      _score: score,
-    })
+    }
+    // The relevance cutoff and position caps only decide who competes for
+    // the capped "relevant" list; a rostered player who misses them is
+    // still appended below rather than dropped.
+    if (raw && score >= minScore) byPos[pos].push({ ...player, _score: score })
+    else if (rostered) rosteredExtras.push(player)
   }
 
   for (const [pos, limit] of Object.entries(POS_LIMITS)) {
     if (pos === 'DST') continue
-    const sorted = (byPos[pos] ?? []).sort((a, b) => b._score - a._score).slice(0, limit)
-    for (const { _score, ...player } of sorted) {
+    const sorted = (byPos[pos] ?? []).sort((a, b) => b._score - a._score)
+    sorted.forEach(({ _score, ...player }, i) => {
       void _score
-      result.push(player)
-    }
+      if (i < limit) result.push(player)
+      else if (player.team !== 'FA') rosteredExtras.push(player) // cap overflow: rostered players stay
+    })
   }
+  result.push(...rosteredExtras)
 
   for (const [i, abbr] of NFL_TEAMS.entries()) {
     const raw = totals[abbr]
@@ -740,12 +748,14 @@ export async function GET(request: Request) {
   const currentPlayers = attachByeWeeks(buildPlayers(meta, currentStats), byeMap)
   const priorPlayers   = attachByeWeeks(buildPlayers(meta, priorStats), byeMap)
 
-  // buildPlayers appends all 32 DSTs unconditionally (even with zero stats),
-  // so a raw length check can never see an "empty" season. A season only has
-  // real data when at least one skill player survived the stat filters —
-  // otherwise (pre-season, before week 1 completes) it's just phantom DSTs.
+  // buildPlayers appends all 32 DSTs unconditionally (even with zero stats)
+  // and every ROSTERED skill player (0 GP when he has no stats yet), so a
+  // raw length check can never see an "empty" season. A season only has
+  // real data when at least one skill player has actual games — otherwise
+  // (pre-season, before week 1 completes) it's phantom DSTs plus a
+  // zero-stat roster dump.
   const hasRealPlayers = (players: NflDbPlayer[]) =>
-    players.some((p) => p.position !== 'DST')
+    players.some((p) => p.position !== 'DST' && p.gamesPlayed > 0)
 
   // Both seasons empty means the stats API is down even though metadata
   // loaded — treat as unreachable rather than serving an empty analyzer.

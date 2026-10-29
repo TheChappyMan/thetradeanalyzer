@@ -201,6 +201,65 @@ function SaveRow({
   );
 }
 
+/**
+ * Delete button + inline confirmation for one saved league. The confirmation
+ * states what happens to the league's trade history before anything is
+ * deleted. Shown in the tier-2 league selector bar and (without a selector)
+ * for the tier-1 single saved league.
+ */
+function DeleteLeagueControl({
+  leagueName, sportLabel, deleting, onConfirm,
+}: {
+  leagueName: string;
+  sportLabel: string;
+  deleting: boolean;
+  onConfirm: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <button
+        className="text-xs whitespace-nowrap disabled:opacity-50"
+        style={{ color: "var(--color-danger)" }}
+        disabled={deleting}
+        onClick={() => setConfirming(true)}
+      >
+        Delete League
+      </button>
+    );
+  }
+  return (
+    <div
+      className="flex flex-col gap-2 rounded-lg border p-2 text-xs"
+      style={{ borderColor: "var(--color-danger)", background: "var(--color-surface)" }}
+    >
+      <span style={{ color: "var(--color-text)" }}>
+        Delete <span className="font-semibold">{leagueName || "this league"}</span>?
+        Its saved settings are removed permanently. Trades you analyzed in it are
+        kept in Trade History under “All {sportLabel} Leagues” (the league is
+        marked as deleted in the league filter).
+      </span>
+      <div className="flex gap-2">
+        <button
+          className="rounded-lg border px-2 py-1 font-medium disabled:opacity-50"
+          style={{ borderColor: "var(--color-danger)", color: "#fff", background: "var(--color-danger)" }}
+          disabled={deleting}
+          onClick={() => { setConfirming(false); onConfirm(); }}
+        >
+          {deleting ? "Deleting…" : "Delete League"}
+        </button>
+        <button
+          className="rounded-lg border px-2 py-1"
+          style={{ borderColor: "var(--color-border)", color: "var(--color-muted)" }}
+          onClick={() => setConfirming(false)}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function NhlSettingsForm({
   initialLeague,
   initialNflLeague,
@@ -399,6 +458,66 @@ export default function NhlSettingsForm({
     setCreatingMlb(false);
   }
 
+  // ── Delete league (any paid tier) ─────────────────────────
+  // Deleting frees the tier-1 slot (the save cap counts rows). Trade
+  // history is kept: trades.league_id is ON DELETE SET NULL server-side and
+  // every trade carries its own league-name snapshot, so past analyses stay
+  // in Trade History (the league shows as "(deleted)" in its filter).
+  const [deletingLeague, setDeletingLeague] = useState(false);
+
+  async function deleteLeagueRow(id: string, sport: "nhl" | "nfl" | "mlb"): Promise<boolean> {
+    setDeletingLeague(true);
+    try {
+      const res = await fetch("/api/leagues", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) return false;
+      // Clear any in-progress Draft Mode state saved for this league so no
+      // orphaned draft survives in localStorage (NHL/NFL only — MLB has no
+      // Draft Mode).
+      if (sport !== "mlb") {
+        try { localStorage.removeItem(`fta-draft-${sport}-${id}`); } catch {}
+      }
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setDeletingLeague(false);
+    }
+  }
+
+  async function handleDeleteNhlLeague(id: string) {
+    if (!(await deleteLeagueRow(id, "nhl"))) return;
+    const remaining = nhlLeagues.filter((l) => l.id !== id);
+    setNhlLeagues(remaining);
+    const next = remaining[0] ?? null;
+    setSelectedNhlId(next?.id ?? null);
+    setLeague(next?.settings ? mergeLeague(next.settings as League) : DEFAULT_LEAGUE);
+    setNhlIsNew(!next);
+  }
+
+  async function handleDeleteNflLeague(id: string) {
+    if (!(await deleteLeagueRow(id, "nfl"))) return;
+    const remaining = nflLeagues.filter((l) => l.id !== id);
+    setNflLeagues(remaining);
+    const next = remaining[0] ?? null;
+    setSelectedNflId(next?.id ?? null);
+    setNflLeague(next?.settings ? mergeNflLeague(next.settings as NflLeague) : DEFAULT_NFL_LEAGUE);
+    setNflIsNew(!next);
+  }
+
+  async function handleDeleteMlbLeague(id: string) {
+    if (!(await deleteLeagueRow(id, "mlb"))) return;
+    const remaining = mlbLeagues.filter((l) => l.id !== id);
+    setMlbLeagues(remaining);
+    const next = remaining[0] ?? null;
+    setSelectedMlbId(next?.id ?? null);
+    setMlbLeague(next?.settings ? mergeMlbLeague(next.settings as MlbLeague) : DEFAULT_MLB_LEAGUE);
+    setMlbIsNew(!next);
+  }
+
   // ── Save handlers ─────────────────────────────────────────
   async function handleNhlSave() {
     setNhlStatus("saving");
@@ -435,6 +554,17 @@ export default function NhlSettingsForm({
     // Tier 1: server action upsert
     const result = await saveLeagueSettings(league);
     if (result.success) {
+      // Keep the local row in sync so the Delete control shows the saved
+      // name — and reappears right after a delete + re-create.
+      if (result.id) {
+        const row: LeagueRow = {
+          id: result.id, sport: "nhl",
+          name: league.name || "My NHL League",
+          settings: league,
+        } as LeagueRow;
+        setNhlLeagues([row]);
+        setSelectedNhlId(result.id);
+      }
       setNhlIsNew(false);
       setNhlStatus("saved");
       setTimeout(() => setNhlStatus("idle"), 2000);
@@ -476,6 +606,15 @@ export default function NhlSettingsForm({
 
     const result = await saveMlbLeagueSettings(mlbLeague);
     if (result.success) {
+      if (result.id) {
+        const row: LeagueRow = {
+          id: result.id, sport: "mlb",
+          name: mlbLeague.name || "My MLB League",
+          settings: mlbLeague,
+        } as LeagueRow;
+        setMlbLeagues([row]);
+        setSelectedMlbId(result.id);
+      }
       setMlbIsNew(false);
       setMlbStatus("saved");
       setTimeout(() => setMlbStatus("idle"), 2000);
@@ -517,6 +656,15 @@ export default function NhlSettingsForm({
 
     const result = await saveNflLeagueSettings(nflLeague);
     if (result.success) {
+      if (result.id) {
+        const row: LeagueRow = {
+          id: result.id, sport: "nfl",
+          name: nflLeague.name || "My NFL League",
+          settings: nflLeague,
+        } as LeagueRow;
+        setNflLeagues([row]);
+        setSelectedNflId(result.id);
+      }
       setNflIsNew(false);
       setNflStatus("saved");
       setTimeout(() => setNflStatus("idle"), 2000);
@@ -678,10 +826,10 @@ export default function NhlSettingsForm({
       {/* ── NHL tab ─────────────────────────────────────────── */}
       {activeTab === "nhl" && (
         <>
-          {/* Tier 2: league selector */}
-          {isTier2 && (
+          {/* League selector (Tier 2) + Delete (any paid tier) */}
+          {(isTier2 || nhlLeagues.length > 0) && (
             <div
-              className="flex items-center gap-3 mb-5 p-3 rounded-xl border"
+              className="flex flex-wrap items-center gap-3 mb-5 p-3 rounded-xl border"
               style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
             >
               <label
@@ -690,28 +838,48 @@ export default function NhlSettingsForm({
               >
                 League:
               </label>
-              {nhlLeagues.length > 0 ? (
-                <select
-                  className="form-input flex-1 max-w-xs"
-                  value={selectedNhlId ?? ""}
-                  onChange={(e) => handleNhlLeagueChange(e.target.value)}
-                >
-                  {nhlLeagues.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
+              {isTier2 ? (
+                nhlLeagues.length > 0 ? (
+                  <select
+                    className="form-input flex-1 max-w-xs"
+                    value={selectedNhlId ?? ""}
+                    onChange={(e) => handleNhlLeagueChange(e.target.value)}
+                  >
+                    {nhlLeagues.map((l) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>
+                    No leagues yet
+                  </span>
+                )
               ) : (
-                <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>
-                  No leagues yet
+                <span className="text-sm" style={{ color: "var(--color-text)" }}>
+                  {nhlLeagues[0]?.name || "My League"}
                 </span>
               )}
-              <button
-                onClick={handleCreateNhlLeague}
-                disabled={creatingNhl}
-                className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
-              >
-                {creatingNhl ? "Creating…" : "+ New League"}
-              </button>
+              {isTier2 && (
+                <button
+                  onClick={handleCreateNhlLeague}
+                  disabled={creatingNhl}
+                  className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
+                >
+                  {creatingNhl ? "Creating…" : "+ New League"}
+                </button>
+              )}
+              {(isTier2 ? selectedNhlId : nhlLeagues[0]?.id) && (
+                <DeleteLeagueControl
+                  leagueName={
+                    (isTier2
+                      ? nhlLeagues.find((l) => l.id === selectedNhlId)?.name
+                      : nhlLeagues[0]?.name) ?? ""
+                  }
+                  sportLabel="NHL"
+                  deleting={deletingLeague}
+                  onConfirm={() => handleDeleteNhlLeague((isTier2 ? selectedNhlId : nhlLeagues[0]?.id)!)}
+                />
+              )}
             </div>
           )}
 
@@ -1033,10 +1201,10 @@ export default function NhlSettingsForm({
       {/* ── NFL tab ─────────────────────────────────────────── */}
       {activeTab === "nfl" && (
         <>
-          {/* Tier 2: league selector */}
-          {isTier2 && (
+          {/* League selector (Tier 2) + Delete (any paid tier) */}
+          {(isTier2 || nflLeagues.length > 0) && (
             <div
-              className="flex items-center gap-3 mb-5 p-3 rounded-xl border"
+              className="flex flex-wrap items-center gap-3 mb-5 p-3 rounded-xl border"
               style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
             >
               <label
@@ -1045,28 +1213,48 @@ export default function NhlSettingsForm({
               >
                 League:
               </label>
-              {nflLeagues.length > 0 ? (
-                <select
-                  className="form-input flex-1 max-w-xs"
-                  value={selectedNflId ?? ""}
-                  onChange={(e) => handleNflLeagueChange(e.target.value)}
-                >
-                  {nflLeagues.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
+              {isTier2 ? (
+                nflLeagues.length > 0 ? (
+                  <select
+                    className="form-input flex-1 max-w-xs"
+                    value={selectedNflId ?? ""}
+                    onChange={(e) => handleNflLeagueChange(e.target.value)}
+                  >
+                    {nflLeagues.map((l) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>
+                    No leagues yet
+                  </span>
+                )
               ) : (
-                <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>
-                  No leagues yet
+                <span className="text-sm" style={{ color: "var(--color-text)" }}>
+                  {nflLeagues[0]?.name || "My League"}
                 </span>
               )}
-              <button
-                onClick={handleCreateNflLeague}
-                disabled={creatingNfl}
-                className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
-              >
-                {creatingNfl ? "Creating…" : "+ New League"}
-              </button>
+              {isTier2 && (
+                <button
+                  onClick={handleCreateNflLeague}
+                  disabled={creatingNfl}
+                  className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
+                >
+                  {creatingNfl ? "Creating…" : "+ New League"}
+                </button>
+              )}
+              {(isTier2 ? selectedNflId : nflLeagues[0]?.id) && (
+                <DeleteLeagueControl
+                  leagueName={
+                    (isTier2
+                      ? nflLeagues.find((l) => l.id === selectedNflId)?.name
+                      : nflLeagues[0]?.name) ?? ""
+                  }
+                  sportLabel="NFL"
+                  deleting={deletingLeague}
+                  onConfirm={() => handleDeleteNflLeague((isTier2 ? selectedNflId : nflLeagues[0]?.id)!)}
+                />
+              )}
             </div>
           )}
 
@@ -1240,33 +1428,53 @@ export default function NhlSettingsForm({
       {/* ── MLB tab ─────────────────────────────────────────── */}
       {activeTab === "mlb" && (
         <>
-          {/* Tier 2: league selector */}
-          {isTier2 && (
+          {/* League selector (Tier 2) + Delete (any paid tier) */}
+          {(isTier2 || mlbLeagues.length > 0) && (
             <div
-              className="flex items-center gap-3 mb-5 p-3 rounded-xl border"
+              className="flex flex-wrap items-center gap-3 mb-5 p-3 rounded-xl border"
               style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}
             >
               <label className="text-sm shrink-0" style={{ color: "var(--color-muted)" }}>League:</label>
-              {mlbLeagues.length > 0 ? (
-                <select
-                  className="form-input flex-1 max-w-xs"
-                  value={selectedMlbId ?? ""}
-                  onChange={(e) => handleMlbLeagueChange(e.target.value)}
-                >
-                  {mlbLeagues.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
+              {isTier2 ? (
+                mlbLeagues.length > 0 ? (
+                  <select
+                    className="form-input flex-1 max-w-xs"
+                    value={selectedMlbId ?? ""}
+                    onChange={(e) => handleMlbLeagueChange(e.target.value)}
+                  >
+                    {mlbLeagues.map((l) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>No leagues yet</span>
+                )
               ) : (
-                <span className="text-sm italic" style={{ color: "var(--color-muted)" }}>No leagues yet</span>
+                <span className="text-sm" style={{ color: "var(--color-text)" }}>
+                  {mlbLeagues[0]?.name || "My League"}
+                </span>
               )}
-              <button
-                onClick={handleCreateMlbLeague}
-                disabled={creatingMlb}
-                className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
-              >
-                {creatingMlb ? "Creating…" : "+ New League"}
-              </button>
+              {isTier2 && (
+                <button
+                  onClick={handleCreateMlbLeague}
+                  disabled={creatingMlb}
+                  className="link-primary text-xs disabled:opacity-50 whitespace-nowrap"
+                >
+                  {creatingMlb ? "Creating…" : "+ New League"}
+                </button>
+              )}
+              {(isTier2 ? selectedMlbId : mlbLeagues[0]?.id) && (
+                <DeleteLeagueControl
+                  leagueName={
+                    (isTier2
+                      ? mlbLeagues.find((l) => l.id === selectedMlbId)?.name
+                      : mlbLeagues[0]?.name) ?? ""
+                  }
+                  sportLabel="MLB"
+                  deleting={deletingLeague}
+                  onConfirm={() => handleDeleteMlbLeague((isTier2 ? selectedMlbId : mlbLeagues[0]?.id)!)}
+                />
+              )}
             </div>
           )}
 

@@ -122,33 +122,39 @@ export default async function SettingsPage() {
   // when duplicate rows exist (a past bug created them), which silently fell
   // back to defaults here while saves kept inserting more duplicates. This
   // targets the same row the save action (findTier1Row) updates.
+  // Full rows (not just settings) so the form can offer Delete — deletion
+  // needs the row id even on tier 1, where no league selector is shown.
   const [nhlResult, nflResult, mlbResult] = await Promise.all([
     supabase
       .from('leagues')
-      .select('settings')
+      .select('id, name, sport, settings, created_at')
       .eq('user_id', userId)
       .eq('sport', 'nhl')
       .order('created_at', { ascending: false })
       .limit(1),
     supabase
       .from('leagues')
-      .select('settings')
+      .select('id, name, sport, settings, created_at')
       .eq('user_id', userId)
       .eq('sport', 'nfl')
       .order('created_at', { ascending: false })
       .limit(1),
     supabase
       .from('leagues')
-      .select('settings')
+      .select('id, name, sport, settings, created_at')
       .eq('user_id', userId)
       .eq('sport', 'mlb')
       .order('created_at', { ascending: false })
       .limit(1),
   ])
 
-  const initialLeague    = (nhlResult.data?.[0]?.settings ?? null) as League    | null
-  const initialNflLeague = (nflResult.data?.[0]?.settings ?? null) as NflLeague | null
-  const initialMlbLeague = (mlbResult.data?.[0]?.settings ?? null) as MlbLeague | null
+  const nhlRows = (nhlResult.data ?? []) as LeagueRow[]
+  const nflRows = (nflResult.data ?? []) as LeagueRow[]
+  const mlbRows = (mlbResult.data ?? []) as LeagueRow[]
+
+  const initialLeague    = (nhlRows[0]?.settings ?? null) as League    | null
+  const initialNflLeague = (nflRows[0]?.settings ?? null) as NflLeague | null
+  const initialMlbLeague = (mlbRows[0]?.settings ?? null) as MlbLeague | null
 
   return (
     <NhlSettingsForm
@@ -156,9 +162,9 @@ export default async function SettingsPage() {
       initialNflLeague={initialNflLeague}
       initialMlbLeague={initialMlbLeague}
       tier={tier}
-      allNhlLeagues={[]}
-      allNflLeagues={[]}
-      allMlbLeagues={[]}
+      allNhlLeagues={nhlRows}
+      allNflLeagues={nflRows}
+      allMlbLeagues={mlbRows}
       referralSection={referralCode ? (
         <ReferralSection
           code={referralCode}

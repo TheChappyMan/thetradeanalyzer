@@ -179,7 +179,12 @@ export async function PUT(request: Request) {
 }
 
 // ── DELETE /api/leagues ────────────────────────────────────────────────────
-// Tier 2 only. Deletes a league by id.
+// Any paid tier. Deletes a league by id. Tier 1 must be able to delete the
+// single league it is allowed per sport — deletion is what frees the slot
+// (the POST cap counts rows), so a tier2 gate here would lock tier1 users
+// to their first-ever league forever.
+// Trade history is untouched: trades.league_id is ON DELETE SET NULL and
+// each trade keeps its own league-name snapshot in trade_data.
 // Body: { id: string }
 // Returns: { success: true }  (200)
 export async function DELETE(request: Request) {
@@ -188,11 +193,11 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // getUserTier() includes the admin override and treats tier3 as ≥ tier2
+  // getUserTier() includes the admin override
   const tier = await getUserTier()
-  if (!isEffectivelyTier2(tier)) {
+  if (tier === 'free') {
     return NextResponse.json(
-      { error: 'Tier 2 subscription required' },
+      { error: 'Paid subscription required' },
       { status: 403 }
     )
   }

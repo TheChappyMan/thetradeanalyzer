@@ -1,6 +1,7 @@
 "use client";
 
 import ClearableSearch from "@/app/components/ClearableSearch";
+import TapTooltip from "@/app/components/TapTooltip";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLeagueContext } from "@/lib/league-context";
@@ -293,7 +294,12 @@ export default function MlbRankings() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      {/* Sticky filter bar — same pattern as NflRankings (search + position
+          pills stay reachable while scrolling the list). */}
+      <div
+        className="sticky top-0 z-20 -mx-6 px-6 py-2 mb-3 flex flex-wrap items-center gap-2 border-b"
+        style={{ background: "var(--color-bg)", borderColor: "var(--color-border)" }}
+      >
         {(["ALL", ...POSITIONS] as const).map((pos) => (
           <button
             key={pos}
@@ -351,6 +357,7 @@ export default function MlbRankings() {
                       const value = r.p.stats[c.key] ?? 0;
                       const avg = avgForPos?.[c.key as string];
                       const better = avg !== undefined && (c.neg ? value < avg : value > avg);
+                      const display = c.decimals !== undefined ? value.toFixed(c.decimals) : Math.round(value);
                       return (
                         <td
                           key={c.key as string}
@@ -358,9 +365,12 @@ export default function MlbRankings() {
                           style={better
                             ? { background: "var(--color-success-subtle)", color: "var(--color-success)", fontWeight: 600 }
                             : undefined}
-                          title={avg !== undefined ? `Draftable-pool avg: ${avg.toFixed(c.decimals ?? 1)}` : undefined}
                         >
-                          {c.decimals !== undefined ? value.toFixed(c.decimals) : Math.round(value)}
+                          {avg !== undefined ? (
+                            <TapTooltip tip={`Draftable-pool avg: ${avg.toFixed(c.decimals ?? 1)}`}>
+                              <span>{display}</span>
+                            </TapTooltip>
+                          ) : display}
                         </td>
                       );
                     })}

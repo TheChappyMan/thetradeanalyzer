@@ -320,4 +320,23 @@
     border-radius: 9999px;
     padding: 0.125rem 0.625rem;
   }
+
+  /* ── Touch tap target ───────────────────────────────────────
+     Expands a small visual trigger (tooltip icons/badges) to a 44×44px
+     hit area on touch devices only. The ::after layer is invisible but
+     catches the tap; desktop mice are unaffected. */
+  .tap-target {
+    position: relative;
+  }
+  @media (pointer: coarse) {
+    .tap-target::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 44px;
+      height: 44px;
+      transform: translate(-50%, -50%);
+    }
+  }
 }

@@ -64,6 +64,19 @@ export default function HistoryClientPage() {
   const sportLeagues = leagues.filter((l) => l.sport === activeSport);
   const sportLabel = SPORTS_CONFIG.find((s) => s.key === activeSport)?.label ?? activeSport.toUpperCase();
 
+  // Leagues that were deleted still have trades: every trade snapshots its
+  // league id + name, so surface those as "(deleted)" filter options rather
+  // than silently orphaning their history under "All".
+  const deletedLeagueOptions = (() => {
+    const known = new Set(sportLeagues.map((l) => l.id));
+    const seen = new Map<string, string>();
+    for (const e of allEntries) {
+      if (e.sport !== activeSport || !e.leagueId || known.has(e.leagueId)) continue;
+      if (!seen.has(e.leagueId)) seen.set(e.leagueId, e.leagueName || "Unnamed league");
+    }
+    return Array.from(seen, ([id, name]) => ({ id, name: `${name} (deleted)` }));
+  })();
+
   const filtered = allEntries.filter((e) => {
     // Legacy trades (no sport tag) show everywhere
     if (e.sport && e.sport !== activeSport) return false;
@@ -114,7 +127,7 @@ export default function HistoryClientPage() {
       </div>
 
       {/* League filter */}
-      {sportLeagues.length > 0 && (
+      {(sportLeagues.length > 0 || deletedLeagueOptions.length > 0) && (
         <div className="flex items-center gap-2 mb-4">
           <label
             className="text-sm shrink-0"
@@ -134,6 +147,11 @@ export default function HistoryClientPage() {
                 {l.name}
               </option>
             ))}
+            {deletedLeagueOptions.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
           </select>
           <span className="text-xs ml-1" style={{ color: "var(--color-muted)" }}>
             {filtered.length} trade{filtered.length !== 1 ? "s" : ""}
@@ -147,7 +165,7 @@ export default function HistoryClientPage() {
         </p>
       ) : (
         <>
-          {sportLeagues.length === 0 && (
+          {sportLeagues.length === 0 && deletedLeagueOptions.length === 0 && (
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs" style={{ color: "var(--color-muted)" }}>
                 {filtered.length} trade{filtered.length !== 1 ? "s" : ""}

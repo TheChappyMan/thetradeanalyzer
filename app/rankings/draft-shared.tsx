@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import TapTooltip from "@/app/components/TapTooltip";
 import { generateDraftPicks, parseDraftPick, type DraftPicksConfig } from "@/lib/draft";
 import type { BalanceStatus, CategoryBalanceRow } from "@/lib/category-balance";
 
@@ -373,11 +374,13 @@ export function CategoryBalancePanel({ rows, mineCount, mode = "categories" }: {
         {rows.map((r) => {
           const s = BALANCE_STYLES[r.status];
           return (
-            <div
+            <TapTooltip
               key={r.key}
+              tip={`${r.label}: you have ${fmtStat(r.mine, r.isRate)}, expected ${fmtStat(r.expectedNow, r.isRate)} at your roster size. Full-roster target: ${fmtStat(r.target, r.isRate)}.${r.direction === "less" ? " Lower is better." : ""}`}
+            >
+            <div
               className="rounded-lg border px-2 py-1 leading-tight"
               style={{ borderColor: "var(--color-border)" }}
-              title={`${r.label}: you have ${fmtStat(r.mine, r.isRate)}, expected ${fmtStat(r.expectedNow, r.isRate)} at your roster size. Full-roster target: ${fmtStat(r.target, r.isRate)}.${r.direction === "less" ? " Lower is better." : ""}`}
             >
               <span className="font-semibold" style={{ color: "var(--color-text)" }}>{r.label}</span>{" "}
               {mineCount > 0 && (
@@ -390,6 +393,7 @@ export function CategoryBalancePanel({ rows, mineCount, mode = "categories" }: {
                 {mineCount > 0 ? " · tgt " : "tgt "}{fmtStat(r.target, r.isRate)}
               </span>
             </div>
+            </TapTooltip>
           );
         })}
       </div>
