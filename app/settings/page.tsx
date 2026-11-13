@@ -6,7 +6,7 @@ import { ensureReferralCode } from '@/lib/referral'
 import type { League, LeagueRow } from '@/lib/types'
 import type { NflLeague } from '@/lib/nfl-types'
 import type { MlbLeague } from '@/lib/mlb-types'
-import NhlSettingsForm from './NhlSettingsForm'
+import SettingsForm from './SettingsForm'
 import ReferralSection from './ReferralSection'
 
 export default async function SettingsPage() {
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
     // Free users get the Manage Subscription tab only — no league settings,
     // no referral program (referral codes are generated for paid users).
     return (
-      <NhlSettingsForm
+      <SettingsForm
         initialLeague={null}
         initialNflLeague={null}
         initialMlbLeague={null}
@@ -98,7 +98,7 @@ export default async function SettingsPage() {
     const allMlbLeagues = (mlbResult.data ?? []) as LeagueRow[]
 
     return (
-      <NhlSettingsForm
+      <SettingsForm
         initialLeague={(allNhlLeagues[0]?.settings ?? null) as League | null}
         initialNflLeague={(allNflLeagues[0]?.settings ?? null) as NflLeague | null}
         initialMlbLeague={(allMlbLeagues[0]?.settings ?? null) as MlbLeague | null}
@@ -157,7 +157,7 @@ export default async function SettingsPage() {
   const initialMlbLeague = (mlbRows[0]?.settings ?? null) as MlbLeague | null
 
   return (
-    <NhlSettingsForm
+    <SettingsForm
       initialLeague={initialLeague}
       initialNflLeague={initialNflLeague}
       initialMlbLeague={initialMlbLeague}

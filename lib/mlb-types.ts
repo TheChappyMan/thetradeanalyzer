@@ -1,6 +1,6 @@
 /**
  * Shared MLB types, constants, and defaults.
- * Imported by app/mlb/page.tsx and app/settings/NhlSettingsForm.tsx.
+ * Imported by app/mlb/page.tsx and app/settings/MlbSettingsTab.tsx.
  */
 
 // ============================================================
