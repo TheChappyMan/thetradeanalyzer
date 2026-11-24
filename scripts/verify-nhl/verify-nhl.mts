@@ -80,11 +80,19 @@ type Rows = Record<string, unknown>[];
 type Snapshot = { season: string; capturedAt: string; summary: Rows; realtime: Rows; faceoffs: Rows; goalies: Rows };
 
 async function fetchRows(path: string, fields: string[], season: string): Promise<Rows> {
-  const url = `https://api.nhle.com/stats/rest/en/${path}?limit=-1&cayenneExp=seasonId=${season}%20and%20gameTypeId=2`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`NHL API ${res.status} for ${path}`);
-  const json = (await res.json()) as { data?: Rows };
-  return (json.data ?? []).map((row) => Object.fromEntries(fields.filter((f) => f in row).map((f) => [f, row[f]])));
+  // The API caps responses at 100 rows, so read the season in pages
+  // (same approach as app/api/nhl/route.ts).
+  const all: Rows = [];
+  for (let start = 0; start < 3000; start += 100) {
+    const url = `https://api.nhle.com/stats/rest/en/${path}?limit=100&start=${start}&sort=playerId&cayenneExp=seasonId=${season}%20and%20gameTypeId=2`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`NHL API ${res.status} for ${path}`);
+    const json = (await res.json()) as { data?: Rows; total?: number };
+    const page = json.data ?? [];
+    all.push(...page);
+    if (page.length < 100 || all.length >= (json.total ?? Infinity)) break;
+  }
+  return all.map((row) => Object.fromEntries(fields.filter((f) => f in row).map((f) => [f, row[f]])));
 }
 
 async function captureSnapshot(season: string, path: string): Promise<void> {

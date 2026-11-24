@@ -29,7 +29,10 @@ accept tier3** — this bug has been fixed several times; use
   24h in-memory cache, because the ~14 MB payload exceeds Next's 2 MB
   fetch-cache limit; weekly stats revalidate 3600). `lib/nfl-players.json`
   is a stamped last-resort fallback only — the UI shows a staleness warning
-  when it's served.
+  when it's served. NHL: the stats API caps responses at 100 rows and
+  rate-limits bursts (~50 requests → 429 for 60 s), so seasons are read in
+  pages, each page cached with `unstable_cache`, misses paced by a limiter
+  (2026-11). A player count near 180 means paging broke again.
 - `lib/types.ts` (NHL), `lib/nfl-types.ts`, `lib/mlb-types.ts` — league
   config types, stat keys, defaults. NHL page still carries duplicate local
   type aliases (structurally identical to `lib/types.ts`) — harmless, but
